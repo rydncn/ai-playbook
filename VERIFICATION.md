@@ -6,6 +6,8 @@ Nothing counts as done until its effect has been checked by something other than
 
 Non-trivial work starts with a short written design, built with Superpowers' brainstorming step. For a plan that already exists, a grilling skill asks one question at a time until each branch has been tested. Agents build from the written design and plan.
 
+Any decision with real alternatives gets a short ADR in `docs/decisions/` ([template](templates/ADR.md)), including the options that were rejected and why. Agents lose that context between sessions; written down in the repository, it stops them proposing the same rejected options again. Changing a decision means a new ADR that replaces the old one, not a quiet change in the code.
+
 ## 2. A plan of test-first tasks
 
 The design states its acceptance criteria as behaviour, in given/when/then form, before any code is written. Each criterion becomes an acceptance or end-to-end test against real infrastructure ([rule 16](rules/16-acceptance-tests-are-isolated-and-real.md)). The criteria are plain text in the plan; a Gherkin toolchain is only worth its upkeep when people outside the team read the specifications.

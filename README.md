@@ -50,6 +50,7 @@ Each rule has its own file: the rule, why it matters, and how to enforce it. Mos
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | [`CLAUDE.template.md`](templates/CLAUDE.template.md) | The structure for a project's root instructions, kept under 200 lines                                           |
 | [`RULE.md`](templates/RULE.md)                       | One rule per file: the rule, why, and how to enforce it                                                         |
+| [`ADR.md`](templates/ADR.md)                         | A decision record, with the options rejected, so agents stop proposing them again                               |
 | [`GATES.md`](templates/GATES.md)                     | A checklist for deciding a project's gates, starting with whether CI runs at all                                |
 | [`settings.json`](templates/settings.json)           | Shared agent permissions: deny secret files, ask before production                                              |
 | [`hooks/`](templates/hooks)                          | Format and lint each edit; run the type check and changed tests before the agent finishes. Tested               |

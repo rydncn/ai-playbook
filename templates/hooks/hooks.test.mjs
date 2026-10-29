@@ -1,6 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, chmodSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  chmodSync,
+  readFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -192,4 +198,52 @@ test("after-edit exits 0 with no output on input it can't use", () => {
   });
   assert.equal(run.status, 0);
   assert.equal(run.stdout, "");
+});
+
+// pre-push: a real git push into a local bare repository.
+
+function pushRepo(scripts) {
+  const root = mkdtempSync(path.join(tmpdir(), "hooks-push-"));
+  const remote = path.join(root, "remote.git");
+  const work = path.join(root, "work");
+  const git = (cwd, ...args) =>
+    spawnSync("git", args, { cwd, encoding: "utf8" });
+  git(root, "init", "-q", "--bare", remote);
+  git(root, "init", "-q", "-b", "main", work);
+  writeFileSync(path.join(work, "package.json"), JSON.stringify({ scripts }));
+  mkdirSync(path.join(work, ".githooks"));
+  writeFileSync(
+    path.join(work, ".githooks", "pre-push"),
+    readFileSync(path.join(here, "pre-push")),
+  );
+  chmodSync(path.join(work, ".githooks", "pre-push"), 0o755);
+  git(work, "config", "core.hooksPath", ".githooks");
+  git(work, "add", "-A");
+  git(
+    work,
+    "-c",
+    "user.email=t@example.com",
+    "-c",
+    "user.name=t",
+    "commit",
+    "-qm",
+    "init",
+  );
+  git(work, "remote", "add", "origin", remote);
+  return () => git(work, "push", "-q", "origin", "main");
+}
+
+test("pre-push stops the push when a check fails", () => {
+  const push = pushRepo({
+    typecheck: 'node -e "process.exit(1)"',
+    lint: 'node -e ""',
+  });
+  const run = push();
+  assert.notEqual(run.status, 0);
+  assert.match(run.stderr, /npm run typecheck` failed/);
+});
+
+test("pre-push lets the push through when the checks pass or don't exist", () => {
+  assert.equal(pushRepo({ lint: 'node -e ""' })().status, 0);
+  assert.equal(pushRepo({})().status, 0);
 });

@@ -35,17 +35,19 @@ Skills for a particular framework are enabled per project rather than everywhere
     "supabase@supabase-agent-skills": true,
     "postgres-best-practices@supabase-agent-skills": true,
     "react-best-practices@ai-playbook": true,
-    "react-native-best-practices@ai-playbook": true
+    "react-native-best-practices@ai-playbook": true,
+    "break-ui@ai-playbook": true
   }
 }
 ```
 
-| Plugin                                | What it covers                                                                                                                                                                  | From                                                                                  |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `expo`                                | Expo's official skills: EAS Update and Build, upgrades, Expo Router, native UI, app stores                                                                                      | [expo/skills](https://github.com/expo/skills)                                         |
-| `supabase`, `postgres-best-practices` | Supabase's official skills, including the security traps (`SECURITY DEFINER` functions and `PUBLIC` grants, `user_metadata` in auth checks)                                     | [supabase/agent-skills](https://github.com/supabase/agent-skills)                     |
-| `react-best-practices`                | Vercel's React rules, including deriving state without effects and moving effect logic into event handlers. Listed in this marketplace because Vercel does not publish a plugin | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills)               |
-| `react-native-best-practices`         | Callstack's React Native performance guide. Listed here with only this skill, rather than Callstack's five-skill bundle                                                         | [callstackincubator/agent-skills](https://github.com/callstackincubator/agent-skills) |
+| Plugin                                | What it covers                                                                                                                                                                                                                          | From                                                                                  |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `expo`                                | Expo's official skills: EAS Update and Build, upgrades, Expo Router, native UI, app stores                                                                                                                                              | [expo/skills](https://github.com/expo/skills)                                         |
+| `supabase`, `postgres-best-practices` | Supabase's official skills, including the security traps (`SECURITY DEFINER` functions and `PUBLIC` grants, `user_metadata` in auth checks)                                                                                             | [supabase/agent-skills](https://github.com/supabase/agent-skills)                     |
+| `react-best-practices`                | Vercel's React rules, including deriving state without effects and moving effect logic into event handlers. Listed in this marketplace because Vercel does not publish a plugin                                                         | [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills)               |
+| `react-native-best-practices`         | Callstack's React Native performance guide. Listed here with only this skill, rather than Callstack's five-skill bundle                                                                                                                 | [callstackincubator/agent-skills](https://github.com/callstackincubator/agent-skills) |
+| `break-ui`                            | Emil Kowalski's adversarial UI skill: realistic worst-case data (long names, unbreakable emails, "1 members", empty lists, non-Latin text) from the project's own schema limits, then a report of what broke. For any project with a UI | [emilkowalski/skills](https://github.com/emilkowalski/skills)                         |
 
 For Next.js, the framework now ships its own agent guidance: bundled docs and an `AGENTS.md` that `next dev` writes from 16.3, or `npx @next/codemod@canary agents-md` on earlier versions. The old `next-best-practices` skill is retired.
 

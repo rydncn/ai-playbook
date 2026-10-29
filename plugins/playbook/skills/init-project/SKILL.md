@@ -28,7 +28,9 @@ Ask and deny rules beat any personal allow list, so this is what keeps every ses
 - **allow** the safe, routine checks you found in step 2, so they don't prompt.
 - Remove template entries for tools the project doesn't use, so the file reads as this project's list.
 
-**Hooks.** Offer the two hooks from the ai-playbook repo's `templates/hooks/`: format and lint after each edit, and run the fast checks before Claude finishes a turn. Copy the scripts into `.claude/hooks/`, merge `settings.hooks.json` into the settings, and add a `test:changed` script for the project's test runner. Leave out any check that takes more than a few seconds on this project; it belongs in CI.
+**Hooks.** Offer the two hooks from the ai-playbook repo's `templates/hooks/`: format and lint after each edit, and run the fast checks before Claude finishes a turn. Copy the scripts into `.claude/hooks/`, merge `settings.hooks.json` into the settings, and add a `test:changed` script for the project's test runner. Leave out any check that takes more than a few seconds on this project; it belongs in CI. Also offer the git `pre-push` hook from the same folder, which covers other agents and people.
+
+**Decisions.** If the project has no `docs/decisions/`, propose one with ADRs (from `templates/ADR.md`) for the choices you found while reading that had real alternatives, especially any where the code or comments show an option was tried and dropped. Mark each `(verify)` until the user confirms the reasons.
 
 **Sandbox.** If the user wants longer runs with fewer prompts, propose the sandbox settings in `docs/agent-environment.md`, with the network list limited to the hosts this project actually needs.
 

@@ -23,7 +23,9 @@ The order matters: the gates go in before the agent writes much code, so nothing
 ## 4. Agent setup
 
 - Run `/playbook:init-project`. It reads the project, writes a `CLAUDE.md` from [`templates/CLAUDE.template.md`](../templates/CLAUDE.template.md), adds the shared [`settings.json`](../templates/settings.json), and reports what it could not set up.
-- Add the [hooks](../templates/hooks) and a fast `test:changed` script, then break the type check on purpose and watch the agent get sent back.
+- Add the [hooks](../templates/hooks), including the git pre-push hook, and a fast `test:changed` script, then break the type check on purpose and watch the agent get sent back.
+- Add an empty `docs/decisions/` and write the first ADRs for the stack choices ([template](../templates/ADR.md)).
+- Have agents open pull requests as drafts; the CI template holds back the test job until a pull request is ready for review.
 - Decide where the agent runs: prompts, the sandbox, or a dev container ([agent-environment.md](agent-environment.md)).
 - Enable the stack plugins the project uses in `.claude/settings.json` (see [setup.md](setup.md)).
 - Commit `.claude/settings.json` and `.claude/rules/`; keep `settings.local.json` untracked.

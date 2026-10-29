@@ -29,6 +29,8 @@ Commands that reach a shared or production environment are set to ask first in `
 
 <A short map: the main parts, how data flows between them, and where each lives.>
 
+Decisions and the options rejected for them are in `docs/decisions/`. Read the relevant one before proposing a different approach; to change a decision, write a new ADR that replaces it.
+
 ### Security boundaries
 
 <The rules that protect users and data, each with the reason. For example: client code never queries the database; every write goes through a server-side function that checks the token, rate-limits and validates input. Describe how the boundary is verified, not just what it is.>

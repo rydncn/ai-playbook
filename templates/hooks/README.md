@@ -16,4 +16,8 @@ Both skip anything the project doesn't have (no Prettier, no `test:changed` scri
 3. Add a fast `test:changed` script: `vitest run --changed` or `jest --onlyChanged`. Keep the Stop hook's checks to what runs in seconds; the full suite belongs in CI.
 4. Check they run: ask Claude to make a change that breaks the type check, and watch it get sent back. A hook with a wrong path fails silently ([rule 9](../../rules/09-checks-must-prove-they-ran.md)).
 
+## Pre-push, for every other tool
+
+The two hooks above only run inside Claude Code. [`pre-push`](pre-push) is a plain git hook that runs the type check and lint before any push, whichever agent or person is pushing. Copy it to `.githooks/pre-push` and add `"prepare": "git config core.hooksPath .githooks || true"` to `package.json`, so every install sets it up. It saves a round trip to CI but doesn't replace it: `git push --no-verify` skips it, and instructions in `CLAUDE.md` or `AGENTS.md` asking agents to run checks get skipped in long sessions. CI stays the gate.
+
 The tests run with `node --test templates/hooks/hooks.test.mjs`, including both scripts end to end as Claude Code runs them.

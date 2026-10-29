@@ -1,0 +1,31 @@
+#!/bin/sh
+# Git pre-push hook: runs the type check and lint before anything leaves the
+# machine, whichever agent or person is pushing. The Claude Code hooks cover
+# Claude's own loop; this covers every other tool, and anyone who skips them.
+#
+# Install by copying to .githooks/pre-push and adding a package.json script
+# that points git at that folder on install:
+#   "prepare": "git config core.hooksPath .githooks || true"
+#
+# CI still runs the same checks. This hook saves a round trip; it isn't the
+# gate, because `git push --no-verify` skips it.
+
+set -eu
+
+CHECKS="${PRE_PUSH_CHECKS:-typecheck lint}"
+
+has_script() {
+  node -e 'const s = require("./package.json").scripts || {}; process.exit(s[process.argv[1]] ? 0 : 1)' "$1"
+}
+
+[ -f package.json ] || exit 0
+
+for name in $CHECKS; do
+  if has_script "$name"; then
+    echo "pre-push: npm run $name" >&2
+    if ! npm run --silent "$name"; then
+      echo "pre-push: \`npm run $name\` failed, so nothing was pushed. Fix it and push again." >&2
+      exit 1
+    fi
+  fi
+done

@@ -36,8 +36,8 @@ jobs:
       - name: Check formatting
         run: npx --yes prettier@3 --check .
 
-      - name: Lint install script
-        run: shellcheck scripts/*.sh
+      - name: Lint shell scripts
+        run: shellcheck scripts/*.sh templates/hooks/pre-push
 
       - name: Test the rule-check template
         run: node --test templates/rule-check/check-rules.test.js

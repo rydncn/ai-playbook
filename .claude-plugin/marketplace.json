@@ -98,6 +98,19 @@
       "license": "MIT",
       "category": "stack",
       "skills": ["./react-native-best-practices"]
+    },
+    {
+      "name": "break-ui",
+      "source": {
+        "source": "git-subdir",
+        "url": "emilkowalski/skills",
+        "path": "skills"
+      },
+      "description": "Stack plugin, enable per project with a UI. Emil Kowalski's break-ui skill: renders a component with realistic worst-case data, using the limits in the project's own schema, and reports everything that breaks.",
+      "homepage": "https://github.com/emilkowalski/skills",
+      "license": "MIT",
+      "category": "stack",
+      "skills": ["./break-ui"]
     }
   ]
 }
