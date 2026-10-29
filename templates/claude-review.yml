@@ -1,0 +1,105 @@
+name: Claude PR Review
+
+# Automatic review of every pull request by Claude Code, run in a fresh
+# session with the repo's own CLAUDE.md and .claude/rules/. Read-only: it can
+# view the PR and post comments, never push or edit.
+#
+# Runs when a PR is opened, reopened or marked ready for review (not on every
+# push, to keep cost down). To review again after new commits, add the
+# `claude-review` label to the PR.
+#
+# Template from the ai-playbook repo; see VERIFICATION.md there.
+#
+# Setup (repo admin): install the Claude GitHub App on this repo
+# (https://github.com/apps/claude) and add the ANTHROPIC_API_KEY repository
+# secret. Use a dedicated key with a spend limit set in the Claude Console.
+#
+# For a deeper second opinion on risky changes, run /codex:review or
+# /codex:adversarial-review locally.
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, labeled]
+    paths-ignore:
+      # Docs only. Markdown elsewhere is reviewed, because CLAUDE.md and
+      # .claude/rules/ are instructions to the agent.
+      - "docs/**"
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Claude review
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      (github.event.action != 'labeled' || github.event.label.name == 'claude-review')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          fetch-depth: 1
+
+      - name: Review
+        uses: anthropics/claude-code-action@d70510b174a1244958df0b03166a54912811f3e6 # v1.0.264
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Review this pull request. The PR branch is checked out in the
+            current directory. Use `gh pr view` and `gh pr diff` to see the
+            change.
+
+            ## Context to load first
+            - Read CLAUDE.md.
+            - For each changed file, read any .claude/rules/*.md file whose
+              `paths:` frontmatter matches it.
+            [TODO before use: list the specific rules files and the folders they cover, then delete this line.]
+
+            ## What to look for, in priority order
+            [TODO before use: replace this list with the project's highest-risk rules from
+            CLAUDE.md and .claude/rules/ (security boundaries, data access,
+            migrations, accessibility, branding), then delete this note.]
+            1. Security and data exposure: auth and permission checks,
+               input validation, secrets or personal data in logs.
+            2. Correctness bugs in the changed lines: wrong logic, missing
+               error handling, race conditions, unbounded queries.
+            3. Clear violations of a rule in CLAUDE.md or .claude/rules/.
+               Quote the rule you are applying.
+            4. Missing tests for new behaviour in risky areas.
+
+            ## How to report
+            - Only report issues you have checked against the code and are
+              confident are real. Before posting, try to disprove each one;
+              drop it if you can't confirm it. Fewer, correct comments beat
+              many speculative ones.
+            - Ignore formatting, lint and type errors (CI checks those),
+              pre-existing issues outside the diff, and matters of taste.
+            - Post each issue as an inline comment with
+              `mcp__github_inline_comment__create_inline_comment` (with
+              `confirmed: true`), saying what is wrong, why it matters, and
+              the fix. Post at most 10.
+            - Then post one top-level summary with `gh pr comment`: a
+              one-line verdict, the issues by severity (must fix / should
+              fix), and anything that needs a human decision. If you found
+              nothing, say "No high-confidence issues found" and list what
+              you checked.
+            - Only post GitHub comments; don't return the review as a
+              message.
+
+          claude_args: |
+            --model sonnet
+            --max-turns 40
+            --allowedTools "Read,Glob,Grep,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),mcp__github_inline_comment__create_inline_comment"

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "no-direct-db",
+    "message": "Client code must not query the database directly; go through a server-side function. See CLAUDE.md § Security.",
+    "dirs": ["app", "components", "hooks", "src"],
+    "extensions": [".ts", ".tsx"],
+    "pattern": "\\b\\w+\\s*\\.\\s*from\\(\\s*([\"'`][\\w-]+[\"'`]|[A-Z][A-Z0-9_]*)\\s*\\)|\\.\\s*rpc\\(",
+    "allow": "^(Array|Buffer|Uint8Array|Set|Map|Object)\\s*\\."
+  },
+  {
+    "id": "no-codename-in-ui",
+    "message": "The internal codename must not appear in user-facing text. See CLAUDE.md § Branding.",
+    "dirs": ["locales"],
+    "extensions": [".json"],
+    "pattern": "codename",
+    "flags": "i",
+    "jsonValues": true
+  },
+  {
+    "id": "no-console-log",
+    "message": "Use the logger, not console.log, so output reaches error tracking and secrets are redacted.",
+    "dirs": ["src"],
+    "extensions": [".ts", ".tsx"],
+    "pattern": "\\bconsole\\.log\\("
+  }
+]

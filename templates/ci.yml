@@ -1,0 +1,83 @@
+name: CI
+
+# Baseline CI for a TypeScript project. Copy to .github/workflows/ci.yml,
+# keep the steps the project has scripts for, and make the jobs required
+# status checks on the main branch (rule 9): a pipeline that stops running
+# must block merges, not go unnoticed.
+#
+# Expects a committed package-lock.json, an .nvmrc, and package.json scripts
+# typecheck, lint and test:ci (one-shot, never watch mode). Optional:
+# check:rules (templates/rule-check) and lint:ratchet (templates/lint-ratchet).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Types, lint and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      # Uncomment once the project has these scripts and they pass.
+      # - name: Rule checks from CLAUDE.md
+      #   run: npm run check:rules
+      #
+      # - name: ESLint ratchet
+      #   run: npm run lint:ratchet
+
+      - name: Unit tests
+        run: npm run test:ci
+
+  security:
+    name: Dependencies and secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          fetch-depth: 0 # full history, so secrets in earlier commits are found too
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version-file: .nvmrc
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high
+
+      # The gitleaks command-line tool, run from its official image. Free for
+      # any repository; the separate gitleaks GitHub Action needs a licence
+      # for organisation-owned repositories.
+      - name: Secrets scan
+        run: >-
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1
+          git /repo --redact --verbose

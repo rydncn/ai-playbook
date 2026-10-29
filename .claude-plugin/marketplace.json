@@ -1,0 +1,103 @@
+{
+  "name": "ai-playbook",
+  "description": "Ryan Duncan's curated Claude Code setup: Superpowers as the core loop, plus the skills that fill its gaps.",
+  "owner": {
+    "name": "Ryan Duncan"
+  },
+  "plugins": [
+    {
+      "name": "playbook",
+      "source": "./plugins/playbook",
+      "description": "Ryan's own skills: set up a project's CLAUDE.md, and capture lessons from mistakes."
+    },
+    {
+      "name": "superpowers",
+      "source": {
+        "source": "github",
+        "repo": "obra/superpowers"
+      },
+      "description": "The core loop: brainstorm, write plan, execute plan, TDD, systematic debugging, code review, verification before completion.",
+      "homepage": "https://github.com/obra/superpowers",
+      "license": "MIT"
+    },
+    {
+      "name": "pocock-extras",
+      "source": {
+        "source": "git-subdir",
+        "url": "mattpocock/skills",
+        "path": "skills"
+      },
+      "description": "Matt Pocock's skills that Superpowers lacks: grill-me, handoff, retro, wait-what, improve-codebase-architecture.",
+      "homepage": "https://github.com/mattpocock/skills",
+      "license": "MIT",
+      "skills": [
+        "./productivity/grill-me",
+        "./productivity/grilling",
+        "./productivity/handoff",
+        "./productivity/wait-what",
+        "./engineering/retro",
+        "./engineering/improve-codebase-architecture",
+        "./engineering/codebase-design",
+        "./engineering/domain-modeling"
+      ]
+    },
+    {
+      "name": "security-audit",
+      "source": {
+        "source": "github",
+        "repo": "cloudflare/security-audit-skill"
+      },
+      "description": "Cloudflare's multi-phase security audit for any codebase. Proposes fixes; never edits your code. Token-heavy: run before releases.",
+      "homepage": "https://github.com/cloudflare/security-audit-skill",
+      "license": "MIT",
+      "skills": ["./skills/security-audit"]
+    },
+    {
+      "name": "codex",
+      "source": {
+        "source": "git-subdir",
+        "url": "openai/codex-plugin-cc",
+        "path": "plugins/codex"
+      },
+      "description": "OpenAI's official plugin: independent Codex reviews from inside Claude Code (/codex:review, /codex:adversarial-review). Needs a ChatGPT plan or OpenAI API key.",
+      "homepage": "https://github.com/openai/codex-plugin-cc",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "ponytail",
+      "source": {
+        "source": "github",
+        "repo": "dietrichgebert/ponytail"
+      },
+      "description": "Stops over-building: simplest solution that works, stdlib first, no unrequested abstractions.",
+      "homepage": "https://github.com/dietrichgebert/ponytail",
+      "license": "MIT"
+    },
+    {
+      "name": "react-best-practices",
+      "source": {
+        "source": "git-subdir",
+        "url": "vercel-labs/agent-skills",
+        "path": "skills"
+      },
+      "description": "Stack plugin, enable per project. Vercel's React and Next.js rules, including deriving state without effects and moving effect logic into event handlers.",
+      "homepage": "https://github.com/vercel-labs/agent-skills",
+      "license": "MIT",
+      "category": "stack",
+      "skills": ["./react-best-practices"]
+    },
+    {
+      "name": "react-native-best-practices",
+      "source": {
+        "source": "git-subdir",
+        "url": "callstackincubator/agent-skills",
+        "path": "skills"
+      },
+      "description": "Stack plugin, enable per project. Callstack's React Native performance guide: lists, Hermes, memory, re-renders, React Compiler, Reanimated.",
+      "homepage": "https://github.com/callstackincubator/agent-skills",
+      "license": "MIT",
+      "category": "stack",
+      "skills": ["./react-native-best-practices"]
+    }
+  ]
+}

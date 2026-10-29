@@ -1,0 +1,55 @@
+name: Validate
+
+# Checks every change to the playbook before it can reach installed machines:
+# the marketplace and plugin manifests, every skill's frontmatter, formatting
+# (which also parses all YAML and JSON), the install script, and the templates.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: "22"
+
+      # Latest on purpose: the validator should track what users install.
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate marketplace and plugin
+        run: claude plugin validate .
+
+      - name: Check formatting
+        run: npx --yes prettier@3 --check .
+
+      - name: Lint install script
+        run: shellcheck scripts/*.sh
+
+      - name: Test the rule-check template
+        run: node --test templates/rule-check/check-rules.test.js
+
+      - name: Test the lint-ratchet template
+        run: node --test templates/lint-ratchet/check-lint-ratchet.test.js
+
+      - name: Test the hooks template
+        run: node --test templates/hooks/hooks.test.mjs
+
+      - name: Check settings templates are valid JSON
+        run: |
+          for f in templates/settings.json templates/hooks/settings.hooks.json; do
+            node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$f"
+          done
