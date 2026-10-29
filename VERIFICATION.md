@@ -2,17 +2,31 @@
 
 Nothing counts as done until its effect has been checked by something other than the agent that did the work. This is how that works in practice.
 
+The steps below are plain documents and commands. Plugins make them quicker (Superpowers runs the design, plan and test-first loop; `/playbook:init-project` runs the setup), but nothing here depends on them: a session without the plugins, or a person without Claude Code, follows the same steps by hand.
+
+Where things live in a project:
+
+| Path                    | What it holds                                                                     |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `docs/design.md`        | The design and its numbered acceptance criteria ([template](templates/DESIGN.md)) |
+| `docs/decisions/`       | One ADR per decision with real alternatives ([template](templates/ADR.md))        |
+| `docs/plans/NNN-*.md`   | One plan per slice of work ([template](templates/PLAN.md))                        |
+| `docs/device-checks.md` | Dated observations only a device can make, for apps with a native surface         |
+| `docs/handoff.md`       | Where the work is, for the next session                                           |
+
+A larger project keeps one design per feature in `docs/designs/` instead of a single `docs/design.md`.
+
 ## 1. Design before code
 
-Non-trivial work starts with a short written design, built with Superpowers' brainstorming step. For a plan that already exists, a grilling skill asks one question at a time until each branch has been tested. Agents build from the written design and plan.
+Non-trivial work starts with a short written design ([template](templates/DESIGN.md)). For a design that already exists, it is questioned one point at a time until each branch has been tested; Superpowers' brainstorming and a grilling skill do this, or a reviewer by hand. Agents build from the written design and plan.
 
-Any decision with real alternatives gets a short ADR in `docs/decisions/` ([template](templates/ADR.md)), including the options that were rejected and why. Agents lose that context between sessions; written down in the repository, it stops them proposing the same rejected options again. Changing a decision means a new ADR that replaces the old one, not a quiet change in the code.
+Any decision with real alternatives gets a short ADR in `docs/decisions/` ([template](templates/ADR.md)), including the options that were rejected and why. Agents lose that context between sessions; written down in the repository, it stops them proposing the same rejected options again. The design links to its ADRs rather than restating them, so there is one place to change. Changing a decision means a new ADR that replaces the old one, not a quiet change in the code.
 
-## 2. A plan of test-first tasks
+## 2. Acceptance criteria and a plan of test-first tasks
 
-The design states its acceptance criteria as behaviour, in given/when/then form, before any code is written. Each criterion becomes an acceptance or end-to-end test against real infrastructure ([rule 16](rules/16-acceptance-tests-are-isolated-and-real.md)). The criteria are plain text in the plan; a Gherkin toolchain is only worth its upkeep when people outside the team read the specifications.
+The acceptance criteria live in the design, numbered, one given/when/then block per behaviour, written before any code. Each becomes an acceptance test that names its number, at the tier of [rule 16](rules/16-acceptance-tests-are-isolated-and-real.md) the design records. They are plain text; a Gherkin toolchain is only worth its upkeep when people outside the team read the specifications.
 
-The design then becomes a plan of small tasks. Each task says how its effect will be observed before any code is written: a test, a command and its expected output, or a screenshot comparison. A task without a check is not ready to start. See [rule 5](rules/05-done-means-the-effect-was-observed.md).
+The design then becomes a plan, one file per slice of work that can be reviewed and merged on its own ([template](templates/PLAN.md)). Each plan names the criteria it satisfies. Each task says how its effect will be observed before any code is written: the failing test, a command and its expected output, a screenshot comparison, or, for what nothing automated can see, the device check that will be recorded. A task without a check is not ready to start. See [rule 5](rules/05-done-means-the-effect-was-observed.md).
 
 ## 3. Build against the check
 

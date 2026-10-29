@@ -11,6 +11,10 @@ any motivational prose. Delete these comments when you're done.
 
 <One or two sentences: what this is and who uses it.>
 
+Set up against ai-playbook `<commit>`. Its `CHANGELOG.md` lists what changed since, and what to do about each change.
+
+Docs: design and acceptance criteria in `docs/design.md`, decisions in `docs/decisions/`, plans in `docs/plans/`, where the work is in `docs/handoff.md`.
+
 ## Commands
 
 ```bash

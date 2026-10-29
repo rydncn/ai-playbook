@@ -29,7 +29,7 @@ What to consider when setting up gates for a new project. Not every item applies
 
 - [ ] Acceptance tests against real services (containers or the platform's local stack), with fakes only for third parties ([rule 16](../rules/16-acceptance-tests-are-isolated-and-real.md))
 - [ ] Tests run in random order and in parallel, so shared state fails quickly
-- [ ] Mutation testing on changed files, for example Stryker in incremental mode ([rule 15](../rules/15-tests-must-be-seen-to-fail.md))
+- [ ] Mutation testing on changed files, for example Stryker in incremental mode ([rule 15](../rules/15-tests-must-be-seen-to-fail.md)). Not yet confirmed to work under `jest-expo`'s preset; prove it runs, and kills a deliberate mutant, before relying on it, and scope it to plain TypeScript modules if the React Native transforms get in the way.
 - [ ] Test lint rules: `jest/expect-expect`, `jest/no-focused-tests`, `jest/valid-expect`, or the Vitest equivalents
 - [ ] The test run fails if no tests ran
 
@@ -76,9 +76,10 @@ For React, React Native and TypeScript projects. Each catches something agents g
 
 ## End to end and release
 
-- [ ] End-to-end flows for the main journeys, on every platform shipped
+- [ ] The acceptance-test tier chosen and recorded in an ADR ([rule 16](../rules/16-acceptance-tests-are-isolated-and-real.md))
+- [ ] End-to-end flows for the main journeys, on every platform shipped, before release (tier 2; Maestro for Expo and React Native)
 - [ ] An environment check before any release or over-the-air update
-- [ ] A written test plan run on real devices before release
+- [ ] Device checks recorded in `docs/device-checks.md`, dated with the build, for what only a device can show (tier 3)
 
 ## Review
 

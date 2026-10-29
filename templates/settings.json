@@ -8,7 +8,14 @@
       "Read(./secrets/**)"
     ],
     "ask": [
-      "Bash(git push*)",
+      "Bash(git push)",
+      "Bash(git push*main*)",
+      "Bash(git push*master*)",
+      "Bash(git push*--force*)",
+      "Bash(git push* -f*)",
+      "Bash(git push* +*)",
+      "Bash(git push*--delete*)",
+      "Bash(git push*--mirror*)",
       "Bash(gh pr merge*)",
       "Bash(gh release *)",
       "Bash(npm publish*)",

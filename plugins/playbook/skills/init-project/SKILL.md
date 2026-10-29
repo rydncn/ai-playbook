@@ -4,7 +4,9 @@ description: Set up or audit a project for the playbook. Drafts or slims its CLA
 disable-model-invocation: true
 ---
 
-Set this project up for the playbook, or audit an existing setup. Don't overwrite anything without showing the user: for each file, show the new file or the diff and wait for a yes. When a file exists, propose changes to it instead.
+Set this project up for the playbook, or audit an existing setup. Don't overwrite anything without showing the user: for each file, show the new file or the diff and wait for a yes. When a file exists, propose changes to it instead. If the user isn't there to answer (a scheduled or unattended session), make the changes on a branch and open a draft pull request for review instead of waiting.
+
+This file is also the checklist to follow by hand when the plugin isn't loaded. `docs/new-project.md` in the ai-playbook repo is the same list in order for a new repository. For an existing project set up against an earlier playbook commit, read the ai-playbook `CHANGELOG.md` from that commit and apply what each entry says existing projects should do.
 
 ## 1. Read the project first
 
@@ -52,7 +54,9 @@ It loads into every session, so every line should be something Claude would othe
 - **Commands**: install, run, the one-shot test command, single-file test, lint, typecheck. Note which commands ask first.
 - Architecture and layout, briefly.
 - Rules that apply everywhere (security boundaries, branding, conventions, commit format).
-- **Workflow**: fill the template's placeholders with the tools the user actually has, for example the Superpowers flow for non-trivial work and where plans live, `/codex:review` before merging, adversarial review and a security audit for risky changes, handoffs, and lessons. Leave out any the user doesn't use.
+- **Playbook version**: the ai-playbook commit this setup follows, so a later reader knows which changes in its `CHANGELOG.md` the project predates.
+- **Docs layout**: the paths from the ai-playbook repo's `VERIFICATION.md` (`docs/design.md`, `docs/decisions/`, `docs/plans/`, `docs/handoff.md`, and `docs/device-checks.md` for a native app). Create the folders if they don't exist.
+- **Workflow**: fill the template's placeholders with the tools the user actually has, for example the Superpowers flow for non-trivial work, `/codex:review` before merging, adversarial review and a security audit for risky changes, handoffs, and lessons. Leave out any the user doesn't use.
 - **Lessons**: an empty section for `/playbook:lesson`.
 
 Leave out:
@@ -78,7 +82,7 @@ Mark anything you're unsure of with `(verify)`.
 Set up the gates and review layers described in the ai-playbook repo's `VERIFICATION.md`, using `templates/GATES.md` as the checklist:
 
 - **Is there CI at all?** If not, propose `templates/ci.yml` and `templates/dependabot.yml` from the ai-playbook repo, trimmed to the scripts the project has, and follow `docs/new-project.md` for the order. The CI template reads the Node version from `.nvmrc`; add one or switch to `node-version`.
-- **Is CI actually running?** Check the recent workflow runs (`gh api repos/<owner>/<repo>/actions/runs`). If jobs fail, read why before assuming it's the code: jobs that never start (billing, disabled workflows) mean nothing is being checked. Recommend making CI a required status check on the main branch. If there's no remote or `gh` can't reach it, report this as not checked rather than skipping it silently.
+- **Is CI actually running?** Check the recent workflow runs, with `gh api repos/<owner>/<repo>/actions/runs` or the GitHub MCP tools, whichever the session has. If jobs fail, read why before assuming it's the code: jobs that never start (billing, disabled workflows) mean nothing is being checked. Recommend making every CI job a required status check on the main branch, including `Tests` when the CI is draft-aware. If neither route can reach the remote, report this as not checked rather than skipping it silently.
 - **Dependency audit and secrets scan.** If CI has neither, propose the `security` job from `templates/ci.yml`.
 - **Tests.** Look at a sample of the existing tests for the patterns in rules 6, 15 and 16: tests that assert on mocks of the project's own code, tests that can't fail, acceptance tests against mocked databases, and tests that share state. Report what you find with examples; don't rewrite tests without asking.
 - **Credentials and telemetry.** Note which credentials an agent session can read and whether any reach production (rule 13), and whether logging, error reporting and analytics scrub secrets and personal data (rule 14). Report gaps; don't change application code for them without asking.

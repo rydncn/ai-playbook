@@ -12,4 +12,6 @@ Personal allow lists grow one "don't ask again" at a time, and broad entries suc
 
 ## How to enforce it
 
-Start from [`templates/settings.json`](../templates/settings.json) and trim the ask list to the project's real commands. Keep personal settings in `settings.local.json`, ignored by git, and review that file now and then.
+Start from [`templates/settings.json`](../templates/settings.json) and trim the ask list to the project's real commands.
+
+Pushing a feature branch doesn't reach production, and asking before it stalls cloud and unattended sessions with nobody there to answer. The template asks before pushes that can: to `main` or `master`, a bare `git push` (which pushes whatever branch is checked out), force pushes, deletions and merges. Branch protection on `main` is the boundary behind that; the ask rules catch mistakes before they reach it. Keep personal settings in `settings.local.json`, ignored by git, and review that file now and then.
