@@ -2,6 +2,12 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-10-29 · after `3608bbe`: Claude review without an API key
+
+- [`templates/claude-review.yml`](templates/claude-review.yml) authenticates with workload identity federation: each run swaps its GitHub OIDC token for a short-lived Claude token, so no API key is stored. One federation rule per repository, scoped to its pull requests; four repository variables. An API key secret remains the fallback.
+
+**Existing projects:** create a federation rule for the repository as in the template's header, add the four repository variables, copy the template's `anthropic_*` inputs into the review workflow, and delete the `ANTHROPIC_API_KEY` secret once a review has run.
+
 ## 2026-10-29 · after `6fea86f`: feedback from the first trial
 
 From a trial rebuilding an app with the playbook, in a cloud session without the plugins.

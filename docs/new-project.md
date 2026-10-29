@@ -44,7 +44,7 @@ This is the one ordered list of what the playbook asks for on day one. Each item
 
 ## 7. Review
 
-- [ ] [`templates/claude-review.yml`](../templates/claude-review.yml) for an automatic review on each pull request, with the API key as a repository secret.
+- [ ] [`templates/claude-review.yml`](../templates/claude-review.yml) for an automatic review on each pull request. It authenticates with workload identity federation rather than a stored API key: one federation rule per repository, scoped to its pull requests, and four repository variables. The template's header has the steps.
 - [ ] A pull request template with a short checklist: how the change was verified, and whether it touches auth, data or migrations.
 - [ ] Agents open pull requests as drafts while they work.
 

@@ -11,8 +11,27 @@ name: Claude PR Review
 # Template from the ai-playbook repo; see VERIFICATION.md there.
 #
 # Setup (repo admin): install the Claude GitHub App on this repo
-# (https://github.com/apps/claude) and add the ANTHROPIC_API_KEY repository
-# secret. Use a dedicated key with a spend limit set in the Claude Console.
+# (https://github.com/apps/claude), then authenticate to the Claude API with
+# workload identity federation, so no API key is stored anywhere. Each run
+# swaps its GitHub OIDC token for a Claude token that lasts minutes.
+#   1. Claude Console > Settings > Workload identity > Connect workload >
+#      GitHub Actions. One rule per repository, scoped to pull requests:
+#      organisation and repository filled in, branch blank, and under
+#      Advanced match options the subject prefix
+#      "repo:<owner>/<repo>:pull_request" with a repository_owner claim.
+#      Never a prefix covering every repository, or "Any event": with fork
+#      pull requests allowed tokens, anyone opening one could get a token.
+#      Enable it in one workspace, with a spend limit, for a dedicated
+#      service account.
+#   2. Add repository variables (not secrets, and not environment
+#      variables; the IDs aren't sensitive): ANTHROPIC_FEDERATION_RULE_ID,
+#      ANTHROPIC_ORGANIZATION_ID, ANTHROPIC_SERVICE_ACCOUNT_ID,
+#      ANTHROPIC_WORKSPACE_ID.
+#   3. Keep "Send write tokens to workflows from pull requests" off under
+#      Settings > Actions > General.
+# Fallback: an ANTHROPIC_API_KEY repository secret, a dedicated key with a
+# spend limit. Remove it once federation works. With neither, the review job
+# fails with an error naming both, rather than passing without a review.
 #
 # For a deeper second opinion on risky changes, run /codex:review or
 # /codex:adversarial-review locally.
@@ -42,6 +61,8 @@ jobs:
       contents: read
       pull-requests: write
       issues: read
+      # The GitHub OIDC token: exchanged for the Claude GitHub App's token
+      # and, with federation, for a short-lived Claude API token.
       id-token: write
 
     steps:
@@ -53,6 +74,10 @@ jobs:
       - name: Review
         uses: anthropics/claude-code-action@d70510b174a1244958df0b03166a54912811f3e6 # v1.0.264
         with:
+          anthropic_federation_rule_id: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+          anthropic_organization_id: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+          anthropic_service_account_id: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+          anthropic_workspace_id: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             REPO: ${{ github.repository }}
