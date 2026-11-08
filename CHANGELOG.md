@@ -2,6 +2,12 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-08 · after `f46009a`: the context budget counts what the session added
+
+- [`context-budget.mjs`](templates/hooks/context-budget.mjs) counted the total, so in a cloud session, where the harness's own instructions take about 80,000 tokens before any work, it warned almost at once (found by the second trial). It now counts what the session added since its first reply, or since its last compaction, and reports the total alongside. [Rule 17](rules/17-sessions-stay-under-a-context-budget.md) says why that is a compromise.
+
+**Existing projects:** copy the new `context-budget.mjs` over the old one.
+
 ## 2026-11-08 · after `5ec4a5a`: the core, defined
 
 - The README's **Start here** now names the core exactly: rules 5, 15 and 16 with numbered acceptance criteria; CI with audit and secrets scan, and the hooks; the review cadence with a human on one-way doors; and the agent's boundaries (permissions, credentials, rule 18, `.npmrc`). Everything else is listed as what to add as a project grows. The second trial runs on the core.

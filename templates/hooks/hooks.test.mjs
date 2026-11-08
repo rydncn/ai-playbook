@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import { afterEdit } from "./after-edit.mjs";
 import { beforeStop } from "./before-stop.mjs";
 import { checkPlugins } from "./check-plugins.mjs";
-import { contextTokens, checkBudget } from "./context-budget.mjs";
+import { contextSizes, checkBudget } from "./context-budget.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -346,7 +346,7 @@ test("check-plugins runs as a hook: prints the warning and exits 0", () => {
   assert.match(run.stdout, /missing@ai-playbook/);
 });
 
-// context-budget: the warning when a session's context passes its budget.
+// context-budget: the warning when a session's context grows past its budget.
 
 const row = (value) => JSON.stringify(value);
 const assistant = (tokens, extra = {}) =>
@@ -364,8 +364,10 @@ const assistant = (tokens, extra = {}) =>
     ...extra,
   });
 
-test("context-budget reads the context size from the last main-thread reply", () => {
+test("context-budget reads the size at the session's first and last main-thread replies", () => {
   const transcript = [
+    row({ type: "user", message: { content: "start" } }),
+    assistant(300_000, { isSidechain: true }),
     assistant(50_000),
     assistant(120_000),
     assistant(400_000, { isSidechain: true }),
@@ -373,38 +375,76 @@ test("context-budget reads the context size from the last main-thread reply", ()
     "not json",
     "",
   ].join("\n");
-  assert.equal(contextTokens(transcript), 120_000);
+  assert.deepEqual(contextSizes(transcript), { start: 50_000, last: 120_000 });
+});
+
+test("context-budget starts counting again after a compaction", () => {
+  const transcript = [
+    assistant(40_000),
+    assistant(620_000),
+    row({ type: "system", subtype: "compact_boundary" }),
+    row({ type: "user", isCompactSummary: true }),
+    assistant(126_000),
+    assistant(285_000),
+  ].join("\n");
+  assert.deepEqual(contextSizes(transcript), { start: 126_000, last: 285_000 });
 });
 
 test("context-budget finds no size in a transcript with no replies", () => {
-  assert.equal(contextTokens(row({ type: "user" })), null);
-  assert.equal(contextTokens(""), null);
+  assert.deepEqual(contextSizes(row({ type: "user" })), {
+    start: null,
+    last: null,
+  });
+  assert.deepEqual(contextSizes(""), { start: null, last: null });
+});
+
+test("context-budget measures what the session added, not what it started with", () => {
+  const budget = 100_000;
+  assert.deepEqual(
+    checkBudget({ tokens: 175_000, start: 80_000, budget, warnedAt: null }),
+    { message: null, warnedAt: null },
+    "80k of harness instructions plus 95k of work is under budget",
+  );
+  const over = checkBudget({
+    tokens: 185_000,
+    start: 80_000,
+    budget,
+    warnedAt: null,
+  });
+  assert.match(over.message, /about 185,000 tokens of context/);
+  assert.match(over.message, /105,000 of them added since the session started/);
+  assert.match(over.message, /budget of 100,000/);
+  assert.match(over.message, /\/handoff/);
 });
 
 test("context-budget warns once when the budget is passed, again every 50,000 tokens, and again after the context shrinks", () => {
   const budget = 100_000;
-  assert.deepEqual(checkBudget({ tokens: 99_999, budget, warnedAt: null }), {
-    message: null,
-    warnedAt: null,
-  });
+  const start = 10_000;
+  assert.deepEqual(
+    checkBudget({ tokens: 109_999, start, budget, warnedAt: null }),
+    { message: null, warnedAt: null },
+  );
 
-  const first = checkBudget({ tokens: 112_000, budget, warnedAt: null });
-  assert.match(first.message, /about 112,000 tokens/);
-  assert.match(first.message, /budget of 100,000/);
-  assert.match(first.message, /\/handoff/);
+  const first = checkBudget({ tokens: 122_000, start, budget, warnedAt: null });
+  assert.match(first.message, /about 122,000 tokens/);
   assert.equal(first.warnedAt, 100_000);
 
   assert.deepEqual(
-    checkBudget({ tokens: 149_999, budget, warnedAt: 100_000 }),
+    checkBudget({ tokens: 159_999, start, budget, warnedAt: 100_000 }),
     { message: null, warnedAt: 100_000 },
     "no repeat inside the same 50,000",
   );
-  const next = checkBudget({ tokens: 151_000, budget, warnedAt: 100_000 });
-  assert.match(next.message, /about 151,000 tokens/);
+  const next = checkBudget({
+    tokens: 161_000,
+    start,
+    budget,
+    warnedAt: 100_000,
+  });
+  assert.match(next.message, /about 161,000 tokens/);
   assert.equal(next.warnedAt, 150_000);
 
   assert.deepEqual(
-    checkBudget({ tokens: 40_000, budget, warnedAt: 150_000 }),
+    checkBudget({ tokens: 40_000, start, budget, warnedAt: 150_000 }),
     { message: null, warnedAt: null },
     "a compacted or cleared session starts again",
   );
@@ -428,13 +468,13 @@ function budgetRun(transcriptRows, env = {}) {
 }
 
 test("context-budget runs as a hook: tells Claude and the user once, then stays quiet", () => {
-  const run = budgetRun([assistant(130_000)]);
+  const run = budgetRun([assistant(20_000), assistant(130_000)]);
   const first = run();
   assert.equal(first.status, 0, first.stderr);
   const output = JSON.parse(first.stdout);
   assert.equal(output.hookSpecificOutput.hookEventName, "UserPromptSubmit");
   assert.match(output.hookSpecificOutput.additionalContext, /130,000/);
-  assert.match(output.systemMessage, /130k/);
+  assert.match(output.systemMessage, /130k tokens, 110k added this session/);
 
   const second = run();
   assert.equal(second.status, 0, second.stderr);
@@ -442,14 +482,14 @@ test("context-budget runs as a hook: tells Claude and the user once, then stays 
 });
 
 test("context-budget stays quiet under the budget, and reads the budget from the environment", () => {
-  const under = budgetRun([assistant(90_000)])();
+  const under = budgetRun([assistant(80_000), assistant(170_000)])();
   assert.equal(under.status, 0, under.stderr);
   assert.equal(under.stdout, "");
 
-  const lower = budgetRun([assistant(90_000)], {
+  const lower = budgetRun([assistant(80_000), assistant(170_000)], {
     CLAUDE_CONTEXT_BUDGET: "80000",
   })();
-  assert.match(JSON.parse(lower.stdout).systemMessage, /80k budget/);
+  assert.match(JSON.parse(lower.stdout).systemMessage, /past the 80k budget/);
 });
 
 test("context-budget never fails the prompt, even with no transcript", () => {
