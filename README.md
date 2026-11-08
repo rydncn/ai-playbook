@@ -70,6 +70,7 @@ Each rule has its own file: the rule, why it matters, and how to enforce it. Mos
 | [`settings.json`](templates/settings.json)           | Shared agent permissions: deny secret files, ask before production                                                                                       |
 | [`hooks/`](templates/hooks)                          | Check the enabled plugins loaded; format and lint each edit; run the type check and changed tests before the agent finishes; a git pre-push hook. Tested |
 | [`audit/`](templates/audit)                          | A dependency audit with a dated allowlist, for advisories nobody can fix yet. Tested                                                                     |
+| [`npmrc`](templates/npmrc)                           | npm supply-chain hardening: install scripts off, a minimum release age, exact versions                                                                   |
 | [`rule-check/`](templates/rule-check)                | A dependency-free, tested CI check that turns written rules into build failures                                                                          |
 | [`lint-ratchet/`](templates/lint-ratchet)            | A CI check that stops any ESLint rule's count rising, so stricter rules can go on before the backlog is cleared                                          |
 | [`rules/`](templates/rules)                          | Path-scoped conventions: APIs, errors, logging and correlation IDs for a server; testing and accessibility for React Native                              |

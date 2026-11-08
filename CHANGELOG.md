@@ -2,6 +2,14 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-08 · after `d62d6a9`: npm supply-chain hardening
+
+- [`templates/npmrc`](templates/npmrc): install scripts off, a 7-day minimum release age, exact versions. Compromised packages spread by publishing a bad version and running code from its install script within hours; this closes both routes.
+- [`templates/ci.yml`](templates/ci.yml) proves the settings take effect, including that npm is 11.10 or later: an older npm reports `min-release-age` but ignores it.
+- [`templates/dependabot.yml`](templates/dependabot.yml) waits 7 days for version updates, matching the release age; security updates skip the wait.
+
+**Existing projects:** copy `templates/npmrc` to `.npmrc` in each folder with a `package.json`; run `rm -rf node_modules && npm ci` and the checks, and for any package that stops working without its install script, run it explicitly (`npm rebuild <name>`) and record why in an ADR; add the CI step and the Dependabot `cooldown` blocks; make sure CI's Node ships npm 11.10 or later.
+
 ## 2026-11-08 · after `647a602`: what's core, and React Native
 
 - A **"Start here"** section in the [README](README.md): the core that produced the trial's gains (rules 5, 15 and 16, the gates, the review cadence, shared permissions) and what to add as a project grows. The trial put the full playbook at two to three times the effort per feature.

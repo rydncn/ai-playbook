@@ -22,6 +22,7 @@ README, package/build files, CI workflows, pre-commit hooks, review-bot config, 
 - Find how to run a single test file, the typecheck, lint, and any other suites (edge functions, portal, e2e).
 - **Run each one** and record whether it passes. A command written into CLAUDE.md that fails on the current code is worse than none. If you can't run it (no dependencies installed, no network), mark it `(verify)`.
 - **Lockfile.** If there's no lockfile, say so: CI's `npm ci` and the audit need one, so it has to be generated and committed first. Check a clean install works the way CI does it: `rm -rf node_modules && npm ci`. Never fix a peer conflict with `--legacy-peer-deps`.
+- **Supply chain.** If there's no `.npmrc` with `ignore-scripts=true` and `min-release-age`, propose `templates/npmrc` from the ai-playbook repo and the matching Dependabot cooldown. Check which packages relied on install scripts (`npm ci` with scripts off, then the checks) and list them for the user rather than turning scripts back on.
 
 ## 3. Shared guardrails in `.claude/settings.json` (committed)
 

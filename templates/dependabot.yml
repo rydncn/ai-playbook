@@ -2,6 +2,8 @@
 # arrive as a few reviewable batches rather than a stream, and pinned GitHub
 # Actions stay current. Major versions are left for a person to plan: they
 # usually break the build, and a stream of red Dependabot PRs gets ignored.
+# New releases wait out a cooldown first, so a compromised version is usually
+# caught and pulled before it reaches the project.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -9,6 +11,10 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Match .npmrc's min-release-age, or Dependabot opens pull requests for
+    # versions npm then refuses to install. Security updates skip the cooldown.
+    cooldown:
+      default-days: 7
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
@@ -20,6 +26,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ["*"]
