@@ -5,6 +5,7 @@ Newest first. Each entry names the commit it follows and says what a project set
 ## 2026-11-08 · after `647a602`: what's core, and React Native
 
 - A **"Start here"** section in the [README](README.md): the core that produced the trial's gains (rules 5, 15 and 16, the gates, the review cadence, shared permissions) and what to add as a project grows. The trial put the full playbook at two to three times the effort per feature.
+- [VERIFICATION.md](VERIFICATION.md) records the trial's one cross-model review: Codex found one issue in 11,000 lines, already found by a fresh-context review.
 - [`templates/rules/react-native.md`](templates/rules/react-native.md): native modules behind adapters with contract-tested fakes, acceptance tests that drive the real app, the tree-walk accessibility gate, and the trial's React Native test lessons.
 
 **Existing projects:** a React Native app can adopt `react-native.md` in `.claude/rules/`; check its conventions against what the project already does, and record any it departs from in an ADR.
