@@ -2,6 +2,12 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-08 · after `5ec4a5a`: the core, defined
+
+- The README's **Start here** now names the core exactly: rules 5, 15 and 16 with numbered acceptance criteria; CI with audit and secrets scan, and the hooks; the review cadence with a human on one-way doors; and the agent's boundaries (permissions, credentials, rule 18, `.npmrc`). Everything else is listed as what to add as a project grows. The second trial runs on the core.
+
+**Existing projects:** nothing to change; a small project can drop what isn't in the core.
+
 ## 2026-11-08 · after `79ec5df`: context budget, agent configuration as code, review by door
 
 - **[Rule 17](rules/17-sessions-stay-under-a-context-budget.md): sessions stay under a context budget,** about 100,000 tokens, then hand off to a fresh session rather than compacting. A new [`context-budget.mjs`](templates/hooks/context-budget.mjs) hook reads the size from the transcript on each message and, past the budget, tells Claude and the user; `CLAUDE_CONTEXT_BUDGET` changes it. The personal defaults say the same for projects without the hook.

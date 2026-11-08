@@ -23,14 +23,18 @@ How I work with AI coding agents, mainly Claude Code. It is the setup I install 
 
 Not all of this pays for itself on every project. In a trial that rebuilt a small app under the playbook and compared it with the same app built without it, an independent reviewer who wasn't told which was which rated the playbook build stronger on correctness, privacy, accessibility and maintainability, with a third of the defects. But it cost two to three times the effort per feature. The gains came from a few parts; most of the rest is record-keeping that earns its place on larger or longer-lived projects.
 
-**The core, for any project:**
+**The core, for any project.** Adopting it is an afternoon's setup:
 
-- Rules [5](rules/05-done-means-the-effect-was-observed.md), [15](rules/15-tests-must-be-seen-to-fail.md) and [16](rules/16-acceptance-tests-are-isolated-and-real.md): done means the effect was observed, tests are seen to fail, and acceptance tests drive the real thing. In the trial, these are what produced a codebase whose whole app could be tested, and that was the clearest difference between the two builds.
-- The gates: [CI](templates/ci.yml), the [hooks](templates/hooks) and the [gate checklist](templates/GATES.md), so the checks run without anyone remembering them.
-- The [review cadence](VERIFICATION.md#5-independent-review): a fresh-context review of each piece of work, and every few pieces a review of the whole codebase against the rules. One such review found more than four layers of per-piece review had.
-- [Shared permissions](templates/settings.json), so production stays behind a prompt.
+- Rules [5](rules/05-done-means-the-effect-was-observed.md), [15](rules/15-tests-must-be-seen-to-fail.md) and [16](rules/16-acceptance-tests-are-isolated-and-real.md): done means the effect was observed, tests are seen to fail, and acceptance tests drive the real thing. In the trial, these are what produced a codebase whose whole app could be tested, and that was the clearest difference between the two builds. They need numbered acceptance criteria, which can live in the issue or a page of design.
+- The gates that run without anyone remembering them: [CI](templates/ci.yml) for the project's languages, with its dependency audit and secrets scan, and the [hooks](templates/hooks), including the context budget ([rule 17](rules/17-sessions-stay-under-a-context-budget.md)).
+- The [review cadence](VERIFICATION.md#5-independent-review): a fresh-context review of each piece of work, a whole-codebase review every few pieces, and a human reading every one-way door. One whole-codebase review found more than four layers of per-piece review had.
+- The agent's boundaries: [shared permissions](templates/settings.json), so production stays behind a prompt; non-production credentials ([rule 13](rules/13-content-is-data-not-instructions.md)); agent configuration reviewed as code ([rule 18](rules/18-agent-configuration-is-code.md)); and, for npm, the [`.npmrc`](templates/npmrc).
 
-**Worth it as a project grows:** a written design with numbered acceptance criteria, plans per slice, ADRs, a handoff file, rule checks, the lint ratchet, and a second model's review for risky changes. Add them when a project has more than one person or session working on it, or when a decision has been argued twice.
+**Add as the project grows**, when more than one person or session works on it, a decision has been argued twice, or it handles data that matters:
+
+- A full design, plans per slice, ADRs and a handoff file.
+- The rest of the [gate checklist](templates/GATES.md): rule checks, the lint ratchet, mutation testing, containers, the workflow and lockfile checks.
+- A second model's review and a security audit for risky changes.
 
 ## Rules
 
