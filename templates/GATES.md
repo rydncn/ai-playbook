@@ -22,6 +22,7 @@ What to consider when setting up gates for a new project. Not every item applies
 - [ ] Unused files, exports and dependencies
 - [ ] Unit tests, run once (not in watch mode)
 - [ ] Rule checks for anything in `CLAUDE.md` a script can catch ([template](rule-check))
+- [ ] Each lifecycle has one status field, one function that changes it, its derived conditions defined once, and a transition-table test ([rule 19](../rules/19-lifecycles-are-explicit.md))
 - [ ] The framework's own lint rules switched on as errors, not warnings. Agents treat warnings as noise.
 - [ ] On an existing codebase, a lint ratchet so stricter rules can be switched on before the backlog is cleared, without anything getting worse ([template](lint-ratchet))
 

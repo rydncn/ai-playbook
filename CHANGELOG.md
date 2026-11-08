@@ -2,6 +2,13 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-08 · after `8a6882d`: lifecycles are explicit
+
+- **[Rule 19](rules/19-lifecycles-are-explicit.md):** anything with stages has one status field, one function that changes it, derived conditions such as "active" defined once, expiry made by a job or inside that definition, and a transition-table test. From a production codebase where the public map and a dashboard disagreed about which items were active, because only one checked the expiry.
+- The [design template](templates/DESIGN.md) gains a **Lifecycles** section before the acceptance criteria; [GATES.md](templates/GATES.md) and the review prompt check for it.
+
+**Existing projects:** list the lifecycles the code already has and where each derived condition is computed; where it is computed in more than one place, make it one definition and add a rule check against the rest; add a transition-table test per lifecycle.
+
 ## 2026-11-08 · after `f46009a`: the context budget counts what the session added
 
 - [`context-budget.mjs`](templates/hooks/context-budget.mjs) counted the total, so in a cloud session, where the harness's own instructions take about 80,000 tokens before any work, it warned almost at once (found by the second trial). It now counts what the session added since its first reply, or since its last compaction, and reports the total alongside. [Rule 17](rules/17-sessions-stay-under-a-context-budget.md) says why that is a compromise.

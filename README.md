@@ -58,6 +58,7 @@ Each rule has its own file: the rule, why it matters, and how to enforce it. Mos
 16. [Acceptance tests are isolated and use real infrastructure](rules/16-acceptance-tests-are-isolated-and-real.md)
 17. [Sessions stay under a context budget](rules/17-sessions-stay-under-a-context-budget.md)
 18. [Agent configuration is reviewed as code](rules/18-agent-configuration-is-code.md)
+19. [Lifecycles are explicit](rules/19-lifecycles-are-explicit.md)
 
 ## How work gets to done
 

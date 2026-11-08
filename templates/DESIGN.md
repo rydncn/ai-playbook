@@ -25,6 +25,10 @@ Each decision with real alternatives has an ADR; this table links to them rather
 
 <The parts, how data moves between them, and where the boundaries are: what is real in tests and what is faked at the edge (rule 16). A short list or a small diagram.>
 
+## Lifecycles
+
+<Each thing that moves through stages (an order, a moderation item, a session, a screen's start-up), as a table: its states, the actions, and the state each action leads to or that it is refused. Derived conditions ("active", "visible") and where each is defined once. Time-based moves (expiry) and what makes them. Rule 19. Leave this out if nothing has stages.>
+
 ## Acceptance criteria
 
 Numbered, one block per behaviour, written as what a user or caller would observe. Each becomes an acceptance test that names its number; plan tasks name the criteria they satisfy.
