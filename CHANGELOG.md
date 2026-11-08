@@ -2,6 +2,17 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-08 · after `deba336`: plugin pins, workflows, containers, browser security
+
+- **Plugins pinned to commits** in the marketplace, checked by [`scripts/plugin-pins.mjs`](scripts/plugin-pins.mjs) in CI; [docs/setup.md](docs/setup.md#what-each-plugin-runs-on-your-machine) has the update routine. Until now a push to any of the eight upstreams reached every machine on its next auto-update.
+- **Workflows:** `persist-credentials: false` on every checkout in the templates, and [zizmor](https://github.com/zizmorcore/zizmor), pinned by checksum, linting them in [`templates/ci.yml`](templates/ci.yml).
+- **Lockfile and registry:** lockfile-lint (registry hosts, HTTPS, integrity hashes) and `npm audit signatures` in the CI template's security job.
+- **[GATES.md](templates/GATES.md):** audits for Go, Python, Rust and Ruby with the same dated-allowlist rule; new Workflows and Containers sections (digest-pinned minimal base, non-root, image scan, the tested image is the shipped one).
+- **[`templates/rules/api.md`](templates/rules/api.md):** a section for servers that render pages: security headers and CSP, cookie flags, CSRF, sign-in rate limits, password hashing, escaping, redirects.
+- **[`templates/dependabot.yml`](templates/dependabot.yml):** an optional `docker` block.
+
+**Existing projects:** add `persist-credentials: false` to every `actions/checkout` (check first that no step pushes with the checkout's token; `claude-code-action` brings its own) and the two zizmor steps, then fix or annotate what it finds; add the lockfile-lint and signature steps to the security job; for each other language, add its audit; with a container, work through the Containers gates and uncomment the Docker block; a server that renders pages adopts the new `api.md` section, with the test it describes.
+
 ## 2026-11-08 · after `d62d6a9`: npm supply-chain hardening
 
 - [`templates/npmrc`](templates/npmrc): install scripts off, a 7-day minimum release age, exact versions. Compromised packages spread by publishing a bad version and running code from its install script within hours; this closes both routes.

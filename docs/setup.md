@@ -65,7 +65,11 @@ Plugins can run code in every session, and Anthropic does not review third-party
 | codex          | Node hooks at session start and end to track background review jobs, and a stop hook that does nothing unless its review gate is switched on | Your code goes to OpenAI for review, under your own ChatGPT or OpenAI account  |
 | ponytail       | Node hooks at session start, on each prompt and for subagents; reads `git ls-files` to map the repository                                    | Only if you set a webhook URL (empty by default); its task log is a local file |
 
-Third-party entries follow their upstream. To freeze one at a reviewed version, add `"ref"` or `"sha"` to its `source` in [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json).
+Every third-party entry is pinned to a commit (`"sha"` in its `source` in [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json)), so a change its authors push reaches no machine until someone has read it. CI fails on an entry without a pin. To update:
+
+1. `node scripts/plugin-pins.mjs --updates` lists each plugin whose upstream has moved, with a link to the changes.
+2. Read the changes, the hooks and scripts above all; update this table if what a plugin runs has changed.
+3. Move the `sha`, run `claude plugin validate .`, and commit. Auto-update then carries the new pin to every machine.
 
 ## Why Codex, and why it only advises
 

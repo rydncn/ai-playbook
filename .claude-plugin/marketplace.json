@@ -14,7 +14,8 @@
       "name": "superpowers",
       "source": {
         "source": "github",
-        "repo": "obra/superpowers"
+        "repo": "obra/superpowers",
+        "sha": "22f0b463e7a5e579904dd6211a520321035526f7"
       },
       "description": "The core loop: brainstorm, write plan, execute plan, TDD, systematic debugging, code review, verification before completion.",
       "homepage": "https://github.com/obra/superpowers",
@@ -25,7 +26,8 @@
       "source": {
         "source": "git-subdir",
         "url": "mattpocock/skills",
-        "path": "skills"
+        "path": "skills",
+        "sha": "4ae2317ddb22b046e26455e4f9c9b3aaaf62212d"
       },
       "description": "Matt Pocock's skills that Superpowers lacks: grill-me, handoff, retro, wait-what, improve-codebase-architecture.",
       "homepage": "https://github.com/mattpocock/skills",
@@ -45,7 +47,8 @@
       "name": "security-audit",
       "source": {
         "source": "github",
-        "repo": "cloudflare/security-audit-skill"
+        "repo": "cloudflare/security-audit-skill",
+        "sha": "c1c8a8c1471069fb0e188eeaff69b8e8db6564a8"
       },
       "description": "Cloudflare's multi-phase security audit for any codebase. Proposes fixes; never edits your code. Token-heavy: run before releases.",
       "homepage": "https://github.com/cloudflare/security-audit-skill",
@@ -57,7 +60,8 @@
       "source": {
         "source": "git-subdir",
         "url": "openai/codex-plugin-cc",
-        "path": "plugins/codex"
+        "path": "plugins/codex",
+        "sha": "db52e28f4d9ded852ab3942cea316258ae4ef346"
       },
       "description": "OpenAI's official plugin: independent Codex reviews from inside Claude Code (/codex:review, /codex:adversarial-review). Needs a ChatGPT plan or OpenAI API key.",
       "homepage": "https://github.com/openai/codex-plugin-cc",
@@ -67,7 +71,8 @@
       "name": "ponytail",
       "source": {
         "source": "github",
-        "repo": "dietrichgebert/ponytail"
+        "repo": "dietrichgebert/ponytail",
+        "sha": "96608e078b2d5ea607c5c3b8b5a54d1c1fba6846"
       },
       "description": "Stops over-building: simplest solution that works, stdlib first, no unrequested abstractions.",
       "homepage": "https://github.com/dietrichgebert/ponytail",
@@ -78,7 +83,8 @@
       "source": {
         "source": "git-subdir",
         "url": "vercel-labs/agent-skills",
-        "path": "skills"
+        "path": "skills",
+        "sha": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62"
       },
       "description": "Stack plugin, enable per project. Vercel's React and Next.js rules, including deriving state without effects and moving effect logic into event handlers.",
       "homepage": "https://github.com/vercel-labs/agent-skills",
@@ -91,7 +97,8 @@
       "source": {
         "source": "git-subdir",
         "url": "callstackincubator/agent-skills",
-        "path": "skills"
+        "path": "skills",
+        "sha": "59e9d17446a248b21d86f078fcd0bd2d36db1ca4"
       },
       "description": "Stack plugin, enable per project. Callstack's React Native performance guide: lists, Hermes, memory, re-renders, React Compiler, Reanimated.",
       "homepage": "https://github.com/callstackincubator/agent-skills",
@@ -104,7 +111,8 @@
       "source": {
         "source": "git-subdir",
         "url": "emilkowalski/skills",
-        "path": "skills"
+        "path": "skills",
+        "sha": "5206a950b715e0cabe7043ea0b2304332b91494e"
       },
       "description": "Stack plugin, enable per project with a UI. Emil Kowalski's break-ui skill: renders a component with realistic worst-case data, using the limits in the project's own schema, and reports everything that breaks.",
       "homepage": "https://github.com/emilkowalski/skills",

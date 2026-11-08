@@ -41,6 +41,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
@@ -85,6 +87,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
@@ -106,12 +110,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
         with:
+          persist-credentials: false
           fetch-depth: 0 # full history, so secrets in earlier commits are found too
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version-file: .nvmrc
+
+      # The lockfile may only point at the npm registry, over HTTPS, with each
+      # resolved URL matching its package name and a sha512 integrity hash. A
+      # tampered lockfile can quietly send one package somewhere else.
+      - name: Lockfile integrity
+        run: >-
+          npx --yes lockfile-lint@5.0.1 --path package-lock.json --type npm
+          --allowed-hosts npm --validate-https --validate-package-names
+          --validate-integrity
+
+      # Installed packages carry the registry's signatures and, where
+      # published, provenance attestations; this checks them.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Registry signatures
+        run: npm audit signatures
 
       # templates/audit: npm audit with a dated allowlist for advisories nobody
       # can fix yet. Plain `npm audit --audit-level=high` has no allowlist, so
@@ -138,3 +160,25 @@ jobs:
 
       - name: Secrets scan
         run: gitleaks git --redact --verbose
+
+      # zizmor lints the workflows themselves: script injection from pull
+      # request titles and branch names, risky triggers such as
+      # pull_request_target, over-broad permissions, credentials left on disk,
+      # and pinned actions whose commit isn't really theirs (online audits use
+      # the job's token). zizmor publishes no checksums; this one was computed
+      # from the release download. Update both together.
+      - name: Install zizmor
+        env:
+          ZIZMOR_VERSION: 1.32.0
+          ZIZMOR_SHA256: bb110cc765eca9cd7efb2e284a956be5974c60027b0970f16397d86208a9957b
+        run: |
+          archive="zizmor-x86_64-unknown-linux-gnu.tar.gz"
+          curl -fsSLo "$RUNNER_TEMP/$archive" "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/$archive"
+          echo "$ZIZMOR_SHA256  $RUNNER_TEMP/$archive" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" zizmor
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      - name: Workflow security lint
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: zizmor --format=github .github/workflows

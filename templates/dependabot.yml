@@ -31,3 +31,12 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+
+  # For a project that builds a container: keeps the digest-pinned base image
+  # current. Uncomment, and point directory at the folder with the Dockerfile.
+  # - package-ecosystem: docker
+  #   directory: /
+  #   schedule:
+  #     interval: weekly
+  #   cooldown:
+  #     default-days: 7

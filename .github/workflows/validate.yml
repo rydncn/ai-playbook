@@ -20,18 +20,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version: "22"
 
-      # Latest on purpose: the validator should track what users install.
+      # An exact version with install scripts off, since there's no lockfile
+      # here. Move it forward with the version users install, so the validator
+      # checks what they'll run.
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code
+        run: npm install -g --ignore-scripts @anthropic-ai/claude-code@2.1.319 # zizmor: ignore[adhoc-packages]
 
       - name: Validate marketplace and plugin
         run: claude plugin validate .
+
+      - name: Third-party plugins are pinned to commits
+        run: node --test scripts/plugin-pins.test.mjs && node scripts/plugin-pins.mjs
 
       - name: Check formatting
         run: npx --yes prettier@3 --check .
@@ -50,6 +57,28 @@ jobs:
 
       - name: Test the audit template
         run: node --test templates/audit/audit.test.mjs
+
+      # zizmor lints the workflows themselves: script injection from pull
+      # request titles and branch names, risky triggers such as
+      # pull_request_target, over-broad permissions, credentials left on disk,
+      # and pinned actions whose commit isn't really theirs (online audits use
+      # the job's token). zizmor publishes no checksums; this one was computed
+      # from the release download. Update both together.
+      - name: Install zizmor
+        env:
+          ZIZMOR_VERSION: 1.32.0
+          ZIZMOR_SHA256: bb110cc765eca9cd7efb2e284a956be5974c60027b0970f16397d86208a9957b
+        run: |
+          archive="zizmor-x86_64-unknown-linux-gnu.tar.gz"
+          curl -fsSLo "$RUNNER_TEMP/$archive" "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/$archive"
+          echo "$ZIZMOR_SHA256  $RUNNER_TEMP/$archive" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" zizmor
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      - name: Workflow security lint
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: zizmor --format=github .github/workflows templates/ci.yml templates/claude-review.yml
 
       - name: Check settings templates are valid JSON
         run: |

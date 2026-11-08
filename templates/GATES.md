@@ -56,10 +56,25 @@ For React, React Native and TypeScript projects. Each catches something agents g
 - [ ] Privileges checked directly after migrations, not inferred from the migration files
 - [ ] Dependency audit in CI, failing on high and critical advisories, with a dated allowlist for advisories nobody can fix yet ([template](audit)); Dependabot for updates, ignoring major versions ([CI template](ci.yml), [Dependabot template](dependabot.yml))
 - [ ] Supply-chain hardening for npm ([template](npmrc)): install scripts off, a 7-day minimum release age, exact versions, installs only with `npm ci`, and a Dependabot cooldown to match. CI proves the settings take effect, because an npm older than 11.10 ignores the release age without a word. Bun and pnpm turn install scripts off by default and have their own release-age settings; the registry, and so the risk, is the same whichever client installs from it.
+- [ ] The lockfile only points at the registry, over HTTPS, with integrity hashes (lockfile-lint), and installed packages pass `npm audit signatures` ([CI template](ci.yml))
+- [ ] Every language in the project has its own audit, with the same dated-allowlist rule: `govulncheck ./...` for Go (it reports only vulnerable code the program actually calls, so it rarely needs an allowlist), `pip-audit` for Python, `cargo audit` for Rust, `bundle audit` for Ruby. The [audit template](audit) is npm's; the idea carries over
+- [ ] The playbook's own plugins, and any other agent plugins or MCP servers, pinned to a commit and updated on purpose after reading the change (`node scripts/plugin-pins.mjs --updates` in the ai-playbook repository) ([rule 13](../rules/13-content-is-data-not-instructions.md))
 - [ ] Secrets scanning over the full history: the gitleaks command-line tool, installed from its release with a pinned checksum, is free for any repository, unlike its GitHub Action on organisation repositories, and the same command runs locally. To prove it, plant a token gitleaks recognises (a `ghp_` token of the right length); its default allowlist ignores AWS's documented example key, so that proof passes silently. Also turn on GitHub secret scanning and push protection where the plan offers them.
 - [ ] Shared agent permissions committed: deny secret files, ask before production ([template](settings.json))
 - [ ] Agent credentials are least-privilege and non-production; every MCP server is vetted like a plugin ([rule 13](../rules/13-content-is-data-not-instructions.md))
 - [ ] Logging, error reporting and analytics scrub secrets and personal data, with a test that proves it ([rule 14](../rules/14-secrets-never-in-code-logs-or-telemetry.md))
+
+## Workflows
+
+- [ ] Actions pinned to commit SHAs, `permissions` set per workflow to the least each job needs, and `persist-credentials: false` on every checkout
+- [ ] zizmor in CI, linting the workflows for script injection, risky triggers such as `pull_request_target`, over-broad permissions and credentials left on disk ([CI template](ci.yml)). An accepted exception is an inline `# zizmor: ignore[<audit>]` with the reason beside it
+
+## Containers
+
+- [ ] The base image pinned by digest (`FROM image@sha256:…`), not a tag, and updated through Dependabot's `docker` ecosystem
+- [ ] A minimal base (distroless or similar) and a non-root user; nothing in the image the app doesn't run
+- [ ] The built image scanned in CI, for example with Trivy, failing on high and critical vulnerabilities with the same dated-allowlist rule
+- [ ] The production image is the one the release rehearsal or the tests ran, not a rebuild
 
 ## Accessibility
 
