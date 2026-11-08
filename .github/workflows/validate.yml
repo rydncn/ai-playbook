@@ -32,7 +32,11 @@ jobs:
       # here. Move it forward with the version users install, so the validator
       # checks what they'll run.
       - name: Install Claude Code
-        run: npm install -g --ignore-scripts @anthropic-ai/claude-code@2.1.319 # zizmor: ignore[adhoc-packages]
+        # Its own install script fetches the native binary, so it runs on its
+        # own, after the install: the one package here allowed to run code.
+        run: | # zizmor: ignore[adhoc-packages]
+          npm install -g --ignore-scripts @anthropic-ai/claude-code@2.1.319
+          node "$(npm root -g)/@anthropic-ai/claude-code/install.cjs"
 
       - name: Validate marketplace and plugin
         run: claude plugin validate .
