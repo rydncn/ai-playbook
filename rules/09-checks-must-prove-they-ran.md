@@ -8,8 +8,10 @@ CI is a required status check on the main branch, so a pipeline that stops runni
 
 ## Why
 
-CI can stop running without anyone noticing: billing lapses, a disabled workflow, a path filter that skips everything. Jobs refused before they start look like ordinary red crosses. A gate pointed at the wrong folder reports success on nothing.
+CI can stop running without anyone noticing: billing lapses, a disabled workflow, a path filter that skips everything. Jobs refused before they start look like ordinary red crosses. A gate pointed at the wrong folder reports success on nothing. A job that skips itself can show green: an automatic review that declines to run on the pull request that adds its own workflow reports success without reviewing anything.
 
 ## How to enforce it
 
-Turn on branch protection with the CI checks required. Make gates count what they checked and fail on zero. The project setup skill reads recent workflow runs and the reason for any failure.
+Turn on branch protection with the CI checks required. Make gates count what they checked and fail on zero. The project setup skill reads recent workflow runs and the reason for any failure. A green result proves nothing until the run has been seen to do its work: read the log of a check's first run, not just its colour.
+
+Where the plan has no branch protection (GitHub Free on a private repository), nothing blocks a red merge mechanically. Write an ADR saying who merges and on what evidence (every CI job green on the pull request), keep the ask rules on pushing to `main` and on `gh pr merge` so agents can't merge on their own, and let CI on `main` catch whatever slips through. Never let CI cancel a run on `main`, or a broken merge can hide behind the next one.

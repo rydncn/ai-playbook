@@ -2,6 +2,25 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-08 · after `7c7eaf0`: the end of the first trial
+
+The rest of the first trial's feedback: a rebuild of a small Expo app across six slices, in cloud sessions.
+
+- **Review at three distances** ([VERIFICATION.md](VERIFICATION.md)): a fresh-context review of each slice before merge; every few slices, a whole-codebase review against the rules; a different model family for risky changes. In the trial, one whole-codebase review found nine must-fix defects that four layers of per-slice review had passed.
+- **A check states what it covers** ([rule 12](rules/12-rules-broken-twice-become-checks.md)), with a planted fault per place it claims to cover.
+- **No branch protection** ([rule 9](rules/09-checks-must-prove-they-ran.md)): on GitHub Free with a private repository, an ADR on who merges and on what evidence. A green check proves nothing until its log has been read.
+- **Cloud sessions** ([docs/agent-environment.md](docs/agent-environment.md#cloud-sessions)) install nothing from project plugin settings: install the plugins in the environment's setup script, with `set -e`. A new [`check-plugins.mjs`](templates/hooks/check-plugins.mjs) hook warns at session start when an enabled plugin is missing, and the day-one list says to start a new session after setup.
+- **[`templates/audit`](templates/audit)**: `npm audit` with a dated allowlist, so an advisory nobody can fix yet doesn't turn the gate red for good. The CI template uses it.
+- **The review template**: the federation subject in GitHub's ID form, purchased credit, the green skip on the pull request that adds the workflow, and how to find out why a review failed.
+- **CI** never cancels a run on `main`. **Dependabot** leaves major versions alone.
+- **The hooks** all live in `.claude/hooks/`, `pre-push` included, with `core.hooksPath` pointing there; the README and the tests now agree.
+- **Plans** head tasks `### Task N:`, the shape Superpowers' scripts read.
+- **GATES.md**: mutation testing confirmed under `jest-expo`; `eslint-plugin-react-native-a11y` dropped (no ESLint 9 support) in favour of checking the rendered tree; `break-ui` on React Native; gitleaks proofs need a token it recognises.
+- **The day-one list**: reconcile a generator's own agent files, a clean `npm ci` before the first push and never `--legacy-peer-deps`, and add each rule check with the folder it scans.
+- **Expo hosts** for the sandbox and cloud allowlists: `docs.expo.dev`, `api.expo.dev`, `reactnative.directory`.
+
+**Existing projects:** add a fresh-context review per slice and a periodic whole-codebase review to `CLAUDE.md`'s workflow; write each check's scope beside its rule and plant a fault per scope; on a plan without branch protection, write the ADR; for cloud sessions, add the setup script; add `check-plugins.mjs` and its `SessionStart` entry, move `pre-push` to `.claude/hooks/` and point `core.hooksPath` there; replace the audit step with `templates/audit`; copy the new concurrency block into CI so `main` isn't cancelled; add the `ignore` block to Dependabot; rename plan tasks to `### Task N:` if you use Superpowers' scripts; correct the review workflow's federation subject to the ID form.
+
 ## 2026-10-29 · after `3608bbe`: Claude review without an API key
 
 - [`templates/claude-review.yml`](templates/claude-review.yml) authenticates with workload identity federation: each run swaps its GitHub OIDC token for a short-lived Claude token, so no API key is stored. One federation rule per repository, scoped to its pull requests; four repository variables. An API key secret remains the fallback.

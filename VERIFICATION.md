@@ -26,7 +26,7 @@ Any decision with real alternatives gets a short ADR in `docs/decisions/` ([temp
 
 The acceptance criteria live in the design, numbered, one given/when/then block per behaviour, written before any code. Each becomes an acceptance test that names its number, at the tier of [rule 16](rules/16-acceptance-tests-are-isolated-and-real.md) the design records. They are plain text; a Gherkin toolchain is only worth its upkeep when people outside the team read the specifications.
 
-The design then becomes a plan, one file per slice of work that can be reviewed and merged on its own ([template](templates/PLAN.md)). Each plan names the criteria it satisfies. Each task says how its effect will be observed before any code is written: the failing test, a command and its expected output, a screenshot comparison, or, for what nothing automated can see, the device check that will be recorded. A task without a check is not ready to start. See [rule 5](rules/05-done-means-the-effect-was-observed.md).
+The design then becomes a plan, one file per slice of work that can be reviewed and merged on its own ([template](templates/PLAN.md)). Each plan names the criteria it satisfies. Tasks are headed `### Task N: <behaviour>`, which is also the shape Superpowers' plan-running scripts look for. Each task says how its effect will be observed before any code is written: the failing test, a command and its expected output, a screenshot comparison, or, for what nothing automated can see, the device check that will be recorded. A task without a check is not ready to start. See [rule 5](rules/05-done-means-the-effect-was-observed.md).
 
 ## 3. Build against the check
 
@@ -53,13 +53,20 @@ Before a release:
 - a check that the release environment is complete ([rule 4](rules/04-releases-check-their-own-environment.md));
 - a written test plan run on real devices.
 
-CI only protects anything while it runs, so it is a required status check ([rule 9](rules/09-checks-must-prove-they-ran.md)). The [gate checklist](templates/GATES.md) covers what to consider for a new project.
+CI only protects anything while it runs, so it is a required status check, or, on a plan without branch protection, an ADR says who merges and on what evidence ([rule 9](rules/09-checks-must-prove-they-ran.md)). The [gate checklist](templates/GATES.md) covers what to consider for a new project.
 
 ## 5. Independent review
 
-- OpenAI's Codex reviews every substantive change, on a read-only profile. A different model family catches somewhat different mistakes. I treat its findings as claims to verify. One study found that Codex reviewing Claude's code made it worse when its suggestions were applied without checking.
+The session that built something is the worst-placed to review it: whatever it got wrong, it got wrong for reasons that still seem right to it. Even a reviewer it starts for itself inherits its framing through the brief it writes ("review the card slice"), and reviews what was built rather than what the rules require. So review happens at three distances from the work:
+
+- **Each slice, before merge: a fresh-context review.** A reviewer, usually a subagent, given only the diff, the design and `CLAUDE.md`, never the building session's reasoning. It reports findings verified against the code; the session fixes them test-first or records a ruling.
+- **Every few slices, and before a phase ends: a whole-codebase review against the rules.** Briefed from `CLAUDE.md` and the design, not from any diff, and reading the slices together. It finds what per-slice reviews can't: surfaces that must agree but don't (a preview and what prints), rules whose checks cover less than they claim, and two documents that contradict each other. In the first trial of this playbook, four layers of per-slice review passed nine must-fix defects that one such review found; six of the nine only showed when slices were read together.
+- **A different model family for risky changes.** OpenAI's Codex, on a read-only profile, for anything touching data, consent, permissions or what leaves the device. A different model catches somewhat different mistakes. I treat its findings as claims to verify: one study found that Codex reviewing Claude's code made it worse when its suggestions were applied without checking.
+
+Alongside them:
+
 - An automatic Claude review on each pull request reads the project's own `CLAUDE.md` and rules files ([workflow template](templates/claude-review.yml)).
-- A security audit before releases and after significant changes to authentication.
+- A security audit before releases and after significant changes to authentication, deletion or anything leaving the device.
 
 ## 6. Guardrails on the agent
 

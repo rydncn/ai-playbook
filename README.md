@@ -46,22 +46,23 @@ Each rule has its own file: the rule, why it matters, and how to enforce it. Mos
 
 ## Templates
 
-| Template                                             | What it is                                                                                                      |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| [`CLAUDE.template.md`](templates/CLAUDE.template.md) | The structure for a project's root instructions, kept under 200 lines                                           |
-| [`RULE.md`](templates/RULE.md)                       | One rule per file: the rule, why, and how to enforce it                                                         |
-| [`ADR.md`](templates/ADR.md)                         | A decision record, with the options rejected, so agents stop proposing them again                               |
-| [`DESIGN.md`](templates/DESIGN.md)                   | A design with numbered given/when/then acceptance criteria                                                      |
-| [`PLAN.md`](templates/PLAN.md)                       | One slice of work: test-first tasks, each saying how its effect is observed                                     |
-| [`GATES.md`](templates/GATES.md)                     | A checklist for deciding a project's gates, starting with whether CI runs at all                                |
-| [`settings.json`](templates/settings.json)           | Shared agent permissions: deny secret files, ask before production                                              |
-| [`hooks/`](templates/hooks)                          | Format and lint each edit; run the type check and changed tests before the agent finishes. Tested               |
-| [`rule-check/`](templates/rule-check)                | A dependency-free, tested CI check that turns written rules into build failures                                 |
-| [`lint-ratchet/`](templates/lint-ratchet)            | A CI check that stops any ESLint rule's count rising, so stricter rules can go on before the backlog is cleared |
-| [`rules/`](templates/rules)                          | Path-scoped conventions for APIs, errors, logging and correlation IDs, copied in when a project has a server    |
-| [`ci.yml`](templates/ci.yml)                         | Baseline CI: types, lint and tests, then a dependency audit and a secrets scan                                  |
-| [`dependabot.yml`](templates/dependabot.yml)         | Weekly, grouped dependency and GitHub Actions updates                                                           |
-| [`claude-review.yml`](templates/claude-review.yml)   | An automatic, read-only Claude review on each pull request                                                      |
+| Template                                             | What it is                                                                                                                                               |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`CLAUDE.template.md`](templates/CLAUDE.template.md) | The structure for a project's root instructions, kept under 200 lines                                                                                    |
+| [`RULE.md`](templates/RULE.md)                       | One rule per file: the rule, why, and how to enforce it                                                                                                  |
+| [`ADR.md`](templates/ADR.md)                         | A decision record, with the options rejected, so agents stop proposing them again                                                                        |
+| [`DESIGN.md`](templates/DESIGN.md)                   | A design with numbered given/when/then acceptance criteria                                                                                               |
+| [`PLAN.md`](templates/PLAN.md)                       | One slice of work: test-first tasks, each saying how its effect is observed                                                                              |
+| [`GATES.md`](templates/GATES.md)                     | A checklist for deciding a project's gates, starting with whether CI runs at all                                                                         |
+| [`settings.json`](templates/settings.json)           | Shared agent permissions: deny secret files, ask before production                                                                                       |
+| [`hooks/`](templates/hooks)                          | Check the enabled plugins loaded; format and lint each edit; run the type check and changed tests before the agent finishes; a git pre-push hook. Tested |
+| [`audit/`](templates/audit)                          | A dependency audit with a dated allowlist, for advisories nobody can fix yet. Tested                                                                     |
+| [`rule-check/`](templates/rule-check)                | A dependency-free, tested CI check that turns written rules into build failures                                                                          |
+| [`lint-ratchet/`](templates/lint-ratchet)            | A CI check that stops any ESLint rule's count rising, so stricter rules can go on before the backlog is cleared                                          |
+| [`rules/`](templates/rules)                          | Path-scoped conventions for APIs, errors, logging and correlation IDs, copied in when a project has a server                                             |
+| [`ci.yml`](templates/ci.yml)                         | Baseline CI: types, lint and tests, then a dependency audit and a secrets scan                                                                           |
+| [`dependabot.yml`](templates/dependabot.yml)         | Weekly, grouped dependency and GitHub Actions updates                                                                                                    |
+| [`claude-review.yml`](templates/claude-review.yml)   | An automatic, read-only Claude review on each pull request                                                                                               |
 
 [docs/new-project.md](docs/new-project.md) sets out the order to apply them in on a new project.
 

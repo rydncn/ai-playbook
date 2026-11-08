@@ -17,21 +17,43 @@ name: Claude PR Review
 #   1. Claude Console > Settings > Workload identity > Connect workload >
 #      GitHub Actions. One rule per repository, scoped to pull requests:
 #      organisation and repository filled in, branch blank, and under
-#      Advanced match options the subject prefix
-#      "repo:<owner>/<repo>:pull_request" with a repository_owner claim.
-#      Never a prefix covering every repository, or "Any event": with fork
-#      pull requests allowed tokens, anyone opening one could get a token.
+#      Advanced match options a subject prefix in GitHub's ID form:
+#        repo:<owner>@<owner id>/<repo>@<repo id>:pull_request
+#      The name-only form (repo:<owner>/<repo>:pull_request) never matches.
+#      Read the ids from the GitHub API: `gh api repos/<owner>/<repo>
+#      --jq '.owner.id, .id'`. Add a repository_owner claim too. Never a
+#      prefix covering every repository, or "Any event": with fork pull
+#      requests allowed tokens, anyone opening one could get a token.
 #      Enable it in one workspace, with a spend limit, for a dedicated
 #      service account.
 #   2. Add repository variables (not secrets, and not environment
 #      variables; the IDs aren't sensitive): ANTHROPIC_FEDERATION_RULE_ID,
 #      ANTHROPIC_ORGANIZATION_ID, ANTHROPIC_SERVICE_ACCOUNT_ID,
 #      ANTHROPIC_WORKSPACE_ID.
-#   3. Keep "Send write tokens to workflows from pull requests" off under
+#   3. Make sure the organisation has purchased API credit. Promotional
+#      credit doesn't cover federated usage; without purchased credit every
+#      review fails with "Credit balance is too low".
+#   4. Keep "Send write tokens to workflows from pull requests" off under
 #      Settings > Actions > General.
 # Fallback: an ANTHROPIC_API_KEY repository secret, a dedicated key with a
 # spend limit. Remove it once federation works. With neither, the review job
 # fails with an error naming both, rather than passing without a review.
+#
+# First run: the action refuses to run a workflow that differs from the one
+# on the default branch, so on the pull request that adds or changes this
+# file it skips and shows GREEN without reviewing anything. Its first real
+# run is the next pull request after this file is on main: read that run's
+# log and check a review was posted (rule 9 in the playbook).
+#
+# When the review fails within seconds, with is_error and no cost, the API
+# refused it, and the action hides why. Debug logging doesn't show it. In
+# order: check the Console's workload identity history (Settings > Workload
+# identity, history tab) for a denied exchange and its reason; check the
+# organisation's purchased credit. If both look fine, set
+# show_full_output: true on main, then re-run from a pull request opened
+# after that change (an older branch still has the old file, so it skips),
+# read the "API Error" text, and turn it off again: full output puts what
+# the review reads into the log.
 #
 # For a deeper second opinion on risky changes, run /codex:review or
 # /codex:adversarial-review locally.

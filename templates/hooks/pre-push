@@ -3,9 +3,9 @@
 # machine, whichever agent or person is pushing. The Claude Code hooks cover
 # Claude's own loop; this covers every other tool, and anyone who skips them.
 #
-# Install by copying to .githooks/pre-push and adding a package.json script
-# that points git at that folder on install:
-#   "prepare": "git config core.hooksPath .githooks || true"
+# Install by copying to .claude/hooks/pre-push, next to the Claude Code hooks,
+# and adding a package.json script that points git at that folder on install:
+#   "prepare": "git config core.hooksPath .claude/hooks || true"
 #
 # CI still runs the same checks. This hook saves a round trip; it isn't the
 # gate, because `git push --no-verify` skips it.

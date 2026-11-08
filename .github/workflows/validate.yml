@@ -48,6 +48,9 @@ jobs:
       - name: Test the hooks template
         run: node --test templates/hooks/hooks.test.mjs
 
+      - name: Test the audit template
+        run: node --test templates/audit/audit.test.mjs
+
       - name: Check settings templates are valid JSON
         run: |
           for f in templates/settings.json templates/hooks/settings.hooks.json; do

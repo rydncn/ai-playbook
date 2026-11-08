@@ -4,20 +4,21 @@
 Copy to docs/plans/NNN-short-name.md. One file per slice: a piece of work
 that can be reviewed and merged on its own, as one draft pull request. Tasks
 are small enough to finish in one sitting, and each says how its effect will
-be observed before any code is written (rules 5 and 15).
+be observed before any code is written (rules 5 and 15). Keep the
+`### Task N:` headings: Superpowers' plan-running scripts look for them.
 -->
 
 **Satisfies:** AC<n>, AC<n> (in `docs/design.md`) · **Depends on:** <slice numbers, or none>
 
 ## Tasks
 
-### 1. <Task, as the behaviour it adds>
+### Task 1: <the behaviour it adds>
 
 - **Test:** <the failing test written first: file, name, and the assertion it fails on before the code exists>
 - **Code:** <what changes, briefly>
 - **Observed by:** <the test passing, a command and its output, a screenshot, or the device check>
 
-### 2. <Task>
+### Task 2: <the behaviour it adds>
 
 - **Test:** <…>
 - **Code:** <…>

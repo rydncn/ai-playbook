@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterEdit } from "./after-edit.mjs";
 import { beforeStop } from "./before-stop.mjs";
+import { checkPlugins } from "./check-plugins.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -211,13 +212,13 @@ function pushRepo(scripts) {
   git(root, "init", "-q", "--bare", remote);
   git(root, "init", "-q", "-b", "main", work);
   writeFileSync(path.join(work, "package.json"), JSON.stringify({ scripts }));
-  mkdirSync(path.join(work, ".githooks"));
+  mkdirSync(path.join(work, ".claude/hooks"), { recursive: true });
   writeFileSync(
-    path.join(work, ".githooks", "pre-push"),
+    path.join(work, ".claude/hooks", "pre-push"),
     readFileSync(path.join(here, "pre-push")),
   );
-  chmodSync(path.join(work, ".githooks", "pre-push"), 0o755);
-  git(work, "config", "core.hooksPath", ".githooks");
+  chmodSync(path.join(work, ".claude/hooks", "pre-push"), 0o755);
+  git(work, "config", "core.hooksPath", ".claude/hooks");
   git(work, "add", "-A");
   git(
     work,
@@ -246,4 +247,100 @@ test("pre-push stops the push when a check fails", () => {
 test("pre-push lets the push through when the checks pass or don't exist", () => {
   assert.equal(pushRepo({ lint: 'node -e ""' })().status, 0);
   assert.equal(pushRepo({})().status, 0);
+});
+
+// check-plugins: the SessionStart warning about enabled plugins that aren't installed.
+
+function pluginProject(enabledPlugins) {
+  const dir = mkdtempSync(path.join(tmpdir(), "hooks-plugins-"));
+  if (enabledPlugins) {
+    mkdirSync(path.join(dir, ".claude"));
+    writeFileSync(
+      path.join(dir, ".claude", "settings.json"),
+      JSON.stringify({ enabledPlugins }),
+    );
+  }
+  return dir;
+}
+
+const listing =
+  (...ids) =>
+  () => ({ status: 0, output: JSON.stringify(ids.map((id) => ({ id }))) });
+
+test("check-plugins names each enabled plugin that isn't installed", () => {
+  const dir = pluginProject({
+    "superpowers@ai-playbook": true,
+    "break-ui@ai-playbook": true,
+    "off@ai-playbook": false,
+  });
+  const message = checkPlugins({
+    projectDir: dir,
+    exec: listing("superpowers@ai-playbook"),
+  });
+  assert.match(
+    message,
+    /not installed in this session: break-ui@ai-playbook\./,
+  );
+  assert.doesNotMatch(
+    message,
+    /superpowers|off@/,
+    "installed and disabled plugins aren't listed",
+  );
+  assert.match(message, /setup script/);
+});
+
+test("check-plugins says nothing when every enabled plugin is installed", () => {
+  const dir = pluginProject({ "superpowers@ai-playbook": true });
+  assert.equal(
+    checkPlugins({
+      projectDir: dir,
+      exec: listing("superpowers@ai-playbook", "other@x"),
+    }),
+    null,
+  );
+});
+
+test("check-plugins says nothing for a project that enables no plugins, without running claude", () => {
+  let ran = false;
+  const exec = () => {
+    ran = true;
+    return { status: 0, output: "[]" };
+  };
+  assert.equal(checkPlugins({ projectDir: pluginProject(), exec }), null);
+  assert.equal(checkPlugins({ projectDir: pluginProject({}), exec }), null);
+  assert.equal(ran, false);
+});
+
+test("check-plugins says it couldn't check when the plugin list fails, rather than staying quiet", () => {
+  const dir = pluginProject({ "superpowers@ai-playbook": true });
+  for (const exec of [
+    () => ({ status: 1, output: "[]" }),
+    () => ({ status: 0, output: "not json" }),
+  ]) {
+    assert.match(
+      checkPlugins({ projectDir: dir, exec }),
+      /Couldn't check.*superpowers@ai-playbook/,
+    );
+  }
+});
+
+test("check-plugins runs as a hook: prints the warning and exits 0", () => {
+  const dir = pluginProject({ "missing@ai-playbook": true });
+  const bin = mkdtempSync(path.join(tmpdir(), "hooks-bin-"));
+  writeFileSync(path.join(bin, "claude"), "#!/bin/sh\necho '[]'\n");
+  chmodSync(path.join(bin, "claude"), 0o755);
+  const run = spawnSync("node", [path.join(here, "check-plugins.mjs")], {
+    input: JSON.stringify({
+      hook_event_name: "SessionStart",
+      source: "startup",
+    }),
+    env: {
+      ...process.env,
+      CLAUDE_PROJECT_DIR: dir,
+      PATH: `${bin}${path.delimiter}${process.env.PATH}`,
+    },
+    encoding: "utf8",
+  });
+  assert.equal(run.status, 0, run.stderr);
+  assert.match(run.stdout, /missing@ai-playbook/);
 });

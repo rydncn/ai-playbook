@@ -1,6 +1,7 @@
 # Copy to .github/dependabot.yml. Weekly, grouped updates so dependency PRs
 # arrive as a few reviewable batches rather than a stream, and pinned GitHub
-# Actions stay current.
+# Actions stay current. Major versions are left for a person to plan: they
+# usually break the build, and a stream of red Dependabot PRs gets ignored.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -8,6 +9,9 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         update-types: [minor, patch]

@@ -30,6 +30,33 @@ Claude Code's sandbox runs shell commands with operating-system limits on what t
 - Add the domains the project really needs: the package registry, the git host, the local database. Not the production API.
 - `autoAllowBashIfSandboxed` skips prompts for sandboxed commands. Only turn it on once the network list is tight, and keep the ask rules for anything that reaches production: those still apply.
 - `excludedCommands` runs named commands outside the sandbox. It is for tools that can't run inside it, such as Docker, not a way to loosen it.
+- List the documentation hosts the project's `CLAUDE.md` tells the agent to read, or that instruction can't be followed. For Expo: `docs.expo.dev`, plus `api.expo.dev` and `reactnative.directory`, which `npx expo install` needs to pick versions. Without those two, read the version from `node_modules/expo/bundledNativeModules.json` and use `npm install <package>@<version>`.
+
+## Cloud sessions
+
+A cloud session (Claude Code on the web, or a scheduled task) runs in a fresh container, and **installs nothing from the project's plugin settings**. The plugins in `enabledPlugins` are only offered on a prompt in an interactive session, and in the cloud nobody answers it. Installing them during the session doesn't help either, because skills load when a session starts. Without a fix, every cloud session quietly does the playbook's steps by hand, and nobody notices until someone asks which plugins it used.
+
+The fix is the environment's **setup script**, which runs when the container is built, before Claude Code starts. Set it in the environment's settings, on the session-start screen's environment selector. Install the same plugins the project enables:
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+claude plugin marketplace add rydncn/ai-playbook
+for p in playbook superpowers pocock-extras ponytail security-audit break-ui; do
+  claude plugin install "$p@ai-playbook"
+done
+# Plus each stack plugin the project enables, for example:
+# claude plugin marketplace add expo/skills && claude plugin install expo@expo-plugins
+
+claude plugin list
+```
+
+- **Start it with `set -e`.** Without it, a failed install lets the session start without the plugin, and the setup reports success.
+- **A private marketplace can't be added from GitHub here.** The setup script runs before the session's GitHub credentials are connected. Add it from the environment's clone of the repository instead, if the repository is attached to the environment (`claude plugin marketplace add <path to the clone>`), or make the marketplace public.
+- **Check the build's output once** after changing the script. It should list every plugin.
+- **The plugin check hook** ([`templates/hooks/check-plugins.mjs`](../templates/hooks/check-plugins.mjs)) warns at the start of any session where an enabled plugin is missing. The account-level plugin list a cloud session can read doesn't show plugins installed in the container, so `claude plugin list` is the check.
+- The setup script's result is cached for a few days, so later sessions start quickly.
 
 ## Dev containers
 

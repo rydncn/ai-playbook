@@ -1,0 +1,7 @@
+[
+  {
+    "id": "GHSA-xxxx-xxxx-xxxx",
+    "reason": "In <package> under <build tool>, which pins this major version; no patched release in that range yet. Build-time only, not shipped in the app.",
+    "expires": "2027-01-31"
+  }
+]

@@ -26,9 +26,12 @@ on:
 permissions:
   contents: read
 
+# A newer push to a pull request cancels its older run. Runs on main are never
+# cancelled: each merge gets its own result, so a broken merge can't hide
+# behind the next one.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   checks:
@@ -97,8 +100,11 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      # templates/audit: npm audit with a dated allowlist for advisories nobody
+      # can fix yet. Plain `npm audit --audit-level=high` has no allowlist, so
+      # one unfixable advisory in a build tool turns this red for good.
       - name: Dependency audit
-        run: npm audit --audit-level=high
+        run: node scripts/audit.mjs scripts/audit-allowlist.json
 
       # The gitleaks command-line tool, downloaded from its release and checked
       # against a pinned checksum. Free for any repository (its GitHub Action
