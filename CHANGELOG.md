@@ -5,7 +5,7 @@ Newest first. Each entry names the commit it follows and says what a project set
 ## 2026-11-08 · after `deba336`: plugin pins, workflows, containers, browser security
 
 - **Plugins pinned to commits** in the marketplace, checked by [`scripts/plugin-pins.mjs`](scripts/plugin-pins.mjs) in CI; [docs/setup.md](docs/setup.md#what-each-plugin-runs-on-your-machine) has the update routine. Until now a push to any of the eight upstreams reached every machine on its next auto-update.
-- **Workflows:** `persist-credentials: false` on every checkout in the templates, and [zizmor](https://github.com/zizmorcore/zizmor), pinned by checksum, linting them in [`templates/ci.yml`](templates/ci.yml).
+- **Workflows:** `persist-credentials: false` on every checkout in the templates, and [zizmor](https://github.com/zizmorcore/zizmor), pinned by checksum, linting them in [`templates/ci.yml`](templates/ci.yml). Its first online run found the playbook's own `# v6` comments on v7 commits; they now name the exact version.
 - **Lockfile and registry:** lockfile-lint (registry hosts, HTTPS, integrity hashes) and `npm audit signatures` in the CI template's security job.
 - **[GATES.md](templates/GATES.md):** audits for Go, Python, Rust and Ruby with the same dated-allowlist rule; new Workflows and Containers sections (digest-pinned minimal base, non-root, image scan, the tested image is the shipped one).
 - **[`templates/rules/api.md`](templates/rules/api.md):** a section for servers that render pages: security headers and CSP, cookie flags, CSRF, sign-in rate limits, password hashing, escaping, redirects.

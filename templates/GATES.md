@@ -67,7 +67,7 @@ For React, React Native and TypeScript projects. Each catches something agents g
 ## Workflows
 
 - [ ] Actions pinned to commit SHAs, `permissions` set per workflow to the least each job needs, and `persist-credentials: false` on every checkout
-- [ ] zizmor in CI, linting the workflows for script injection, risky triggers such as `pull_request_target`, over-broad permissions and credentials left on disk ([CI template](ci.yml)). An accepted exception is an inline `# zizmor: ignore[<audit>]` with the reason beside it
+- [ ] zizmor in CI, linting the workflows for script injection, risky triggers such as `pull_request_target`, over-broad permissions and credentials left on disk ([CI template](ci.yml)). An accepted exception is an inline `# zizmor: ignore[<audit>]` with the reason beside it. Run it with a token (`GH_TOKEN`), not `--offline`: the online audits are the ones that check each pinned SHA against its version comment, and the playbook's own CI found every `# v6` comment sitting on a v7 commit that way, after an offline run passed clean
 
 ## Containers
 
