@@ -19,6 +19,19 @@ How I work with AI coding agents, mainly Claude Code. It is the setup I install 
 
 **Context is kept small and current.** The instructions loaded into every session stay short; area-specific rules load only when they apply; lessons are written into the repository rather than left in one machine's memory.
 
+## Start here
+
+Not all of this pays for itself on every project. In a trial that rebuilt a small app under the playbook and compared it with the same app built without it, an independent reviewer who wasn't told which was which rated the playbook build stronger on correctness, privacy, accessibility and maintainability, with a third of the defects. But it cost two to three times the effort per feature. The gains came from a few parts; most of the rest is record-keeping that earns its place on larger or longer-lived projects.
+
+**The core, for any project:**
+
+- Rules [5](rules/05-done-means-the-effect-was-observed.md), [15](rules/15-tests-must-be-seen-to-fail.md) and [16](rules/16-acceptance-tests-are-isolated-and-real.md): done means the effect was observed, tests are seen to fail, and acceptance tests drive the real thing. In the trial, these are what produced a codebase whose whole app could be tested, and that was the clearest difference between the two builds.
+- The gates: [CI](templates/ci.yml), the [hooks](templates/hooks) and the [gate checklist](templates/GATES.md), so the checks run without anyone remembering them.
+- The [review cadence](VERIFICATION.md#5-independent-review): a fresh-context review of each piece of work, and every few pieces a review of the whole codebase against the rules. One such review found more than four layers of per-piece review had.
+- [Shared permissions](templates/settings.json), so production stays behind a prompt.
+
+**Worth it as a project grows:** a written design with numbered acceptance criteria, plans per slice, ADRs, a handoff file, rule checks, the lint ratchet, and a second model's review for risky changes. Add them when a project has more than one person or session working on it, or when a decision has been argued twice.
+
 ## Rules
 
 Each rule has its own file: the rule, why it matters, and how to enforce it. Most are enforced by tooling once a project is set up, through hooks, CI, permissions and the setup skill, so day to day there is little to remember: the agent gets sent back when it breaks one.
@@ -59,7 +72,7 @@ Each rule has its own file: the rule, why it matters, and how to enforce it. Mos
 | [`audit/`](templates/audit)                          | A dependency audit with a dated allowlist, for advisories nobody can fix yet. Tested                                                                     |
 | [`rule-check/`](templates/rule-check)                | A dependency-free, tested CI check that turns written rules into build failures                                                                          |
 | [`lint-ratchet/`](templates/lint-ratchet)            | A CI check that stops any ESLint rule's count rising, so stricter rules can go on before the backlog is cleared                                          |
-| [`rules/`](templates/rules)                          | Path-scoped conventions for APIs, errors, logging and correlation IDs, copied in when a project has a server                                             |
+| [`rules/`](templates/rules)                          | Path-scoped conventions: APIs, errors, logging and correlation IDs for a server; testing and accessibility for React Native                              |
 | [`ci.yml`](templates/ci.yml)                         | Baseline CI: types, lint and tests, then a dependency audit and a secrets scan                                                                           |
 | [`dependabot.yml`](templates/dependabot.yml)         | Weekly, grouped dependency and GitHub Actions updates                                                                                                    |
 | [`claude-review.yml`](templates/claude-review.yml)   | An automatic, read-only Claude review on each pull request                                                                                               |

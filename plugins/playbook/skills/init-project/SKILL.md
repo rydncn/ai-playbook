@@ -72,7 +72,7 @@ Leave out:
   ---
   ```
 
-  Design systems, database and migration rules, and API conventions are the usual candidates. Keep each file under 40,000 characters. If the project has its own server or API, offer the convention templates in the ai-playbook repo's `templates/rules/` (problem details and domain errors; structured logging and correlation IDs). Fill them in from what the code already does. Where the code does something different, ask which way the project wants rather than writing down a convention it doesn't follow.
+  Design systems, database and migration rules, and API conventions are the usual candidates. Keep each file under 40,000 characters. If the project has its own server or API, offer the convention templates in the ai-playbook repo's `templates/rules/` (problem details and domain errors; structured logging and correlation IDs). For a React Native app, offer `react-native.md` from the same folder: adapters for native modules, acceptance tests that drive the real app, and the tree-walk accessibility gate. Fill them in from what the code already does. Where the code does something different, ask which way the project wants rather than writing down a convention it doesn't follow.
 
 - **Inventories that duplicate the code** (lists of functions, endpoints, modules). They drift. Point at the folder instead.
 - **Motivational or persona prose** ("ultrathink", "think different", "never the first solution that works"). It pushes towards over-engineering and contradicts the simplest-solution default.

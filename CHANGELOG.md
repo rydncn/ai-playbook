@@ -2,6 +2,13 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-08 · after `647a602`: what's core, and React Native
+
+- A **"Start here"** section in the [README](README.md): the core that produced the trial's gains (rules 5, 15 and 16, the gates, the review cadence, shared permissions) and what to add as a project grows. The trial put the full playbook at two to three times the effort per feature.
+- [`templates/rules/react-native.md`](templates/rules/react-native.md): native modules behind adapters with contract-tested fakes, acceptance tests that drive the real app, the tree-walk accessibility gate, and the trial's React Native test lessons.
+
+**Existing projects:** a React Native app can adopt `react-native.md` in `.claude/rules/`; check its conventions against what the project already does, and record any it departs from in an ADR.
+
 ## 2026-11-08 · after `7c7eaf0`: the end of the first trial
 
 The rest of the first trial's feedback: a rebuild of a small Expo app across six slices, in cloud sessions.

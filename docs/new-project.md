@@ -46,7 +46,7 @@ This is the one ordered list of what the playbook asks for on day one. Each item
 
 - [ ] `CLAUDE.md` from [`templates/CLAUDE.template.md`](../templates/CLAUDE.template.md), under 200 lines ([rule 10](../rules/10-keep-always-loaded-context-small.md)), recording the playbook commit it was set up against.
 - [ ] The first ADRs, for the stack and anything else chosen between real alternatives ([template](../templates/ADR.md)), including which tier of acceptance test the project runs ([rule 16](../rules/16-acceptance-tests-are-isolated-and-real.md)).
-- [ ] For a project with its own server, the [convention templates](../templates/rules) in `.claude/rules/`.
+- [ ] The [convention templates](../templates/rules) that fit, in `.claude/rules/`: `api.md` and `observability.md` for a project with its own server, `react-native.md` for a phone app.
 - [ ] Rule checks ([`templates/rule-check`](../templates/rule-check)) for the rules a script can see. Add each one in the change that creates the folder it scans: a rule that scans nothing fails, so one added on day one for a folder that doesn't exist yet is red from the start.
 
 ## 7. Review
