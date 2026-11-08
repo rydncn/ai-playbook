@@ -63,6 +63,13 @@ The session that built something is the worst-placed to review it: whatever it g
 - **Every few slices, and before a phase ends: a whole-codebase review against the rules.** Briefed from `CLAUDE.md` and the design, not from any diff, and reading the slices together. It finds what per-slice reviews can't: surfaces that must agree but don't (a preview and what prints), rules whose checks cover less than they claim, and two documents that contradict each other. In the first trial of this playbook, four layers of per-slice review passed nine must-fix defects that one such review found; six of the nine only showed when slices were read together.
 - **A different model family for risky changes.** OpenAI's Codex, on a read-only profile, for anything touching data, consent, permissions or what leaves the device. A different model catches somewhat different mistakes. I treat its findings as claims to verify: one study found that Codex reviewing Claude's code made it worse when its suggestions were applied without checking. In the first trial, Codex reviewed 11,000 lines after the fresh-context reviews had run and found one issue, which those reviews had already found and deliberately deferred; the fresh-context reviews found 30 on the same code. One run is weak evidence, so this stays a layer for risky changes on larger projects rather than part of the core.
 
+**How much a human reads depends on whether the change can be undone.** Every pull request says which kind it is, and the automatic review checks the claim:
+
+- **One-way doors**, hard or impossible to undo once merged or released: migrations and anything that deletes data, authentication and permissions, what leaves the device or the shape of a public API or URL, agent configuration ([rule 18](rules/18-agent-configuration-is-code.md)), new dependencies, and release or infrastructure settings. A human reads the diff for these files, not only the summary, and the different-model review runs on them.
+- **Two-way doors**, undone by a revert: screens, copy, internal changes behind tests. The automated layers carry these; a human reads the summary and spot-checks.
+
+Human attention goes where a mistake can't be taken back, instead of being spread thin over every line. A pull request with any one-way file is a one-way door.
+
 Alongside them:
 
 - An automatic Claude review on each pull request reads the project's own `CLAUDE.md` and rules files ([workflow template](templates/claude-review.yml)).

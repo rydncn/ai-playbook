@@ -13,7 +13,7 @@ any motivational prose. Delete these comments when you're done.
 
 Set up against ai-playbook `<commit>`. Its `CHANGELOG.md` lists what changed since, and what to do about each change.
 
-Docs: design and acceptance criteria in `docs/design.md`, decisions in `docs/decisions/`, plans in `docs/plans/`, where the work is in `docs/handoff.md`.
+Docs: design and acceptance criteria in `docs/design.md`, decisions in `docs/decisions/`, plans in `docs/plans/` (build only from one marked active; done plans are history), where the work is in `docs/handoff.md`.
 
 ## Commands
 
@@ -59,6 +59,7 @@ These load automatically when the agent works on matching files:
 ## Workflow
 
 - Non-trivial work: written design, then a plan of test-first tasks. Each task states how its effect will be checked before any code is written.
+- Every pull request says whether it is a one-way door (migrations, data deletion, auth, public API, agent configuration, new dependencies, release settings) or a two-way door. A human reads the diff of every one-way file before merging.
 - A task is done when its effect has been observed, not when the code has been read back.
 - Before merging: a fresh-context review of the slice (a reviewer given the diff, the design and this file, not the session's reasoning). For auth, data, permission or migration changes: <deeper review, e.g. a different model family, and a security audit>.
 - Every few slices: a review of the whole codebase against these rules, reading the slices together.

@@ -58,6 +58,20 @@ claude plugin list
 - **The plugin check hook** ([`templates/hooks/check-plugins.mjs`](../templates/hooks/check-plugins.mjs)) warns at the start of any session where an enabled plugin is missing. The account-level plugin list a cloud session can read doesn't show plugins installed in the container, so `claude plugin list` is the check.
 - The setup script's result is cached for a few days, so later sessions start quickly.
 
+## Unattended runs
+
+An agent can work while nobody watches: a scheduled task, an overnight run through a queue of tickets, a cloud session left running. Mistakes then compound for hours before anyone sees them, so:
+
+1. **Run one iteration with you watching first.** Give it one ticket, read the whole transcript, and fix the prompt, the plan or the checks where it went wrong. Only then let it run unattended, and read the first unattended run in full too.
+2. **Only work marked for it.** The queue holds tickets whose plan says they can run unattended: small, with checks that decide when they're done. Anything that needs a judgement waits for a person.
+3. **Somewhere that limits the damage.** A dev container or a cloud session, never your own machine with prompts switched off; non-production credentials only ([rule 13](../rules/13-content-is-data-not-instructions.md)); its own worktree and database.
+4. **The output is a draft pull request.** An unattended run never merges, releases or reaches production; the ask rules stay on, so it stops at them ([rule 3](../rules/03-production-asks-first.md)).
+5. **A limit on time and spend,** set where the run starts (a timeout on the job, a spend limit on the key), and a written summary at the end of each run of what it did, what it skipped and why.
+
+## Repositories you didn't write
+
+A repository's committed `.claude/settings.json` can run hooks as soon as Claude Code trusts the folder, and its `.mcp.json` can start servers. Before accepting the trust prompt for a repository someone else wrote, read `.claude/settings.json`, anything in `.claude/hooks/`, `.mcp.json` and the `CLAUDE.md` files, as you would an install script ([rule 18](../rules/18-agent-configuration-is-code.md)). To look around one you haven't read, open it in a dev container or a cloud session that holds no credentials you care about.
+
 ## Dev containers
 
 Anthropic publishes a reference dev container (`.devcontainer/` in the `anthropics/claude-code` repository) with a firewall that allows only the hosts Claude Code and package installs need. Inside it, `--dangerously-skip-permissions` is reasonable for unattended work, with two conditions:

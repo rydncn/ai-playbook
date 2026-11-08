@@ -2,6 +2,16 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-08 · after `79ec5df`: context budget, agent configuration as code, review by door
+
+- **[Rule 17](rules/17-sessions-stay-under-a-context-budget.md): sessions stay under a context budget,** about 100,000 tokens, then hand off to a fresh session rather than compacting. A new [`context-budget.mjs`](templates/hooks/context-budget.mjs) hook reads the size from the transcript on each message and, past the budget, tells Claude and the user; `CLAUDE_CONTEXT_BUDGET` changes it. The personal defaults say the same for projects without the hook.
+- **[Rule 18](rules/18-agent-configuration-is-code.md): agent configuration is reviewed as code.** A new [`templates/CODEOWNERS`](templates/CODEOWNERS); a CI step that flags any pull request touching `.claude/`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, the workflows or the dev container; the review prompt puts these first and says a human must read them. [docs/agent-environment.md](docs/agent-environment.md) says to read a repository's hooks before trusting a folder you didn't write. The review action restores the root agent configuration from the base branch, but not a `CLAUDE.md` in a subfolder.
+- **Review by door** ([VERIFICATION.md](VERIFICATION.md#5-independent-review)): each pull request says whether it is a one-way door (hard to undo) or a two-way door, and a human reads the diff of every one-way file. The review summary names them.
+- **Unattended runs** ([docs/agent-environment.md](docs/agent-environment.md#unattended-runs)): one watched iteration first, only work marked for it, a container or cloud session, a draft pull request as the output, limits on time and spend.
+- **Plans** carry a status; agents build only from an active one.
+
+**Existing projects:** copy `context-budget.mjs` into `.claude/hooks/` and add its `UserPromptSubmit` entry from `settings.hooks.json`; copy `templates/CODEOWNERS` to `.github/CODEOWNERS` with real reviewers, and add the "Agent configuration changes" step to the CI security job; in the review workflow, add the agent configuration item first and the door line to the summary; add the door line to `CLAUDE.md`'s workflow; add `**Status:**` to existing plans, marking merged ones done.
+
 ## 2026-11-08 · after `deba336`: plugin pins, workflows, containers, browser security
 
 - **Plugins pinned to commits** in the marketplace, checked by [`scripts/plugin-pins.mjs`](scripts/plugin-pins.mjs) in CI; [docs/setup.md](docs/setup.md#what-each-plugin-runs-on-your-machine) has the update routine. Until now a push to any of the eight upstreams reached every machine on its next auto-update.

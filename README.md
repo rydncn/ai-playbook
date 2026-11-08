@@ -17,7 +17,7 @@ How I work with AI coding agents, mainly Claude Code. It is the setup I install 
 
 **Accessible by default.** Accessibility is checked in CI on every change, in every theme and interactive state, rather than audited at the end. A component that fails is not finished.
 
-**Context is kept small and current.** The instructions loaded into every session stay short; area-specific rules load only when they apply; lessons are written into the repository rather than left in one machine's memory.
+**Context is kept small and current.** The instructions loaded into every session stay short; area-specific rules load only when they apply; each session stays under a context budget and hands off to a fresh one rather than compacting; lessons are written into the repository rather than left in one machine's memory.
 
 ## Start here
 
@@ -52,6 +52,8 @@ Each rule has its own file: the rule, why it matters, and how to enforce it. Mos
 14. [Secrets never live in code, logs or telemetry](rules/14-secrets-never-in-code-logs-or-telemetry.md)
 15. [Tests must be seen to fail](rules/15-tests-must-be-seen-to-fail.md)
 16. [Acceptance tests are isolated and use real infrastructure](rules/16-acceptance-tests-are-isolated-and-real.md)
+17. [Sessions stay under a context budget](rules/17-sessions-stay-under-a-context-budget.md)
+18. [Agent configuration is reviewed as code](rules/18-agent-configuration-is-code.md)
 
 ## How work gets to done
 

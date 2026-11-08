@@ -182,3 +182,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: zizmor --format=github .github/workflows
+
+      # Agent configuration is code (rule 18): a hook runs on every session
+      # that opens the repository, settings change what the agent may do
+      # without asking, and CLAUDE.md is instructions. A pull request that
+      # touches any of it is flagged for a human reviewer, who reads what it
+      # runs and what it allows before merging. Advisory: it never fails.
+      - name: Agent configuration changes
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          pattern='(^|/)(CLAUDE|AGENTS)\.md$|^\.claude/|^\.mcp\.json$|^\.github/workflows/|^\.devcontainer/'
+          changed=$(git diff --name-only "$BASE_SHA" HEAD | grep -E "$pattern" || true)
+          if [ -n "$changed" ]; then
+            {
+              echo "### Agent configuration changed: a human reviews it as code"
+              echo
+              echo "$changed" | sed 's/^/- /'
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "$changed" | while read -r file; do
+              echo "::warning file=$file::Agent configuration changed. Review what it runs and allows before merging (rule 18)."
+            done
+          fi

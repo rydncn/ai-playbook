@@ -41,7 +41,7 @@ This is the one ordered list of what the playbook asks for on day one. Each item
 
 ## 5. Checks in the agent's loop
 
-- [ ] The hooks from [`templates/hooks`](../templates/hooks): the plugin check at session start, format and lint after each edit, the fast checks before Claude stops, and `pre-push` for everyone else.
+- [ ] The hooks from [`templates/hooks`](../templates/hooks): the plugin check at session start, the context budget on each message, format and lint after each edit, the fast checks before Claude stops, and `pre-push` for everyone else.
 - [ ] Break the type check on purpose and watch the agent get sent back, and watch a push get refused.
 
 ## 6. Instructions and decisions
@@ -53,6 +53,7 @@ This is the one ordered list of what the playbook asks for on day one. Each item
 
 ## 7. Review
 
+- [ ] [`templates/CODEOWNERS`](../templates/CODEOWNERS) as `.github/CODEOWNERS`, naming who reviews agent configuration ([rule 18](../rules/18-agent-configuration-is-code.md)).
 - [ ] [`templates/claude-review.yml`](../templates/claude-review.yml) for an automatic review on each pull request. It authenticates with workload identity federation rather than a stored API key: one federation rule per repository, scoped to its pull requests, and four repository variables. The template's header has the steps, and three traps:
   - the federation rule's subject uses GitHub's ID form, `repo:<owner>@<owner id>/<repo>@<repo id>:pull_request`, not just the names;
   - federated usage needs purchased API credit; promotional credit doesn't cover it;

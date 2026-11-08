@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { afterEdit } from "./after-edit.mjs";
 import { beforeStop } from "./before-stop.mjs";
 import { checkPlugins } from "./check-plugins.mjs";
+import { contextTokens, checkBudget } from "./context-budget.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -343,4 +344,119 @@ test("check-plugins runs as a hook: prints the warning and exits 0", () => {
   });
   assert.equal(run.status, 0, run.stderr);
   assert.match(run.stdout, /missing@ai-playbook/);
+});
+
+// context-budget: the warning when a session's context passes its budget.
+
+const row = (value) => JSON.stringify(value);
+const assistant = (tokens, extra = {}) =>
+  row({
+    type: "assistant",
+    isSidechain: false,
+    message: {
+      usage: {
+        input_tokens: 2,
+        cache_read_input_tokens: tokens - 1002,
+        cache_creation_input_tokens: 500,
+        output_tokens: 500,
+      },
+    },
+    ...extra,
+  });
+
+test("context-budget reads the context size from the last main-thread reply", () => {
+  const transcript = [
+    assistant(50_000),
+    assistant(120_000),
+    assistant(400_000, { isSidechain: true }),
+    row({ type: "user", message: { content: "next" } }),
+    "not json",
+    "",
+  ].join("\n");
+  assert.equal(contextTokens(transcript), 120_000);
+});
+
+test("context-budget finds no size in a transcript with no replies", () => {
+  assert.equal(contextTokens(row({ type: "user" })), null);
+  assert.equal(contextTokens(""), null);
+});
+
+test("context-budget warns once when the budget is passed, again every 50,000 tokens, and again after the context shrinks", () => {
+  const budget = 100_000;
+  assert.deepEqual(checkBudget({ tokens: 99_999, budget, warnedAt: null }), {
+    message: null,
+    warnedAt: null,
+  });
+
+  const first = checkBudget({ tokens: 112_000, budget, warnedAt: null });
+  assert.match(first.message, /about 112,000 tokens/);
+  assert.match(first.message, /budget of 100,000/);
+  assert.match(first.message, /\/handoff/);
+  assert.equal(first.warnedAt, 100_000);
+
+  assert.deepEqual(
+    checkBudget({ tokens: 149_999, budget, warnedAt: 100_000 }),
+    { message: null, warnedAt: 100_000 },
+    "no repeat inside the same 50,000",
+  );
+  const next = checkBudget({ tokens: 151_000, budget, warnedAt: 100_000 });
+  assert.match(next.message, /about 151,000 tokens/);
+  assert.equal(next.warnedAt, 150_000);
+
+  assert.deepEqual(
+    checkBudget({ tokens: 40_000, budget, warnedAt: 150_000 }),
+    { message: null, warnedAt: null },
+    "a compacted or cleared session starts again",
+  );
+});
+
+function budgetRun(transcriptRows, env = {}) {
+  const dir = mkdtempSync(path.join(tmpdir(), "hooks-budget-"));
+  const transcript = path.join(dir, "session.jsonl");
+  writeFileSync(transcript, transcriptRows.join("\n") + "\n");
+  return () =>
+    spawnSync("node", [path.join(here, "context-budget.mjs")], {
+      input: JSON.stringify({
+        hook_event_name: "UserPromptSubmit",
+        session_id: "s1",
+        transcript_path: transcript,
+        prompt: "carry on",
+      }),
+      env: { ...process.env, CONTEXT_BUDGET_STATE_DIR: dir, ...env },
+      encoding: "utf8",
+    });
+}
+
+test("context-budget runs as a hook: tells Claude and the user once, then stays quiet", () => {
+  const run = budgetRun([assistant(130_000)]);
+  const first = run();
+  assert.equal(first.status, 0, first.stderr);
+  const output = JSON.parse(first.stdout);
+  assert.equal(output.hookSpecificOutput.hookEventName, "UserPromptSubmit");
+  assert.match(output.hookSpecificOutput.additionalContext, /130,000/);
+  assert.match(output.systemMessage, /130k/);
+
+  const second = run();
+  assert.equal(second.status, 0, second.stderr);
+  assert.equal(second.stdout, "");
+});
+
+test("context-budget stays quiet under the budget, and reads the budget from the environment", () => {
+  const under = budgetRun([assistant(90_000)])();
+  assert.equal(under.status, 0, under.stderr);
+  assert.equal(under.stdout, "");
+
+  const lower = budgetRun([assistant(90_000)], {
+    CLAUDE_CONTEXT_BUDGET: "80000",
+  })();
+  assert.match(JSON.parse(lower.stdout).systemMessage, /80k budget/);
+});
+
+test("context-budget never fails the prompt, even with no transcript", () => {
+  const run = spawnSync("node", [path.join(here, "context-budget.mjs")], {
+    input: JSON.stringify({ transcript_path: "/nonexistent/x.jsonl" }),
+    encoding: "utf8",
+  });
+  assert.equal(run.status, 0, run.stderr);
+  assert.equal(run.stdout, "");
 });

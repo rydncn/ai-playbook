@@ -8,7 +8,9 @@ be observed before any code is written (rules 5 and 15). Keep the
 `### Task N:` headings: Superpowers' plan-running scripts look for them.
 -->
 
-**Satisfies:** AC<n>, AC<n> (in `docs/design.md`) · **Depends on:** <slice numbers, or none>
+**Status:** active · **Satisfies:** AC<n>, AC<n> (in `docs/design.md`) · **Depends on:** <slice numbers, or none>
+
+<!-- When the slice merges, set Status to "done, merged in #<PR>" in that pull request. A done plan records what was intended then, not what the code does now: agents never build from one, and docs/design.md stays the current description. -->
 
 ## Tasks
 

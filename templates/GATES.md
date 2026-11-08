@@ -62,6 +62,7 @@ For React, React Native and TypeScript projects. Each catches something agents g
 - [ ] Secrets scanning over the full history: the gitleaks command-line tool, installed from its release with a pinned checksum, is free for any repository, unlike its GitHub Action on organisation repositories, and the same command runs locally. To prove it, plant a token gitleaks recognises (a `ghp_` token of the right length); its default allowlist ignores AWS's documented example key, so that proof passes silently. Also turn on GitHub secret scanning and push protection where the plan offers them.
 - [ ] Shared agent permissions committed: deny secret files, ask before production ([template](settings.json))
 - [ ] Agent credentials are least-privilege and non-production; every MCP server is vetted like a plugin ([rule 13](../rules/13-content-is-data-not-instructions.md))
+- [ ] Agent configuration reviewed as code: [CODEOWNERS](CODEOWNERS) on `.claude/`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, the workflows and the dev container, and the CI step that flags pull requests touching them ([rule 18](../rules/18-agent-configuration-is-code.md))
 - [ ] Logging, error reporting and analytics scrub secrets and personal data, with a test that proves it ([rule 14](../rules/14-secrets-never-in-code-logs-or-telemetry.md))
 
 ## Workflows
