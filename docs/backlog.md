@@ -2,7 +2,7 @@
 
 Changes agreed but waiting for evidence. Each says what it waits for.
 
-## After trial 2 (Workspots: Go, server-rendered HTML, Postgres)
+## After the second trial (a Go web app: server-rendered HTML and Postgres)
 
 Built from the trial's real Go versions rather than designed in advance.
 
