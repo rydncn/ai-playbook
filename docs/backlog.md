@@ -11,6 +11,7 @@ Built from the trial's real Go versions rather than designed in advance.
 - **`api.md`: errors for browsers.** A request that prefers HTML gets the same problem fields as a page, not raw `application/problem+json`.
 - **`api.md`: patterns the trial needed.** Sign-up that doesn't reveal whether an account exists (the same page; the difference is only in the mail); CSRF before sign-in; a maximum password length; a development mail outbox kept out of the structured log.
 - **Turn the project's rules into acceptance criteria.** A person reviewing the trial's design found four gaps where a rule in `api.md` never became a criterion. The design step should walk the rules files and ask, for each, which criterion proves it.
+- **Code-owner review on a one-person project.** Rule 18 and the CODEOWNERS template assume a second person. When the agent opens pull requests as the only owner, GitHub can't accept the owner's own approval, so required code-owner review blocks every change to agent configuration. Say what to do instead (a bypass for the owner, who merges after reading the flagged files, with the CI flag kept), and check it on the second trial's next pull request that touches those files.
 - **Slimming, decided on numbers.** Compare the trial's effort per criterion and defects per review layer with trial 1's before cutting more. Keep verification (where the quality came from); cut record-keeping only where the trial managed without it. The handoff file stays: the trial needed one before slice 1.
 
 ## Deferred
