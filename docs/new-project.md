@@ -14,15 +14,16 @@ This is the one ordered list of what the playbook asks for on day one. Each item
 - [ ] [`templates/npmrc`](../templates/npmrc) as `.npmrc`, before the first install: install scripts off, a 7-day minimum release age, exact versions. It needs npm 11.10 or later. A package that really needs its install script gets it run explicitly, with the reason in an ADR.
 - [ ] For each language other than JavaScript, its audit in CI (`govulncheck`, `pip-audit`, `cargo audit`); with a container, the Containers gates in [GATES.md](../templates/GATES.md) and Dependabot's `docker` block.
 - [ ] Before the first push, and after every dependency change: `rm -rf node_modules && npm ci`, then the checks. That's what CI does, and a local `npm install` can pass where it fails. Never install with `--legacy-peer-deps`: it drops other packages' peers and writes a lockfile `npm ci` refuses.
-- [ ] `package.json` scripts with the names CI and the hooks expect: `typecheck`, `lint`, `test:ci` (runs once and exits; a watch-mode `test` never finishes when an agent runs it), `test:changed` (the tests for changed files, for the Stop hook) and `scan:secrets` (`gitleaks git --redact --verbose`).
+- [ ] `package.json` scripts with the names CI and the hooks expect: `typecheck`, `lint`, `test:ci` (runs once and exits; a watch-mode `test` never finishes when an agent runs it), `test:changed` (the tests for changed files, for the Stop hook) and `scan:secrets` (`gitleaks git --redact --verbose --log-opts=HEAD`).
 - [ ] The docs layout from [VERIFICATION.md](../VERIFICATION.md): `docs/design.md`, `docs/decisions/`, `docs/plans/`, `docs/handoff.md`, and `docs/device-checks.md` for an app with a native or hardware surface.
 
 ## 2. CI
 
 - [ ] [`templates/ci.yml`](../templates/ci.yml) to `.github/workflows/ci.yml`: types and lint on every push, tests once a pull request is ready for review, then a dependency audit and a secrets scan of the full history.
+- [ ] On a stack other than npm, its pack from [`templates/stacks`](../templates/stacks) instead: its CI workflow, and its `checks.json` as `.claude/checks.json` for the hooks. On a stack with no pack, write one as that folder's README describes, and treat it as a draft until a project has proved it.
 - [ ] [`templates/audit`](../templates/audit) to `scripts/`: the audit with a dated allowlist. A fresh scaffold can carry a high advisory nobody can fix yet; allowlist it with a reason and an expiry, rather than leaving the gate red.
 - [ ] [`templates/dependabot.yml`](../templates/dependabot.yml) to `.github/dependabot.yml`. It leaves major versions for a person to plan.
-- [ ] Open a first pull request and watch every job run and pass. Then break each gate on purpose (a type error, a lint error, a failing test, a fake secret) and watch it fail. For the secret, use a token gitleaks recognises, such as a `ghp_` token of the right length; its default allowlist ignores AWS's documented example key. A gate that has never been seen to fail hasn't been shown to work ([rule 9](../rules/09-checks-must-prove-they-ran.md), [rule 15](../rules/15-tests-must-be-seen-to-fail.md)).
+- [ ] Open a first pull request and watch every job run and pass. Then break each gate on purpose (a type error, a lint error, a failing test, a fake secret) and watch it fail. For the secret, plant a random token in a format gitleaks recognises (`ghp_` followed by 36 random letters and digits). A token of the right length that is obviously fake, such as all `x`, has too little entropy to match, and gitleaks's default allowlist ignores AWS's documented example key, so either proof passes silently. Plant it on a branch you delete straight afterwards, and keep the scan to the history reachable from the checked-out commit (`--log-opts="HEAD"`, as the CI template does), or the planted token turns every other pull request red. A gate that has never been seen to fail hasn't been shown to work ([rule 9](../rules/09-checks-must-prove-they-ran.md), [rule 15](../rules/15-tests-must-be-seen-to-fail.md)).
 
 ## 3. Branch protection
 
@@ -42,6 +43,7 @@ This is the one ordered list of what the playbook asks for on day one. Each item
 ## 5. Checks in the agent's loop
 
 - [ ] The hooks from [`templates/hooks`](../templates/hooks): the plugin check at session start, the context budget on each message, format and lint after each edit, the fast checks before Claude stops, and `pre-push` for everyone else.
+- [ ] [`templates/REVIEW.md`](../templates/REVIEW.md) as `docs/review-brief.md`, the brief for every review the project runs, with its four questions.
 - [ ] Break the type check on purpose and watch the agent get sent back, and watch a push get refused.
 
 ## 6. Instructions and decisions

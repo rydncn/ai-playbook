@@ -61,8 +61,9 @@ These load automatically when the agent works on matching files:
 - Non-trivial work: written design, then a plan of test-first tasks. Each task states how its effect will be checked before any code is written.
 - Every pull request says whether it is a one-way door (migrations, data deletion, auth, public API, agent configuration, new dependencies, release settings) or a two-way door. A human reads the diff of every one-way file before merging.
 - A task is done when its effect has been observed, not when the code has been read back.
-- Before merging: a fresh-context review of the slice (a reviewer given the diff, the design and this file, not the session's reasoning). For auth, data, permission or migration changes: <deeper review, e.g. a different model family, and a security audit>.
-- Every few slices: a review of the whole codebase against these rules, reading the slices together.
+- Before merging: a fresh-context review of the slice (a reviewer given the diff, the design and this file, not the session's reasoning), briefed with `docs/review-brief.md` (from the playbook's `templates/REVIEW.md`), which asks the four questions by name. For auth, data, permission or migration changes: <deeper review, e.g. a different model family, and a security audit>.
+- Every few slices: a review of the whole codebase against these rules, reading the slices together, with the same brief.
+- When the context budget warns, finish the step and write the handoff (`docs/handoff.md`): where the work is, what's next, what's undecided. Tools the next session needs go in a setup script it runs, never in the handoff as "installed": a fresh session may start in a fresh container.
 - When the agent gets something wrong, record the lesson here or in the matching rules file, never only in local memory. If a rule is broken twice, turn it into a check.
 
 ## Lessons

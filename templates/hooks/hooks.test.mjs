@@ -41,9 +41,10 @@ function recorder(results = {}) {
   const calls = [];
   const exec = (command, args) => {
     calls.push([path.basename(command), ...args]);
+    const full = [path.basename(command), ...args].join(" ");
     const key =
       path.basename(command) === "npm" ? args.at(-1) : path.basename(command);
-    return results[key] ?? { status: 0, output: "" };
+    return results[full] ?? results[key] ?? { status: 0, output: "" };
   };
   return { calls, exec };
 }
@@ -169,6 +170,139 @@ test("before-stop does nothing outside a git repository", () => {
   const { calls, exec } = recorder();
   assert.equal(beforeStop({}, { projectDir: dir, exec }), null);
   assert.equal(calls.length, 0);
+});
+
+// .claude/checks.json: the project's own commands, for any language.
+
+const goChecks = {
+  afterEdit: [
+    { extensions: [".go"], run: ["gofmt", "-w", "{file}"], fix: true },
+    { extensions: [".go"], run: ["go", "vet", "{dir}"] },
+  ],
+  beforeStop: [
+    { run: ["gofmt", "-l", "."], failOnOutput: true },
+    { run: ["go", "vet", "./..."] },
+    { run: ["go", "test", "./..."] },
+  ],
+};
+
+function goProject(checks = goChecks) {
+  // npm tools and scripts present too, so a fall back to them would show.
+  const dir = project({
+    bins: ["prettier", "eslint"],
+    scripts: { typecheck: "tsc" },
+  });
+  mkdirSync(path.join(dir, "internal", "web"), { recursive: true });
+  writeFileSync(
+    path.join(dir, "internal", "web", "server.go"),
+    "package web\n",
+  );
+  mkdirSync(path.join(dir, ".claude"));
+  writeFileSync(
+    path.join(dir, ".claude", "checks.json"),
+    typeof checks === "string" ? checks : JSON.stringify(checks),
+  );
+  return dir;
+}
+
+test("after-edit runs the project's checks for the edited file's extension, instead of the npm defaults", () => {
+  const dir = goProject();
+  const { calls, exec } = recorder();
+  const file = path.join(dir, "internal", "web", "server.go");
+  const result = afterEdit(
+    { tool_input: { file_path: file } },
+    { projectDir: dir, exec },
+  );
+  assert.equal(result.code, 0);
+  assert.deepEqual(calls, [
+    ["gofmt", "-w", file],
+    ["go", "vet", "./internal/web"],
+  ]);
+});
+
+test("after-edit reports a failing check with its command, and ignores a failing fix", () => {
+  const dir = goProject();
+  const { exec } = recorder({
+    gofmt: { status: 2, output: "syntax error" },
+    "go vet ./internal/web": {
+      status: 1,
+      output: "server.go:3: unreachable code",
+    },
+  });
+  const file = path.join(dir, "internal", "web", "server.go");
+  const result = afterEdit(
+    { tool_input: { file_path: file } },
+    { projectDir: dir, exec },
+  );
+  assert.equal(result.code, 2);
+  assert.match(result.stderr, /`go vet \.\/internal\/web`/);
+  assert.match(result.stderr, /unreachable code/);
+  assert.doesNotMatch(result.stderr, /syntax error/);
+});
+
+test("after-edit runs nothing for a file no check covers", () => {
+  const dir = goProject();
+  const { calls, exec } = recorder();
+  const result = afterEdit(
+    { tool_input: { file_path: path.join(dir, "notes.txt") } },
+    { projectDir: dir, exec },
+  );
+  assert.equal(result.code, 0);
+  assert.deepEqual(calls, []);
+});
+
+test("after-edit says so when checks.json can't be read, rather than checking nothing", () => {
+  const dir = goProject("{ not json");
+  const { calls, exec } = recorder();
+  const result = afterEdit(
+    {
+      tool_input: { file_path: path.join(dir, "internal", "web", "server.go") },
+    },
+    { projectDir: dir, exec },
+  );
+  assert.equal(result.code, 2);
+  assert.match(result.stderr, /\.claude\/checks\.json/);
+  assert.deepEqual(calls, []);
+});
+
+test("before-stop runs the project's checks in order and stops at the first that fails", () => {
+  const dir = goProject();
+  const { calls, exec } = recorder({
+    git: { status: 0, output: " M internal/web/server.go\n" },
+    "gofmt -l .": { status: 0, output: "internal/web/server.go\n" },
+  });
+  const result = beforeStop({}, { projectDir: dir, exec });
+  assert.equal(result.decision, "block");
+  assert.match(result.reason, /`gofmt -l \.`/);
+  assert.match(result.reason, /server\.go/);
+  assert.deepEqual(
+    calls.filter((c) => c[0] !== "git"),
+    [["gofmt", "-l", "."]],
+  );
+});
+
+test("before-stop passes when every configured check passes, and never falls back to npm", () => {
+  const dir = goProject();
+  const { calls, exec } = recorder({
+    git: { status: 0, output: " M internal/web/server.go\n" },
+  });
+  assert.equal(beforeStop({}, { projectDir: dir, exec }), null);
+  assert.deepEqual(
+    calls.filter((c) => c[0] !== "git"),
+    [
+      ["gofmt", "-l", "."],
+      ["go", "vet", "./..."],
+      ["go", "test", "./..."],
+    ],
+  );
+});
+
+test("before-stop sends Claude back once when checks.json can't be read", () => {
+  const dir = goProject({ beforeStop: "not a list" });
+  const { exec } = recorder({ git: { status: 0, output: " M a\n" } });
+  const result = beforeStop({}, { projectDir: dir, exec });
+  assert.equal(result.decision, "block");
+  assert.match(result.reason, /\.claude\/checks\.json/);
 });
 
 // End to end: the scripts as Claude Code runs them, reading JSON on stdin.

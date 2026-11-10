@@ -4,6 +4,10 @@
 # (GitHub Free with a private repository), this still requests the review,
 # and the CI step "Agent configuration changes" flags the pull request.
 #
+# On a one-person project, where the agent opens pull requests as you, GitHub
+# counts the owner as satisfied without a review, so this enforces nothing:
+# the CI flag and your reading of the flagged files carry rule 18 instead.
+#
 # Agent configuration is code (rule 18 in the ai-playbook): hooks run on
 # every session, settings change what the agent may do without asking, MCP
 # servers reach other systems, and CLAUDE.md and the rules are instructions.

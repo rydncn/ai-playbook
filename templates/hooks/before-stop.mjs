@@ -3,6 +3,10 @@
 // fast checks. If one fails, Claude is sent back to fix it, or to tell the
 // user plainly that it couldn't, rather than reporting the work as done.
 //
+// The checks come from .claude/checks.json's "beforeStop" when the project has
+// one (any language; see checks.mjs), and otherwise from the package.json
+// scripts in CHECKS.
+//
 // It sends Claude back once per stop. If the checks still fail on the next
 // attempt (stop_hook_active is true), it lets Claude stop, so a check that
 // cannot be fixed in this session never traps it in a loop.
@@ -11,6 +15,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { failed, loadChecks, shown } from "./checks.mjs";
 
 // The package.json scripts to run, in order. Keep them fast: the type check
 // and the unit tests for changed files, not the whole end-to-end suite.
@@ -52,21 +58,41 @@ export function beforeStop(
   const status = exec("git", ["status", "--porcelain"], projectDir);
   if (status.status !== 0 || status.output.trim() === "") return null;
 
+  let configured;
+  try {
+    configured = loadChecks(projectDir);
+  } catch (error) {
+    return {
+      decision: "block",
+      reason: `${error.message} Fix it, or tell the user, before finishing.`,
+    };
+  }
+  if (configured) {
+    for (const entry of configured.beforeStop) {
+      const [command, ...args] = entry.run;
+      const run = exec(command, args, projectDir);
+      if (failed(entry, run)) return blocked(shown(entry.run), run.output);
+    }
+    return null;
+  }
+
   const scripts = readScripts(projectDir);
   for (const name of checks) {
     if (!scripts[name]) continue;
     const run = exec("npm", ["run", "--silent", name], projectDir);
-    if (run.status !== 0) {
-      return {
-        decision: "block",
-        reason:
-          `\`npm run ${name}\` fails after your changes. Fix it before finishing. ` +
-          `If it can't be fixed in this session, stop and tell the user exactly what fails and why, ` +
-          `rather than reporting the work as done.\n\n${run.output.slice(-MAX_OUTPUT)}`,
-      };
-    }
+    if (run.status !== 0) return blocked(`npm run ${name}`, run.output);
   }
   return null;
+}
+
+function blocked(command, output) {
+  return {
+    decision: "block",
+    reason:
+      `\`${command}\` fails after your changes. Fix it before finishing. ` +
+      `If it can't be fixed in this session, stop and tell the user exactly what fails and why, ` +
+      `rather than reporting the work as done.\n\n${output.slice(-MAX_OUTPUT)}`,
+  };
 }
 
 function main() {

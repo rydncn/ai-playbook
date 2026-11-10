@@ -1,0 +1,11 @@
+{
+  "afterEdit": [
+    { "extensions": [".go"], "run": ["gofmt", "-w", "{file}"], "fix": true },
+    { "extensions": [".go"], "run": ["go", "vet", "{dir}"] }
+  ],
+  "beforeStop": [
+    { "run": ["gofmt", "-l", "."], "failOnOutput": true },
+    { "run": ["go", "vet", "./..."] },
+    { "run": ["go", "test", "-count=1", "./..."] }
+  ]
+}

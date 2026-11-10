@@ -26,6 +26,13 @@ on:
 permissions:
   contents: read
 
+# An explicit bash runs every step with -eo pipefail, so a check piped into
+# another command (`npm test | tee test.log`) fails when the check does. The
+# default shell runs with -e only (rule 9).
+defaults:
+  run:
+    shell: bash
+
 # A newer push to a pull request cancels its older run. Runs on main are never
 # cancelled: each merge gets its own result, so a broken merge can't hide
 # behind the next one.
@@ -49,6 +56,13 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+
+      # The Node LTS ships an npm older than 11.10, which ignores
+      # min-release-age without a word, so install npm itself at an exact
+      # version. npm can't come from the lockfile it installs, hence the
+      # zizmor exception. Move the version forward with Node.
+      - name: Use npm 11
+        run: npm install -g npm@11.21.2 # zizmor: ignore[adhoc-packages]
 
       # Rule 7: prove the .npmrc hardening (templates/npmrc) takes effect. An
       # npm older than 11.10 ignores min-release-age without a word.
@@ -96,6 +110,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      - name: Use npm 11
+        run: npm install -g npm@11.21.2 # zizmor: ignore[adhoc-packages]
+
       - name: Install dependencies
         run: npm ci
 
@@ -117,6 +134,9 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
+
+      - name: Use npm 11
+        run: npm install -g npm@11.21.2 # zizmor: ignore[adhoc-packages]
 
       # The lockfile may only point at the npm registry, over HTTPS, with each
       # resolved URL matching its package name and a sha512 integrity hash. A
@@ -144,7 +164,7 @@ jobs:
       # The gitleaks command-line tool, downloaded from its release and checked
       # against a pinned checksum. Free for any repository (its GitHub Action
       # needs a licence for organisation-owned ones), needs no Docker, and the
-      # same binary runs locally: `gitleaks git --redact --verbose`, or the
+      # same binary runs locally: `gitleaks git --redact --verbose --log-opts=HEAD`, or the
       # project's `npm run scan:secrets`. When updating the version, take the
       # new checksum from that release's gitleaks_<version>_checksums.txt.
       - name: Install gitleaks
@@ -158,8 +178,11 @@ jobs:
           tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" gitleaks
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
+      # The history reachable from the checked-out commit, not every branch:
+      # by default gitleaks scans all refs, and fetch-depth 0 fetches them, so
+      # a secret planted on a proof branch turned every pull request red.
       - name: Secrets scan
-        run: gitleaks git --redact --verbose
+        run: gitleaks git --redact --verbose --log-opts="HEAD"
 
       # zizmor lints the workflows themselves: script injection from pull
       # request titles and branch names, risky triggers such as
@@ -199,7 +222,7 @@ jobs:
             {
               echo "### Agent configuration changed: a human reviews it as code"
               echo
-              echo "$changed" | sed 's/^/- /'
+              echo "$changed" | sed 's/^/- `/; s/$/`/'
             } >> "$GITHUB_STEP_SUMMARY"
             echo "$changed" | while read -r file; do
               echo "::warning file=$file::Agent configuration changed. Review what it runs and allows before merging (rule 18)."

@@ -2,6 +2,34 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-10 · after `1da03c8`: what the second trial taught
+
+**Defects fixed** (each proven before the fix):
+
+- [`templates/ci.yml`](templates/ci.yml) failed as written: the Node LTS ships npm 10.9, and the npm check needs 11.10 for `min-release-age`. Each job now installs npm at an exact version.
+- The secrets scan read every branch (gitleaks scans all refs by default, and `fetch-depth: 0` fetches them), so a token planted on a proof branch turned every pull request red. It now scans the history reachable from the checked-out commit (`--log-opts="HEAD"`).
+- The gitleaks proof advice planted a token gitleaks ignores: an obviously fake `ghp_` token has too little entropy. [GATES.md](templates/GATES.md) and [docs/new-project.md](docs/new-project.md) now say to plant a random one, on a branch deleted straight afterwards.
+- A check piped into `tee` passed when it failed. [Rule 9](rules/09-checks-must-prove-they-ran.md) says so, and the CI template sets `shell: bash`, which runs with `pipefail`.
+- [`rules/api.md`](templates/rules/api.md) gave browsers raw JSON errors; a browser now gets the same problem fields as a page.
+- [Rule 15](rules/15-tests-must-be-seen-to-fail.md): plant breaks on a clean tree. Undoing one with `git checkout -- file` erased uncommitted work in the trial.
+
+**Added:**
+
+- [`templates/REVIEW.md`](templates/REVIEW.md): one brief for every review, asking four questions by name that both review layers missed in the trial (what another parser does with the input, two at once, a flood, one account against a shared result), plus lifecycles and the door. The review workflow, the CLAUDE template, GATES and VERIFICATION point at it. The [design template](templates/DESIGN.md) checks its criteria against the rules, the four questions and the lifecycles before review.
+- [`rules/api.md`](templates/rules/api.md): CSRF before sign-in; sign-up that doesn't reveal accounts; rate limits counted atomically before the slow work and shared across every route that checks a password; a password length cap and a hashing concurrency cap; redirect targets checked by parsing; one vote per account in anything combined; bounded lists; a development mail outbox. Each with the test that proves it.
+- **Hooks for any language:** `after-edit.mjs` and `before-stop.mjs` read the project's commands from `.claude/checks.json` (shared code in `checks.mjs`), falling back to the npm defaults without one. A broken `checks.json` is reported, never skipped.
+- [`templates/stacks/`](templates/stacks): which templates are generic and which per stack, a Node pack (the existing templates), a Go pack from the trial (CI, `checks.json`, permissions, notes), how to write one, and which rules apply to projects without a UI.
+- **"Start here" in three levels:** a prototype, a product (the core), and personal data, accounts or money. The README leads with what the trials showed; [VERIFICATION.md](VERIFICATION.md) has both trials' results side by side.
+- Smaller: the [ADR template](templates/ADR.md) says to write one only where a real alternative was rejected; [rule 18](rules/18-agent-configuration-is-code.md) and [CODEOWNERS](templates/CODEOWNERS) say code-owner review enforces nothing on a one-person project; [rule 17](rules/17-sessions-stay-under-a-context-budget.md) and the CLAUDE template say a handoff describes the work, with tool installs in a setup script.
+
+**Existing projects:**
+
+1. In CI: add the "Use npm 11" step after each `setup-node`, add `--log-opts="HEAD"` to the secrets scan, add `defaults: run: shell: bash`, and wrap file names in the agent configuration summary in code spans.
+2. Copy `templates/REVIEW.md` to `docs/review-brief.md` and brief every review from it; in the review workflow, add the four questions and lifecycles as items 2 and 3.
+3. Copy the new `after-edit.mjs`, `before-stop.mjs` and `checks.mjs` into `.claude/hooks/`. A project that isn't npm adds its pack's `checks.json` to `.claude/`.
+4. A server that renders pages or holds accounts: work through the new `api.md` items, each with its test.
+5. Check the design's criteria from the three directions the design template now lists.
+
 ## 2026-11-08 · after `8a6882d`: lifecycles are explicit
 
 - **[Rule 19](rules/19-lifecycles-are-explicit.md):** anything with stages has one status field, one function that changes it, derived conditions such as "active" defined once, expiry made by a job or inside that definition, and a transition-table test. From a production codebase where the public map and a dashboard disagreed about which items were active, because only one checked the expiry.

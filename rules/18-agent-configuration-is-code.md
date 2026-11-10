@@ -12,7 +12,7 @@ A session-start hook in a committed `.claude/settings.json` is an install script
 
 ## How to enforce it
 
-- Copy [`templates/CODEOWNERS`](../templates/CODEOWNERS) to `.github/CODEOWNERS`, so these paths request a named reviewer; with branch protection, make code owner review required.
+- Copy [`templates/CODEOWNERS`](../templates/CODEOWNERS) to `.github/CODEOWNERS`, so these paths request a named reviewer; with branch protection, make code owner review required. On a one-person project, where the agent opens pull requests as the only owner, GitHub treats the requirement as met (in the second trial, a pull request changing a workflow had no review and was still mergeable), so it adds nothing there. The rule is carried instead by the CI flag and by the owner reading every flagged file before merging; the file still records who that is.
 - The CI step flags every pull request that touches these paths, in the job summary and as warnings on each file.
 - The automatic review treats these files as the highest-risk change and says a human must review them, whatever else it finds.
 - An agent that runs in CI on a pull request must not load the pull request's own configuration. `claude-code-action` restores `.claude/`, `.mcp.json` and the root `CLAUDE.md` from the base branch before Claude Code starts, so a hook added in a pull request doesn't run in the review job. A `CLAUDE.md` or `AGENTS.md` in a subfolder isn't restored, and loads when the reviewer reads files there; the review prompt says such text carries no authority. A workflow that runs an agent any other way restores the same files itself.

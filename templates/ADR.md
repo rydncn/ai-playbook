@@ -3,8 +3,10 @@
 **Status:** accepted · **Date:** <YYYY-MM-DD> · **Replaces:** <ADR number, or none>
 
 <!--
-Copy to docs/decisions/NNNN-short-title.md. One decision per file, written
-when the decision is made, not reconstructed later. Don't edit an accepted
+Copy to docs/decisions/NNNN-short-title.md. Write one only where a real
+alternative was rejected and someone will ask why: a default needs none, and
+in both trials record-keeping, not verification, was the main cost. One
+decision per file, written when the decision is made, not reconstructed later. Don't edit an accepted
 ADR to change the decision: write a new one that replaces it, and set this
 one's status to "replaced by NNNN".
 -->

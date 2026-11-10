@@ -21,20 +21,30 @@ How I work with AI coding agents, mainly Claude Code. It is the setup I install 
 
 ## Start here
 
-Not all of this pays for itself on every project. In a trial that rebuilt a small app under the playbook and compared it with the same app built without it, an independent reviewer who wasn't told which was which rated the playbook build stronger on correctness, privacy, accessibility and maintainability, with a third of the defects. But it cost two to three times the effort per feature. The gains came from a few parts; most of the rest is record-keeping that earns its place on larger or longer-lived projects.
+Not all of this pays for itself on every project, so pick the level that fits and leave the rest until it earns its place.
 
-**The core, for any project.** Adopting it is an afternoon's setup:
+**What the trials showed.** In the first, a small app rebuilt under the full playbook was rated stronger on correctness, privacy, accessibility and maintainability by a reviewer who wasn't told which build was which, with a third of the defects, at two to three times the effort per feature. The second built a Go web app under the core alone, at about half an hour per acceptance criterion: fresh-context reviews found 44 issues (7 must-fix) and whole-codebase reviews 18 (5 must-fix). Five defects still passed every automated layer and were found by a person reading afterwards, each a question no brief had asked; [`templates/REVIEW.md`](templates/REVIEW.md) now asks them by name. In both, the main cost was record-keeping, not verification. Two trials on different apps and stacks show a direction, not a proof; [VERIFICATION.md](VERIFICATION.md) has the detail, including what got through.
 
-- Rules [5](rules/05-done-means-the-effect-was-observed.md), [15](rules/15-tests-must-be-seen-to-fail.md) and [16](rules/16-acceptance-tests-are-isolated-and-real.md): done means the effect was observed, tests are seen to fail, and acceptance tests drive the real thing. In the trial, these are what produced a codebase whose whole app could be tested, and that was the clearest difference between the two builds. They need numbered acceptance criteria, which can live in the issue or a page of design.
-- The gates that run without anyone remembering them: [CI](templates/ci.yml) for the project's languages, with its dependency audit and secrets scan, and the [hooks](templates/hooks), including the context budget ([rule 17](rules/17-sessions-stay-under-a-context-budget.md)).
-- The [review cadence](VERIFICATION.md#5-independent-review): a fresh-context review of each piece of work, a whole-codebase review every few pieces, and a human reading every one-way door. One whole-codebase review found more than four layers of per-piece review had.
-- The agent's boundaries: [shared permissions](templates/settings.json), so production stays behind a prompt; non-production credentials ([rule 13](rules/13-content-is-data-not-instructions.md)); agent configuration reviewed as code ([rule 18](rules/18-agent-configuration-is-code.md)); and, for npm, the [`.npmrc`](templates/npmrc).
+**A prototype** (a spike, a script, anything you would throw away). About an hour:
 
-**Add as the project grows**, when more than one person or session works on it, a decision has been argued twice, or it handles data that matters:
+- [CI](templates/ci.yml) (or the [stack pack's](templates/stacks)) with the tests and the secrets scan, and the [hooks](templates/hooks).
+- [Rule 5](rules/05-done-means-the-effect-was-observed.md): done means the effect was observed.
+- The [shared permissions](templates/settings.json), so nothing reaches production without a prompt.
 
-- A full design, plans per slice, ADRs and a handoff file.
-- The rest of the [gate checklist](templates/GATES.md): rule checks, the lint ratchet, mutation testing, containers, the workflow and lockfile checks.
-- A second model's review and a security audit for risky changes.
+**A product** (people will rely on it). The core, an afternoon's setup. Everything above, and:
+
+- Rules [15](rules/15-tests-must-be-seen-to-fail.md) and [16](rules/16-acceptance-tests-are-isolated-and-real.md): tests are seen to fail, and acceptance tests drive the real thing. They need numbered acceptance criteria and, for anything with stages, its lifecycle ([rule 19](rules/19-lifecycles-are-explicit.md)): a page of [design](templates/DESIGN.md), or the issue.
+- The [review cadence](VERIFICATION.md#5-independent-review), every review briefed from [`REVIEW.md`](templates/REVIEW.md): a fresh-context review of each piece of work, a whole-codebase review every few pieces, and a person reading every one-way door. In both trials, the whole-codebase review found what per-piece reviews structurally can't.
+- The agent's boundaries: non-production credentials ([rule 13](rules/13-content-is-data-not-instructions.md)), agent configuration reviewed as code ([rule 18](rules/18-agent-configuration-is-code.md)), and the stack's supply-chain settings (for npm, the [`.npmrc`](templates/npmrc)). The context budget comes with the hooks ([rule 17](rules/17-sessions-stay-under-a-context-budget.md)).
+
+**Personal data, accounts or money.** Everything above, and:
+
+- The four questions in [`REVIEW.md`](templates/REVIEW.md) answered for the design as well as for each review: what another parser does with the input, what two at once do, what a flood costs, what one account can do to a shared result. Each answer that matters becomes an acceptance criterion.
+- The [API rules](templates/rules/api.md) in full, including the browser section, with the tests they describe.
+- The security audit before each release, and a second model's review of the one-way doors.
+- The data, container and supply-chain sections of the [gate checklist](templates/GATES.md).
+
+**As the project grows** (more people or sessions, a decision argued twice, a long life): plans per slice, a handoff file, rule checks, the lint ratchet and mutation testing. Write an [ADR](templates/ADR.md) only where a real alternative was rejected and someone will ask why; a default needs none.
 
 ## Rules
 

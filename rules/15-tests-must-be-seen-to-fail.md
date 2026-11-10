@@ -15,4 +15,5 @@ A test that cannot fail is vacuous. Agents produce vacuous tests often: an asser
 - In the plan, each task records the failing test run before the implementation and the passing run after ([VERIFICATION.md](../VERIFICATION.md)).
 - Turn on lint rules that catch the common forms: `jest/expect-expect`, `jest/no-focused-tests`, `jest/valid-expect` and `@typescript-eslint/no-floating-promises`, or the Vitest equivalents.
 - Run mutation testing on the files a change touches, for example Stryker's `--incremental` mode for JavaScript and TypeScript. A surviving mutant is a behaviour no test protects. Running it on the whole codebase is usually too slow to be worth it; on changed files it is cheap.
+- Break things on a clean tree. Commit or stash before planting a break, and undo it with an edit or a `git checkout` of that clean commit. Undoing a break with `git checkout -- file` on a dirty tree restores the committed file and silently erases the uncommitted work in it.
 - Fail the test run if no tests ran ([rule 9](09-checks-must-prove-they-ran.md)).

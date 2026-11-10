@@ -1,0 +1,162 @@
+name: CI
+
+# The ai-playbook's CI template for Go, taken from its second trial (a Go web
+# app on Postgres). Copy to .github/workflows/ci.yml. Pull requests start as
+# drafts: the quick checks run on every push, and the tests wait until the
+# pull request is ready for review. Make every job a required check by name.
+#
+# For a database, add a Postgres service to the tests job (as the trial did)
+# and a step that applies every migration to the empty database twice, the
+# second applying nothing. For end-to-end tests with Playwright, take the e2e
+# job and the npm supply-chain steps from templates/ci.yml.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# An explicit bash runs every step with -eo pipefail, so `go test | tee log`
+# fails when go test does (rule 9).
+defaults:
+  run:
+    shell: bash
+
+# A newer push to a pull request cancels its older run. Runs on main are never
+# cancelled, so a broken merge can't hide behind the next one.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  checks:
+    name: Format, vet and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then echo "unformatted: $unformatted"; exit 1; fi
+      - name: go vet
+        run: go vet ./...
+      - name: staticcheck
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@2026.2.2
+          staticcheck ./...
+      - name: go build
+        run: go build ./...
+      # Rule checks from CLAUDE.md that a grep can see go here, each failing if
+      # it finds nothing to scan (rule 12). For example, structured logging
+      # only: fail on fmt.Print and log.Print outside main and tests.
+
+  tests:
+    name: Tests
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      # Shuffled, uncached and under the race detector: order dependence,
+      # stale results and data races all fail here (rule 16).
+      - name: Tests
+        run: go test -race -count=1 -shuffle=on ./... 2>&1 | tee test.log
+      - name: Tests ran
+        run: |
+          grep -qE '^ok\s' test.log || { echo "no package reported ok"; exit 1; }
+          ! grep -qE '^(FAIL|--- FAIL)' test.log || { echo "a test failed"; exit 1; }
+
+  security:
+    name: Dependencies and secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # full history, so secrets in earlier commits are found too
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      # Go's dependency audit reports only vulnerable code the program calls,
+      # so it rarely needs an allowlist.
+      - name: govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+          govulncheck ./...
+      # gitleaks from its release, checked against a pinned checksum. The same
+      # command runs locally. When updating, take the new checksum from that
+      # release's gitleaks_<version>_checksums.txt.
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSLo "$RUNNER_TEMP/$archive" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$archive"
+          echo "$GITLEAKS_SHA256  $RUNNER_TEMP/$archive" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" gitleaks
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      # The history reachable from the checked-out commit, not every branch:
+      # by default gitleaks scans all refs, so a secret planted on a proof
+      # branch would turn every pull request red.
+      - name: Secrets scan
+        run: gitleaks git --redact --verbose --log-opts="HEAD"
+      # zizmor lints the workflows: script injection, risky triggers, broad
+      # permissions, credentials left on disk, and pinned SHAs that aren't the
+      # version their comment claims (online, with the job's token).
+      - name: Install zizmor
+        env:
+          ZIZMOR_VERSION: 1.32.0
+          ZIZMOR_SHA256: bb110cc765eca9cd7efb2e284a956be5974c60027b0970f16397d86208a9957b
+        run: |
+          archive="zizmor-x86_64-unknown-linux-gnu.tar.gz"
+          curl -fsSLo "$RUNNER_TEMP/$archive" "https://github.com/zizmorcore/zizmor/releases/download/v${ZIZMOR_VERSION}/$archive"
+          echo "$ZIZMOR_SHA256  $RUNNER_TEMP/$archive" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" zizmor
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - name: Workflow security lint
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: zizmor --format=github .github/workflows
+      # Agent configuration is code (rule 18): flag a pull request that touches
+      # it for a person who reads what it runs and allows. Advisory: it never
+      # fails.
+      - name: Agent configuration changes
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          pattern='(^|/)(CLAUDE|AGENTS)\.md$|^\.claude/|^\.mcp\.json$|^\.github/workflows/|^\.devcontainer/'
+          changed=$(git diff --name-only "$BASE_SHA" HEAD | grep -E "$pattern" || true)
+          if [ -n "$changed" ]; then
+            {
+              echo "### Agent configuration changed: a human reviews it as code"
+              echo
+              echo "$changed" | sed 's/^/- `/; s/$/`/'
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "$changed" | while read -r file; do
+              echo "::warning file=$file::Agent configuration changed. Review what it runs and allows before merging (rule 18)."
+            done
+          fi

@@ -3,14 +3,20 @@
 // just changed and lints it, so the agent sees problems while it is still
 // working on that file rather than at CI time.
 //
-// Exit 0: nothing to report. Exit 2: lint errors, shown to Claude (the edit
-// has already happened; this cannot block it). Tools the project hasn't
+// The commands come from .claude/checks.json when the project has one (any
+// language; see checks.mjs). Without it: Prettier and ESLint from the
+// project's node_modules.
+//
+// Exit 0: nothing to report. Exit 2: a failing check, shown to Claude (the
+// edit has already happened; this cannot block it). Tools the project hasn't
 // installed are skipped, so the hook never breaks a session.
 
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { failed, fill, loadChecks, shown } from "./checks.mjs";
 
 const FORMAT_EXTENSIONS = new Set([
   ".js",
@@ -64,6 +70,23 @@ export function afterEdit(input, { projectDir, exec = defaultExec }) {
   if (!existsSync(absolute)) return { code: 0 };
 
   const extension = path.extname(absolute).toLowerCase();
+
+  let checks;
+  try {
+    checks = loadChecks(projectDir);
+  } catch (error) {
+    return { code: 2, stderr: `${error.message}\n` };
+  }
+  if (checks)
+    return configured(
+      checks.afterEdit,
+      extension,
+      absolute,
+      relative,
+      projectDir,
+      exec,
+    );
+
   const prettier = localBin(projectDir, "prettier");
   if (FORMAT_EXTENSIONS.has(extension) && prettier) {
     exec(
@@ -88,6 +111,27 @@ export function afterEdit(input, { projectDir, exec = defaultExec }) {
     }
   }
 
+  return { code: 0 };
+}
+
+function configured(entries, extension, absolute, relative, projectDir, exec) {
+  const dir = path.dirname(relative);
+  const vars = {
+    file: absolute,
+    dir: dir === "." ? "." : `./${dir.split(path.sep).join("/")}`,
+  };
+  for (const entry of entries) {
+    if (!entry.extensions.map((e) => e.toLowerCase()).includes(extension))
+      continue;
+    const [command, ...args] = fill(entry.run, vars);
+    const result = exec(command, args, projectDir);
+    if (entry.fix !== true && failed(entry, result)) {
+      return {
+        code: 2,
+        stderr: `\`${shown([command, ...args])}\` found problems in ${relative}. Fix them before moving on:\n${result.output.slice(-MAX_OUTPUT)}`,
+      };
+    }
+  }
   return { code: 0 };
 }
 
