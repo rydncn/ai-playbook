@@ -1,7 +1,8 @@
 #!/bin/sh
-# Git pre-push hook: runs the type check and lint before anything leaves the
-# machine, whichever agent or person is pushing. The Claude Code hooks cover
-# Claude's own loop; this covers every other tool, and anyone who skips them.
+# Git pre-push hook: refuses pushes to main, and runs the type check and lint
+# before anything leaves the machine, whichever agent or person is pushing.
+# The Claude Code hooks cover Claude's own loop; this covers every other tool,
+# and anyone who skips them.
 #
 # Install by copying to .claude/hooks/pre-push, next to the Claude Code hooks,
 # and adding a package.json script that points git at that folder on install:
@@ -11,6 +12,21 @@
 # gate, because `git push --no-verify` skips it.
 
 set -eu
+
+# Nothing reaches main or master by a push, however the command spells it
+# (git push origin main, HEAD:main, git -C dir push, a refspec): changes reach
+# them by a reviewed merge. Permission rules match only a command's start, so
+# this is the backstop, in auto mode especially, which allows pushes to the
+# default branch unless something stops them. A person who means to push to
+# main skips it with --no-verify, which the settings template asks about.
+while read -r _local _sha remote _remote_sha; do
+  case "$remote" in
+    refs/heads/main | refs/heads/master)
+      echo "pre-push: refusing to push to ${remote#refs/heads/}; open a pull request instead." >&2
+      exit 1
+      ;;
+  esac
+done
 
 CHECKS="${PRE_PUSH_CHECKS:-typecheck lint}"
 

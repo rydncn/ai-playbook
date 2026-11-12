@@ -367,7 +367,13 @@ function pushRepo(scripts) {
     "init",
   );
   git(work, "remote", "add", "origin", remote);
-  return () => git(work, "push", "-q", "origin", "main");
+  git(work, "branch", "feature");
+  // A push of the feature branch by default; pass other arguments to try
+  // other spellings, including ones a permission rule's prefix can't see.
+  return (...args) =>
+    args.length
+      ? git(root, ...args.map((a) => a.replace("WORK", work)))
+      : git(work, "push", "-q", "origin", "feature");
 }
 
 test("pre-push stops the push when a check fails", () => {
@@ -378,6 +384,33 @@ test("pre-push stops the push when a check fails", () => {
   const run = push();
   assert.notEqual(run.status, 0);
   assert.match(run.stderr, /npm run typecheck` failed/);
+});
+
+test("pre-push refuses a push to main or master however the command spells it", () => {
+  const push = pushRepo({ lint: 'node -e ""' });
+  for (const args of [
+    ["-C", "WORK", "push", "-q", "origin", "main"],
+    ["-C", "WORK", "push", "-q", "origin", "HEAD:main"],
+    ["-C", "WORK", "push", "-q", "origin", "feature:refs/heads/main"],
+    [
+      "-C",
+      "WORK",
+      "-c",
+      "push.default=current",
+      "push",
+      "-q",
+      "origin",
+      "@:master",
+    ],
+  ]) {
+    const run = push(...args);
+    assert.notEqual(run.status, 0, args.join(" "));
+    assert.match(
+      run.stderr,
+      /refusing to push to (main|master)/,
+      args.join(" "),
+    );
+  }
 });
 
 test("pre-push lets the push through when the checks pass or don't exist", () => {

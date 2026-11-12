@@ -12,4 +12,6 @@ The root file loads into every session, and longer files cost context and reduce
 
 ## How to enforce it
 
+- Run `/doctor` on a checked-in `CLAUDE.md` now and then: it proposes cuts for anything Claude can work out from the code. Take the ones that hold up.
+
 Use [`templates/CLAUDE.template.md`](../templates/CLAUDE.template.md). When splitting an existing file, move sections word for word and check with a script that every line still exists somewhere.

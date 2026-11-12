@@ -13,6 +13,8 @@ The playbook's ideas don't depend on the language; some of its templates do. Thi
 | `rules/api.md`, `rules/observability.md`                                                                                          | Generic ideas with JavaScript examples; adapt the examples.                                                                          |
 | `rules/react-native.md`                                                                                                           | React Native.                                                                                                                        |
 
+For a typed language, also install Anthropic's code intelligence plugin for it (`/plugin`): it gives Claude symbol navigation and shows type errors straight after each edit, alongside the hooks.
+
 ## Packs
 
 - [`node/`](node): JavaScript and TypeScript, from the first trial (an Expo app). Its files are the top-level templates.

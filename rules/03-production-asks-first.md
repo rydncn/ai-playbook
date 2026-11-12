@@ -10,6 +10,10 @@ Every project has a committed `.claude/settings.json` that makes Claude Code ask
 
 Personal allow lists grow one "don't ask again" at a time, and broad entries such as `Bash(npm run *)` silently cover deploy scripts. Claude Code checks deny and ask rules before allow rules across every settings file, so a shared ask rule holds whatever any personal list says. An instruction in `CLAUDE.md` depends on the agent following it; a permission rule does not.
 
+## Auto mode
+
+Auto mode, the default permission mode in recent versions of Claude Code, replaces most prompts with a classifier that blocks risky actions. It doesn't weaken this rule: ask and deny rules are checked before the classifier, so a matching command still prompts. Two limits matter. A rule matches the start of a command, so `git -C dir push origin main` slips past `Bash(git push*main*)`; and auto mode allows pushes to the default branch unless something stops them. The [pre-push hook](../templates/hooks/pre-push) refuses a push to `main` however it is spelled, and the settings ask before `--no-verify`, the way past it.
+
 ## How to enforce it
 
 Start from [`templates/settings.json`](../templates/settings.json) and trim the ask list to the project's real commands.

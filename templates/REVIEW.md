@@ -2,6 +2,8 @@
 
 Copy into the prompt for every review the project runs: the fresh-context review of each slice, the whole-codebase review, a second model's review, and the security audit's scope. Fill in the angle brackets. The reviewer gets this, the change (or the codebase) and the project's own rules, never the reasoning of the session that built it ([VERIFICATION.md](../VERIFICATION.md#5-independent-review)).
 
+Claude Code's bundled `/code-review` skill runs a quick correctness pass on the current diff in a fresh subagent. Use it freely; it doesn't ask the five questions below, so the reviews the playbook counts on still get this brief.
+
 ## What you are given
 
 - **Scope:** <the diff of pull request #n | the whole repository at commit abc123>.
@@ -29,5 +31,6 @@ Copy into the prompt for every review the project runs: the fresh-context review
 
 - Only what you have checked against the code and are confident is real. Try to disprove each finding before reporting it; drop it if you can't confirm it. Where you can, prove it: a failing test, a query against a real database, a request in a real browser.
 - Ignore formatting and lint (CI checks those), problems outside the scope, and matters of taste.
-- For each finding: where, what is wrong, why it matters, and the fix. Mark each must fix or should fix.
+- For each finding: where, what is wrong, why it matters, and the fix. Mark each **must fix** or **should fix**. Must fix is only what affects correctness, security, data, accessibility or a stated requirement, including a gap any of the five questions found. Everything else is should fix.
+- A reviewer asked to find gaps will find some even in sound work, and acting on all of them grows extra layers, defensive code and tests for cases that can't happen. So the builder fixes every must-fix, test-first, and a should-fix only when it is small and plainly better; the rest go in the pull request or the backlog, not into the code. Anthropic's own guidance warns of the same; in the third trial, reviews and their fixes were 44% of the time.
 - End with the door, the answers to the five questions, and anything that needs a person's decision. If you found nothing, say what you checked.

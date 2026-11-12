@@ -185,7 +185,9 @@ jobs:
               configuration, new dependencies, release or infrastructure
               settings) or a two-way door (undone by a revert), naming the
               one-way files a human must read in full; the issues by
-              severity (must fix / should fix); and anything that needs a
+              severity (must fix: correctness, security, data,
+              accessibility or a stated requirement; should fix:
+              everything else, optional); and anything that needs a
               human decision. If you found
               nothing, say "No high-confidence issues found" and list what
               you checked.

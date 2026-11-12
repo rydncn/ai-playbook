@@ -16,6 +16,7 @@
       "Bash(git push* +*)",
       "Bash(git push*--delete*)",
       "Bash(git push*--mirror*)",
+      "Bash(*--no-verify*)",
       "Bash(gh pr merge*)",
       "Bash(gh release *)",
       "Bash(npm publish*)",

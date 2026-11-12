@@ -2,6 +2,16 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-12 · after `41b8436`: in step with Anthropic's current guidance
+
+Checked against the [Claude Code best practices](https://code.claude.com/docs/en/best-practices) and the [auto mode reference](https://code.claude.com/docs/en/auto-mode-config).
+
+- **Review findings:** must fix is only what affects correctness, security, data, accessibility or a stated requirement; a should-fix is optional, fixed only when small and plainly better ([`REVIEW.md`](templates/REVIEW.md), the review workflow, the CLAUDE template). Anthropic warns that a reviewer asked to find gaps always finds some, and acting on all of them over-engineers; reviews and their fixes were 44% of the third trial's time.
+- **Auto mode:** ask and deny rules still prompt and block, because they run before its classifier ([rule 3](rules/03-production-asks-first.md), [docs/agent-environment.md](docs/agent-environment.md#auto-mode)). But a rule matches only a command's start, and auto mode allows pushes to the default branch, so the template [pre-push hook](templates/hooks/pre-push) now refuses a push to `main` however it is spelled (tested with four spellings), and the settings ask before `--no-verify`.
+- **Built-ins where they do the job:** `/code-review` for a quick pass, `/doctor` to prune `CLAUDE.md`, `/goal` for unattended runs, and code intelligence plugins for typed languages.
+
+**Existing projects:** copy the new `pre-push` (it refuses pushes to `main`), add `Bash(*--no-verify*)` to the ask rules, and update the review brief and workflow from the templates. With auto mode, describe trusted infrastructure in `autoMode.environment` in your user settings.
+
 ## 2026-11-12 · after `dfc984a`: what the third trial taught
 
 The third trial was the first controlled one: the same brief built under the playbook and by plain Claude Code, then a blind review. The playbook build scored 15 of 20 against 13 and avoided the worst defect (silently storing a payment as income), at about five times the working time, and was harder for a new user to pick up. [VERIFICATION.md](VERIFICATION.md#8-what-the-trials-found) has the detail and how to run a trial fairly.

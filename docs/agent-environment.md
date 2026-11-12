@@ -32,6 +32,15 @@ Claude Code's sandbox runs shell commands with operating-system limits on what t
 - `excludedCommands` runs named commands outside the sandbox. It is for tools that can't run inside it, such as Docker, not a way to loosen it.
 - List the documentation hosts the project's `CLAUDE.md` tells the agent to read, or that instruction can't be followed. For Expo: `docs.expo.dev`, plus `api.expo.dev` and `reactnative.directory`, which `npx expo install` needs to pick versions. Without those two, read the version from `node_modules/expo/bundledNativeModules.json` and use `npm install <package>@<version>`.
 
+## Auto mode
+
+Recent versions of Claude Code start in auto mode: a classifier reviews each action and blocks what looks risky (force pushes, production deploys, sending data outside the trusted environment) instead of asking about everything. It sits after the permission rules, not in place of them, so the playbook's committed ask and deny rules still prompt and block. What to know:
+
+- **It trusts only the working directory and this repository's remotes** until told otherwise. Describe the rest (other repositories, internal domains, buckets, which hosts count as production) in `autoMode.environment` in `~/.claude/settings.json` or managed settings, or let `/auto-mode-setup` draft it. Auto mode ignores an `autoMode` block in a project's `.claude/settings.json`, so a repository can't loosen it for you.
+- **A narrow allow rule skips the classifier,** so `Bash(npm run test*)` with a surprising argument runs unchecked. Where allow rules are broad, set `autoMode.classifyAllShell` to `true`.
+- **Pushes to the default branch are allowed** unless something stops them. The [pre-push hook](../templates/hooks/pre-push) is that something.
+- `claude auto-mode config` shows the rules in effect; the `/permissions` dialog's "Recently denied" tab shows what it blocked.
+
 ## Cloud sessions
 
 A cloud session (Claude Code on the web, or a scheduled task) runs in a fresh container, and **installs nothing from the project's plugin settings**. The plugins in `enabledPlugins` are only offered on a prompt in an interactive session, and in the cloud nobody answers it. Installing them during the session doesn't help either, because skills load when a session starts. Without a fix, every cloud session quietly does the playbook's steps by hand, and nobody notices until someone asks which plugins it used.
@@ -65,8 +74,9 @@ An agent can work while nobody watches: a scheduled task, an overnight run throu
 1. **Run one iteration with you watching first.** Give it one ticket, read the whole transcript, and fix the prompt, the plan or the checks where it went wrong. Only then let it run unattended, and read the first unattended run in full too.
 2. **Only work marked for it.** The queue holds tickets whose plan says they can run unattended: small, with checks that decide when they're done. Anything that needs a judgement waits for a person.
 3. **Somewhere that limits the damage.** A dev container or a cloud session, never your own machine with prompts switched off; non-production credentials only ([rule 13](../rules/13-content-is-data-not-instructions.md)); its own worktree and database.
-4. **The output is a draft pull request.** An unattended run never merges, releases or reaches production; the ask rules stay on, so it stops at them ([rule 3](../rules/03-production-asks-first.md)).
-5. **A limit on time and spend,** set where the run starts (a timeout on the job, a spend limit on the key), and a written summary at the end of each run of what it did, what it skipped and why.
+4. **A check that decides when it's done.** Set the run's check (the tests, a build, a script) as a `/goal` condition, so a separate evaluator re-checks it after every turn and the run keeps going until it passes or stalls; the stop hook is the deterministic version of the same thing.
+5. **The output is a draft pull request.** An unattended run never merges, releases or reaches production; the ask rules stay on, so it stops at them ([rule 3](../rules/03-production-asks-first.md)).
+6. **A limit on time and spend,** set where the run starts (a timeout on the job, a spend limit on the key), and a written summary at the end of each run of what it did, what it skipped and why.
 
 ## Repositories you didn't write
 
