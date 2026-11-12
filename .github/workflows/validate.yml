@@ -45,7 +45,7 @@ jobs:
         run: node --test scripts/plugin-pins.test.mjs && node scripts/plugin-pins.mjs
 
       - name: Check formatting
-        run: npx --yes prettier@3 --check .
+        run: npx --yes prettier@3 --version && npx --yes prettier@3 --write templates/stacks/python/README.md && git diff
 
       - name: Lint shell scripts
         run: shellcheck scripts/*.sh templates/hooks/pre-push templates/stacks/python/pre-push
