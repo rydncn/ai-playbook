@@ -1,7 +1,10 @@
 #!/usr/bin/env node
-// UserPromptSubmit hook: warns when the session's context has grown by more
-// than a budget, 100,000 tokens unless CLAUDE_CONTEXT_BUDGET says otherwise
-// (rule 17).
+// UserPromptSubmit and PostToolUse hook: warns when the session's context has
+// grown by more than a budget, 100,000 tokens unless CLAUDE_CONTEXT_BUDGET
+// says otherwise (rule 17). After each tool call as well as each message,
+// because a session working on its own (a review, an audit, a long run) can
+// go far past the budget between two messages: in the third trial, a hook on
+// messages alone warned between 138,000 and 208,000 tokens added.
 //
 // Past that size an agent follows its instructions less closely and decides
 // worse, long before the window is full, and compaction carries forward a
@@ -14,10 +17,21 @@
 // was sent, plus what it wrote. The budget counts what the session added
 // since its first reply, because the harness's own instructions and tools
 // arrive before any work and vary widely (about 80,000 tokens in a cloud
-// session). After a compaction it counts from the first reply after it. They still take attention, so the message gives the total too.
-// Never fails or blocks the prompt.
+// session). After a compaction it counts from the first reply after it. They
+// still take attention, so the message gives the total too.
+//
+// It reads only what the transcript gained since its last run, keeping its
+// place and the sizes so far in a small state file, so running after every
+// tool call stays cheap however long the session. Never fails or blocks.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import {
+  closeSync,
+  fstatSync,
+  openSync,
+  readFileSync,
+  readSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -35,9 +49,8 @@ const size = (usage) =>
  * The context size at the session's first main-thread reply since its last
  * compaction, and at its latest one, from the transcript's JSONL text.
  */
-export function contextSizes(transcript) {
-  let start = null;
-  let last = null;
+export function contextSizes(transcript, from = { start: null, last: null }) {
+  let { start, last } = from;
   for (const line of transcript.split("\n")) {
     let row;
     try {
@@ -78,39 +91,80 @@ export function checkBudget({ tokens, start, budget, warnedAt }) {
   };
 }
 
+/** What the transcript gained since `offset`, up to its last complete line. */
+function unread(file, offset) {
+  const fd = openSync(file, "r");
+  try {
+    const size = fstatSync(fd).size;
+    if (size < offset) return { text: null, size }; // replaced: start again
+    const buffer = Buffer.alloc(size - offset);
+    readSync(fd, buffer, 0, buffer.length, offset);
+    const end = buffer.lastIndexOf(0x0a) + 1;
+    return {
+      text: buffer.subarray(0, end).toString("utf8"),
+      next: offset + end,
+    };
+  } finally {
+    closeSync(fd);
+  }
+}
+
+function readState(file) {
+  try {
+    const state = JSON.parse(readFileSync(file, "utf8"));
+    if (state && typeof state.offset === "number") return state;
+  } catch {
+    // None yet, or from an older version of this hook: start from the top.
+  }
+  return { offset: 0, start: null, last: null, warnedAt: null };
+}
+
 function main() {
   try {
     const input = JSON.parse(readFileSync(0, "utf8"));
-    const { start, last: tokens } = contextSizes(
-      readFileSync(input.transcript_path, "utf8"),
+    const id = String(input.session_id ?? "session").replace(/[^\w-]/g, "_");
+    const stateFile = path.join(
+      process.env.CONTEXT_BUDGET_STATE_DIR || tmpdir(),
+      `claude-context-budget-${id}.json`,
     );
-    if (tokens === null) return;
+    let state = readState(stateFile);
+    let read = unread(input.transcript_path, state.offset);
+    if (read.text === null) {
+      state = { offset: 0, start: null, last: null, warnedAt: null };
+      read = unread(input.transcript_path, 0);
+    }
+    const sizes = contextSizes(read.text, state);
+    state = { ...state, ...sizes, offset: read.next };
+    const { start, last: tokens } = sizes;
+    if (tokens === null || start === null) {
+      writeFileSync(stateFile, JSON.stringify(state));
+      return;
+    }
 
     const configured = Number.parseInt(
       process.env.CLAUDE_CONTEXT_BUDGET ?? "",
       10,
     );
     const budget = configured > 0 ? configured : DEFAULT_BUDGET;
-    const id = String(input.session_id ?? "session").replace(/[^\w-]/g, "_");
-    const stateFile = path.join(
-      process.env.CONTEXT_BUDGET_STATE_DIR || tmpdir(),
-      `claude-context-budget-${id}`,
+    const result = checkBudget({
+      tokens,
+      start,
+      budget,
+      warnedAt: state.warnedAt,
+    });
+    writeFileSync(
+      stateFile,
+      JSON.stringify({ ...state, warnedAt: result.warnedAt }),
     );
-    let warnedAt = null;
-    try {
-      warnedAt = Number.parseInt(readFileSync(stateFile, "utf8"), 10) || null;
-    } catch {
-      // Not warned yet in this session.
-    }
-
-    const result = checkBudget({ tokens, start, budget, warnedAt });
-    writeFileSync(stateFile, String(result.warnedAt ?? ""));
     if (!result.message) return;
     process.stdout.write(
       JSON.stringify({
         systemMessage: `Context is about ${short(tokens)} tokens, ${short(tokens - start)} added this session, past the ${short(budget)} budget. Consider a handoff and a fresh session at the next break.`,
         hookSpecificOutput: {
-          hookEventName: "UserPromptSubmit",
+          hookEventName:
+            input.hook_event_name === "PostToolUse"
+              ? "PostToolUse"
+              : "UserPromptSubmit",
           additionalContext: result.message,
         },
       }),

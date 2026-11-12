@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  appendFileSync,
   mkdtempSync,
   mkdirSync,
   writeFileSync,
@@ -624,6 +625,92 @@ test("context-budget stays quiet under the budget, and reads the budget from the
     CLAUDE_CONTEXT_BUDGET: "80000",
   })();
   assert.match(JSON.parse(lower.stdout).systemMessage, /past the 80k budget/);
+});
+
+test("context-budget reads a transcript in pieces exactly as it reads it whole", () => {
+  const rows = [
+    assistant(40_000),
+    assistant(90_000),
+    row({ type: "system", subtype: "compact_boundary" }),
+    assistant(30_000),
+    assistant(70_000),
+    row({ type: "system", subtype: "compact_boundary" }),
+    assistant(25_000),
+    assistant(160_000),
+  ];
+  const whole = contextSizes(rows.join("\n"));
+  for (let cut = 1; cut < rows.length; cut++) {
+    const first = contextSizes(rows.slice(0, cut).join("\n"));
+    const both = contextSizes(rows.slice(cut).join("\n"), first);
+    assert.deepEqual(both, whole, `cut after row ${cut}`);
+  }
+});
+
+function growing(env = {}) {
+  const dir = mkdtempSync(path.join(tmpdir(), "hooks-budget-"));
+  const transcript = path.join(dir, "session.jsonl");
+  writeFileSync(transcript, "");
+  const run = (event = "PostToolUse") =>
+    spawnSync("node", [path.join(here, "context-budget.mjs")], {
+      input: JSON.stringify({
+        hook_event_name: event,
+        session_id: "s2",
+        transcript_path: transcript,
+      }),
+      env: { ...process.env, CONTEXT_BUDGET_STATE_DIR: dir, ...env },
+      encoding: "utf8",
+    });
+  const append = (text) => appendFileSync(transcript, text);
+  const replace = (text) => writeFileSync(transcript, text);
+  const offset = () =>
+    JSON.parse(
+      readFileSync(path.join(dir, "claude-context-budget-s2.json"), "utf8"),
+    ).offset;
+  return { run, append, replace, offset };
+}
+
+test("context-budget warns during a long turn, after a tool call, naming that event", () => {
+  const { run, append } = growing();
+  append(assistant(20_000) + "\n");
+  assert.equal(run().stdout, "", "under budget");
+  append(assistant(90_000) + "\n" + assistant(130_000) + "\n");
+  const output = JSON.parse(run().stdout);
+  assert.equal(output.hookSpecificOutput.hookEventName, "PostToolUse");
+  assert.match(
+    output.hookSpecificOutput.additionalContext,
+    /110,000 of them added/,
+  );
+  assert.equal(run().stdout, "", "once per step");
+});
+
+test("context-budget leaves a half-written last line until it is complete", () => {
+  const { run, append, offset } = growing();
+  append(assistant(20_000) + "\n");
+  run();
+  const line = assistant(150_000);
+  const complete = Buffer.byteLength(assistant(20_000) + "\n");
+  append(line.slice(0, 40));
+  assert.equal(run().stdout, "");
+  assert.equal(
+    offset(),
+    complete,
+    "reads on from the last complete line next time",
+  );
+  append(line.slice(40) + "\n");
+  assert.match(
+    JSON.parse(run().stdout).systemMessage,
+    /150k tokens, 130k added/,
+  );
+});
+
+test("context-budget starts again when the transcript is replaced by a shorter one", () => {
+  const { run, append, replace } = growing();
+  append(assistant(20_000) + "\n" + assistant(60_000) + "\n");
+  run();
+  replace(assistant(10_000) + "\n");
+  assert.equal(run().stdout, "");
+  append(assistant(115_000) + "\n");
+  assert.match(JSON.parse(run().stdout).systemMessage, /105k added/);
 });
 
 test("context-budget never fails the prompt, even with no transcript", () => {

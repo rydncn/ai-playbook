@@ -35,6 +35,16 @@
             "timeout": 60
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/context-budget.mjs"],
+            "timeout": 10
+          }
+        ]
       }
     ],
     "Stop": [

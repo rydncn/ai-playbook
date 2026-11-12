@@ -48,7 +48,7 @@ jobs:
         run: npx --yes prettier@3 --check .
 
       - name: Lint shell scripts
-        run: shellcheck scripts/*.sh templates/hooks/pre-push
+        run: shellcheck scripts/*.sh templates/hooks/pre-push templates/stacks/python/pre-push
 
       - name: Test the rule-check template
         run: node --test templates/rule-check/check-rules.test.js
@@ -82,10 +82,13 @@ jobs:
       - name: Workflow security lint
         env:
           GH_TOKEN: ${{ github.token }}
-        run: zizmor --format=github .github/workflows templates/ci.yml templates/claude-review.yml templates/stacks/go/ci.yml
+        run: zizmor --format=github .github/workflows templates/ci.yml templates/claude-review.yml templates/stacks/go/ci.yml templates/stacks/python/ci.yml
+
+      - name: The Python pack's scripts compile
+        run: python3 -m py_compile templates/stacks/python/*.py
 
       - name: Check settings templates are valid JSON
         run: |
-          for f in templates/settings.json templates/hooks/settings.hooks.json templates/stacks/go/checks.json; do
+          for f in templates/settings.json templates/hooks/settings.hooks.json templates/stacks/go/checks.json templates/stacks/python/checks.json; do
             node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$f"
           done

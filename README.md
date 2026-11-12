@@ -23,7 +23,7 @@ How I work with AI coding agents, mainly Claude Code. It is the setup I install 
 
 Not all of this pays for itself on every project, so pick the level that fits and leave the rest until it earns its place.
 
-**What the trials showed.** In the first, a small app rebuilt under the full playbook was rated stronger on correctness, privacy, accessibility and maintainability by a reviewer who wasn't told which build was which, with a third of the defects, at two to three times the effort per feature. The second built a Go web app under the core alone, at about half an hour per acceptance criterion: fresh-context reviews found 44 issues (7 must-fix) and whole-codebase reviews 18 (5 must-fix). Five defects still passed every automated layer and were found by a person reading afterwards, each a question no brief had asked; [`templates/REVIEW.md`](templates/REVIEW.md) now asks them by name. In both, the main cost was record-keeping, not verification. Two trials on different apps and stacks show a direction, not a proof; [VERIFICATION.md](VERIFICATION.md) has the detail, including what got through.
+**What the trials showed.** In the third, the same brief (a Python tool that imports bank statements) was built twice, once under the playbook and once by plain Claude Code, and a reviewer compared them blind. The playbook build scored 15 of 20 against 13, and the difference was where it mattered most: the plain build silently stored a payment as income and let a hostile file write to the terminal, while the playbook build's worst defect was a feature that was hard to reach. It cost about five times the working time, mostly mutation testing and reviews, and it was harder for a new user to pick up. The first two trials, on an Expo app and a Go web app, pointed the same way. Every trial found things the playbook got wrong, and it changed after each; [VERIFICATION.md](VERIFICATION.md#8-what-the-trials-found) has all three, including what got through.
 
 **A prototype** (a spike, a script, anything you would throw away). About an hour:
 
@@ -39,7 +39,7 @@ Not all of this pays for itself on every project, so pick the level that fits an
 
 **Personal data, accounts or money.** Everything above, and:
 
-- The four questions in [`REVIEW.md`](templates/REVIEW.md) answered for the design as well as for each review: what another parser does with the input, what two at once do, what a flood costs, what one account can do to a shared result. Each answer that matters becomes an acceptance criterion.
+- The five questions in [`REVIEW.md`](templates/REVIEW.md) answered for the design as well as for each review: what another parser does with the input, what two at once do, what a flood costs, what one account or input can do to a result people rely on, and what the caller learns when it only partly works. Each answer that matters becomes an acceptance criterion.
 - The [API rules](templates/rules/api.md) in full, including the browser section, with the tests they describe.
 - The security audit before each release, and a second model's review of the one-way doors.
 - The data, container and supply-chain sections of the [gate checklist](templates/GATES.md).

@@ -43,7 +43,7 @@ This is the one ordered list of what the playbook asks for on day one. Each item
 ## 5. Checks in the agent's loop
 
 - [ ] The hooks from [`templates/hooks`](../templates/hooks): the plugin check at session start, the context budget on each message, format and lint after each edit, the fast checks before Claude stops, and `pre-push` for everyone else.
-- [ ] [`templates/REVIEW.md`](../templates/REVIEW.md) as `docs/review-brief.md`, the brief for every review the project runs, with its four questions.
+- [ ] [`templates/REVIEW.md`](../templates/REVIEW.md) as `docs/review-brief.md`, the brief for every review the project runs, with its five questions.
 - [ ] Break the type check on purpose and watch the agent get sent back, and watch a push get refused.
 
 ## 6. Instructions and decisions

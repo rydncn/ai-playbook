@@ -30,7 +30,7 @@ What to consider when setting up gates for a new project. Not every item applies
 
 - [ ] Acceptance tests against real services (containers or the platform's local stack), with fakes only for third parties ([rule 16](../rules/16-acceptance-tests-are-isolated-and-real.md))
 - [ ] Tests run in random order and in parallel, so shared state fails quickly
-- [ ] Mutation testing on changed files, for example Stryker in incremental mode ([rule 15](../rules/15-tests-must-be-seen-to-fail.md)). Confirmed with Stryker 10's Jest runner under `jest-expo` 58, scoped to plain TypeScript modules (React Native renders not tried). On any other stack, prove it runs and kills a deliberate mutant before relying on it.
+- [ ] Mutation testing on the changed files in the core (the modules whose mistakes cost most), and once over everything before a release, for example Stryker in incremental mode ([rule 15](../rules/15-tests-must-be-seen-to-fail.md)). Confirmed with Stryker 10's Jest runner under `jest-expo` 58, scoped to plain TypeScript modules (React Native renders not tried). On any other stack, prove it runs and kills a deliberate mutant before relying on it.
 - [ ] Test lint rules: `jest/expect-expect`, `jest/no-focused-tests`, `jest/valid-expect`, or the Vitest equivalents
 - [ ] The test run fails if no tests ran
 
@@ -103,7 +103,9 @@ For React, React Native and TypeScript projects. Each catches something agents g
 ## Review
 
 - [ ] Automatic review on every pull request, reading the project's own rules ([workflow](claude-review.yml))
-- [ ] Every review briefed from [`REVIEW.md`](REVIEW.md), with its four questions answered by name for any change to auth, input, rate limits or shared results
+- [ ] The README lets a new user install, configure and run every command, with an example; checked as part of done, by someone who hasn't read the design
+- [ ] Inputs the brief or a user gave are fixtures, read as given and never edited to make a test pass ([rule 16](../rules/16-acceptance-tests-are-isolated-and-real.md))
+- [ ] Every review briefed from [`REVIEW.md`](REVIEW.md), with its five questions answered by name for any change to auth, input, output, rate limits or shared results
 - [ ] A fresh-context review of each slice before merge, by a reviewer given the diff and the rules, not the building session's reasoning
 - [ ] A whole-codebase review against the rules at a fixed cadence (every few slices, and before each phase ends), briefed from `CLAUDE.md` and the design rather than a diff ([VERIFICATION.md](../VERIFICATION.md))
 - [ ] An independent second opinion from a different model family for risky changes

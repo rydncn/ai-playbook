@@ -47,10 +47,15 @@ Numbered, one block per behaviour, written as what a user or caller would observ
 
 <Include the unhappy paths: empty, invalid, refused, offline, and the worst-case data the screen will really meet.>
 
-<Before reviewing the criteria, check them from three directions:
+<Two criteria every design has, whatever else it covers:
+
+- Every example the brief or the user gave (a sample file, a request, a screen) is read exactly as given: a criterion each, word for word. In the third trial, one build edited its own copy of a sample row it couldn't parse, so its tests never met the real bytes, and the brief's refund went missing.
+- A new user can start from the README alone: install, configure, a first run and every command, with an example. In the third trial, the build whose settings were described only in its acceptance criteria scored lowest on usability.
+
+Before reviewing the criteria, check them from three directions:
 
 - Each rules file that applies (`CLAUDE.md`, `.claude/rules/`): for each rule with behaviour someone could observe, which criterion proves it? A rule with none is a gap; in the second trial, a person reviewing the design found four (CSRF before sign-in, a new session at sign-in, a maximum password length, HTTPS in the release rehearsal).
-- The four questions in `templates/REVIEW.md`, asked of the design: what another parser does with each input, what two at once do, what a flood costs, what one account can do to a shared result. Each answer that matters becomes a criterion; "one account counts once per spot" was missing from thirty criteria and was the most harmful defect the trial found.
+- The five questions in `templates/REVIEW.md`, asked of the design: what another parser does with each input, what two at once do, what a flood costs, what one account or input can do to a result people rely on, and what the caller learns when it only partly works. Each answer that matters becomes a criterion; "one account counts once per spot" was missing from thirty criteria and was the most harmful defect the trial found.
 - Each lifecycle above: every refused move is a criterion.>
 
 ## Test tiers

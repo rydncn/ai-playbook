@@ -2,6 +2,24 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-12 · after `dfc984a`: what the third trial taught
+
+The third trial was the first controlled one: the same brief built under the playbook and by plain Claude Code, then a blind review. The playbook build scored 15 of 20 against 13 and avoided the worst defect (silently storing a payment as income), at about five times the working time, and was harder for a new user to pick up. [VERIFICATION.md](VERIFICATION.md#8-what-the-trials-found) has the detail and how to run a trial fairly.
+
+- **A fifth review question,** in [`templates/REVIEW.md`](templates/REVIEW.md), the review workflow and the design template: what does the caller learn when it only partly works? Both builds exited 0 on a partial import.
+- **The brief's inputs are fixtures** ([rule 16](rules/16-acceptance-tests-are-isolated-and-real.md), the design template, the review brief): read as given, never edited so a test passes. The playbook build edited its copy of a sample it couldn't parse.
+- **User documentation is part of done:** a criterion in every design, a gate, a review item, and a line in the CLAUDE template. Design documents and ADRs don't count.
+- **Mutation testing aimed at the core** ([rule 15](rules/15-tests-must-be-seen-to-fail.md), GATES): the changed files whose mistakes cost most, and once over everything before a release. On every changed file it was the largest single cost and bought one planted regression in six.
+- **The context budget is checked after every tool call,** not only on messages, reading only what the transcript gained since the last run. With messages only, its warnings came between 138,000 and 208,000 tokens added.
+- **A draft Python pack,** [`templates/stacks/python`](templates/stacks/python), from the trial: `checks.json`, CI, `pre-push`, mutation testing on the core with mutmut, a `pip-audit` allowlist, a lockfile check, and what the trial learned.
+
+**Existing projects:**
+
+1. Copy the new `context-budget.mjs` into `.claude/hooks/`, and add its PostToolUse entry from `settings.hooks.json`.
+2. Update `docs/review-brief.md` from `templates/REVIEW.md` (the fifth question, fixtures, user documentation), and the review workflow's prompt to match.
+3. Add the two criteria every design now has: the brief's examples read as given, and a README a new user can start from.
+4. If mutation testing runs on every changed file, aim it at the core: for the Python pack, set the repository variable `MUTATION_CORE`.
+
 ## 2026-11-10 · after `1da03c8`: what the second trial taught
 
 **Defects fixed** (each proven before the fix):

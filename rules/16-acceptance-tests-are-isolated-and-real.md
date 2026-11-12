@@ -31,4 +31,5 @@ Tests that share state fail in ways that depend on the order they ran in. The fa
 - Start real services for the test run: containers (Testcontainers, or Docker Compose in CI) or the platform's local stack, with every migration applied from empty.
 - Give each test its own data: unique IDs or tenants, a transaction rolled back after each test, or a truncate between tests. Never rely on seeded data another test may change.
 - Run the suite in random order and in parallel in CI (for example Jest's `--randomize`, or Vitest's `sequence.shuffle`), so order dependence fails quickly rather than one day.
+- Inputs someone else gave (the brief's sample files, a user's example request, a bank's real export) are fixtures. The tests read them byte for byte as given; a test or a sample edited so the code passes is a finding. If the code refuses one, a criterion says so and why, and the brief's owner agrees.
 - Each acceptance test maps to a numbered acceptance criterion in the design, written before the code ([VERIFICATION.md](../VERIFICATION.md)), and names it.

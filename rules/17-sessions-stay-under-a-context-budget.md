@@ -12,6 +12,8 @@ Agents follow their instructions less closely and make worse decisions as the co
 
 A handoff describes the work, not the machine. In the second trial a fresh session started in a fresh container without the tools the handoff said were installed, and spent twenty minutes finding out; tool installs belong in a setup script the next session runs.
 
+In the third trial, with the hook on messages alone, the warning came between 138,000 and 208,000 tokens added, every time at the end of a long stretch the session ran on its own (a review, an audit, a mutation run), and reading the handoff, the design and the code cost 60,000 to 107,000 before any work. Hence the hook after each tool call, and a handoff and a design short enough to read without spending half the budget.
+
 ## How to enforce it
 
-The hook reads the context size from the session's transcript each time the user sends a message, and once the session has added more than the budget tells Claude to suggest the handoff and shows the user the same. Set a different budget with `CLAUDE_CONTEXT_BUDGET` in the `env` block of `.claude/settings.json`. The hook only advises: it never blocks, because stopping in the middle of a step costs more than finishing it.
+The hook reads the context size from the session's transcript each time the user sends a message and after every tool call, and once the session has added more than the budget tells Claude to suggest the handoff and shows the user the same. Set a different budget with `CLAUDE_CONTEXT_BUDGET` in the `env` block of `.claude/settings.json`. The hook only advises: it never blocks, because stopping in the middle of a step costs more than finishing it.
