@@ -2,7 +2,7 @@
 
 Changes agreed but waiting for evidence. Each says what it waits for.
 
-- **Adoption on an existing codebase.** Every trial so far started empty. Run the setup skill on a production codebase, adopt the level that fits, and record what it found, what it cost and what it got wrong. The next piece of evidence, ahead of any fourth designed trial.
+- **Adoption on an existing codebase.** First evidence: the templates alone, used for one feature on a production codebase. The fifth question found a real defect at once, and the design's three-direction check and an independent review were worth their cost; the gaps it found are fixed in the changelog entry after `d7082cc`. Still to do: the setup skill run on an existing codebase, and the hooks adopted there.
 - **The Python and Go packs, proven twice.** Each has been through one project. Mark each proven once a second project has used it, with what that project changed.
 - **Whether the five review questions close the gap.** The second trial's escapes were all of the first four classes, and the third added the fifth. Count what still gets past every automated layer when the brief asks all five by name.
 - **The cost.** The third trial's playbook build took about five times the plain build's working time; mutation testing and reviews were most of it. After aiming mutation testing at the core, measure again on the next project.

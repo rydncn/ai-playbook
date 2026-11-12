@@ -2,6 +2,20 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-12 · after `d7082cc`: the first feedback from an existing codebase
+
+The templates alone (design, plans, ADRs, the review brief) were used for one feature on a production codebase. The fifth review question found a real defect straight away (a loader that dropped a cut-short file's last line and exited 0), and the design's three-direction check and an independent review were worth their cost. What it found missing:
+
+- **A route for using the templates alone** in [docs/new-project.md](docs/new-project.md): the playbook commit goes in the design's header, and the marketplace is kept current.
+- **Spikes** in [`PLAN.md`](templates/PLAN.md): Measure, Record and Decides instead of Test, Code and Observed by, and the five questions still apply to throwaway code.
+- **Slice plans that stand alone:** each quotes its criteria and names the design sections it needs, so a slice session doesn't read the whole design (rule 17).
+- **Paid resources and public places** in [rule 3](rules/03-production-asks-first.md): anything billed by the hour has a live-price-and-availability estimate, a teardown and a hard stop; anything posted publicly is read by a person first. The settings template asks before `gh issue create`, `gh issue comment` and `gh gist create`, and the playbook has a feedback issue template that says not to name the project. The feedback itself was first posted naming its project.
+- **The README's reader is whoever runs it,** user or operator; where nobody gave sample inputs, the fixtures are recorded real responses and an unedited cut of real input ([design template](templates/DESIGN.md)).
+- **Several stacks in one repository:** scope each pack's checks to its folders ([`stacks/`](templates/stacks)).
+- **Rule 13:** infrastructure work gets its own session that doesn't read untrusted input.
+
+**Existing projects:** add the three `gh` ask rules to `.claude/settings.json`; use the plan template's quoted criteria and spike variant from the next plan on.
+
 ## 2026-11-12 · after `41b8436`: in step with Anthropic's current guidance
 
 Checked against the [Claude Code best practices](https://code.claude.com/docs/en/best-practices) and the [auto mode reference](https://code.claude.com/docs/en/auto-mode-config).

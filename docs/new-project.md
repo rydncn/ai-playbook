@@ -4,6 +4,8 @@ This is the one ordered list of what the playbook asks for on day one. Each item
 
 `/playbook:init-project` works through steps 4 to 6 for you. Without the plugin, its [skill file](../plugins/playbook/skills/init-project/SKILL.md) is the same checklist to follow by hand.
 
+**On an existing codebase, using only the templates** (a design, plans, ADRs and the review brief for one piece of work, without the hooks or the setup skill): record the playbook commit in the design's header (`Templates: ai-playbook at <commit>`), and catch up from the changelog's "Existing projects" steps for the templates you use. Keep the marketplace current: auto-update on, or `claude plugin marketplace update ai-playbook` before starting; a local copy goes stale without anything saying so.
+
 ## 1. Repository and scaffold
 
 - [ ] Create the repository with a `main` branch and a licence if it will be public.

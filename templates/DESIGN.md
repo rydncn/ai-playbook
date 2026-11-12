@@ -49,8 +49,8 @@ Numbered, one block per behaviour, written as what a user or caller would observ
 
 <Two criteria every design has, whatever else it covers:
 
-- Every example the brief or the user gave (a sample file, a request, a screen) is read exactly as given: a criterion each, word for word. In the third trial, one build edited its own copy of a sample row it couldn't parse, so its tests never met the real bytes, and the brief's refund went missing.
-- A new user can start from the README alone: install, configure, a first run and every command, with an example. In the third trial, the build whose settings were described only in its acceptance criteria scored lowest on usability.
+- Every example the brief or the user gave (a sample file, a request, a screen) is read exactly as given: a criterion each, word for word. Where nobody gave one, the fixtures are recorded real responses from the services it calls and an unedited cut of real input. In the third trial, one build edited its own copy of a sample row it couldn't parse, so its tests never met the real bytes, and the brief's refund went missing.
+- The README's reader is whoever runs it, a user or an operator, and they can start from it alone: install (or create), configure, a first run and every command or exit code, with an example. In the third trial, the build whose settings were described only in its acceptance criteria scored lowest on usability.
 
 Before reviewing the criteria, check them from three directions:
 

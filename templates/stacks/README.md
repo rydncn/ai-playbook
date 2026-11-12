@@ -15,6 +15,8 @@ The playbook's ideas don't depend on the language; some of its templates do. Thi
 
 For a typed language, also install Anthropic's code intelligence plugin for it (`/plugin`): it gives Claude symbol navigation and shows type errors straight after each edit, alongside the hooks.
 
+**More than one stack in a repository:** scope each pack's checks to its own folders, and exclude those folders from the others' (type checker, linter, dead-code finder). A folder of scripts for a second runtime otherwise breaks the first one's type check, because its globals don't exist there.
+
 ## Packs
 
 - [`node/`](node): JavaScript and TypeScript, from the first trial (an Expo app). Its files are the top-level templates.
