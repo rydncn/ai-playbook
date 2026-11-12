@@ -3,7 +3,7 @@
 [![Validate](https://github.com/rydncn/ai-playbook/actions/workflows/validate.yml/badge.svg)](https://github.com/rydncn/ai-playbook/actions/workflows/validate.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-How I work with AI coding agents, mainly Claude Code. It is the setup I install on every machine and apply to every project: the rules I hold agents to, how work is verified before it counts as done, and the templates and tooling that make both stick.
+How I work with AI coding agents, mainly Claude Code: the rules I hold agents to, the checks that enforce them, and templates for Node, Go and Python. In a controlled trial, the same brief was built under it and by plain Claude Code, then reviewed blind: the playbook build avoided the worst defects, such as a payment silently stored as income, at about five times the working time. [The results](VERIFICATION.md#8-what-the-trials-found), including what got through.
 
 ## Principles
 
