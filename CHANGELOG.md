@@ -2,6 +2,18 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-14 · after `7ac4e2a`: the second trial's last notes
+
+Eight notes from the second trial were written on two branches and never reached the backlog. Three were already in: plant breaks on a clean tree ([rule 15](rules/15-tests-must-be-seen-to-fail.md)), a handoff describes the work, not the container ([rule 17](rules/17-sessions-stay-under-a-context-budget.md)), and the context-budget hook runs after every tool call. The other five:
+
+- **An input-handling defect is a class** ([`api.md`](templates/rules/api.md), [`REVIEW.md`](templates/REVIEW.md)): every text field refuses a NUL byte and invalid UTF-8 with a validation error, done once for all fields, with a test that posts both to every field. A NUL byte that became a 500 in one field was found on every other field four slices later.
+- **A repeated form keys its errors by the item** ([`api.md`](templates/rules/api.md)): with one form per item and errors keyed by field name, a 422 marked every form invalid and repeated the ARIA ids. The test has two items; the trial's had one.
+- **A domain check the handler also makes gets its own test** ([`api.md`](templates/rules/api.md)): over HTTP the handler answers first, so a planted break in the domain check passed.
+- **Breaking a gate that waits for ready-for-review** ([GATES](templates/GATES.md), the CI templates): run the workflow on the branch with `workflow_dispatch` to see it fail on a draft.
+- **A small profile for the security audit** goes in the [backlog](docs/backlog.md), waiting for a project to try it.
+
+**Existing projects:** if you copied `api.md`, add its new bullets and their three checks. Update `docs/review-brief.md` from `templates/REVIEW.md` (item 4).
+
 ## 2026-11-14 · after `23b6e9b`: running off your machine
 
 Checked against Anthropic's [sandbox environments comparison](https://code.claude.com/docs/en/sandbox-environments) and [cloud environments](https://code.claude.com/docs/en/cloud-environments) pages. In [where the agent runs](docs/agent-environment.md):

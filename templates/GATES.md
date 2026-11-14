@@ -13,7 +13,7 @@ What to consider when setting up gates for a new project. Not every item applies
 - [ ] Hooks that format and lint each edited file, and run the type check and changed tests before the agent finishes ([template](hooks))
 - [ ] Seen working: a deliberate type error sends the agent back
 - [ ] A git pre-push hook running the type check and lint, for tools and people outside Claude Code ([template](hooks/pre-push))
-- [ ] Agents open pull requests as drafts; slow CI jobs wait until a pull request is ready for review ([CI template](ci.yml)). The quick checks still run on every push.
+- [ ] Agents open pull requests as drafts; slow CI jobs wait until a pull request is ready for review ([CI template](ci.yml)). The quick checks still run on every push. To see a planted break fail one of the waiting jobs while the pull request is still a draft, run the workflow on the branch (`gh workflow run ci.yml --ref <branch>`): `workflow_dispatch` runs every job without marking the pull request ready, except one that needs the pull request itself, such as the Python pack's mutation job, which diffs against its base. The break and its revert still land in the branch history as two commits.
 
 ## Code
 
