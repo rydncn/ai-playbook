@@ -2,6 +2,12 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-14 · after `c3ab36e`: modern web guidance, noted not adopted
+
+The [Node pack](templates/stacks/node/README.md) mentions GoogleChrome/modern-web-guidance for browser UI, with a warning: its skill runs an unpinned npm package before every front-end task. It goes in the marketplace only after a trial ([backlog](docs/backlog.md)).
+
+**Existing projects:** nothing to do. If you use it, pin the npm version.
+
 ## 2026-11-12 · after `d7082cc`: the first feedback from an existing codebase
 
 The templates alone (design, plans, ADRs, the review brief) were used for one feature on a production codebase. The fifth review question found a real defect straight away (a loader that dropped a cut-short file's last line and exited 0), and the design's three-direction check and an independent review were worth their cost. What it found missing:
