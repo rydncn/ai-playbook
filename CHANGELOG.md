@@ -2,6 +2,17 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-14 · after `23b6e9b`: running off your machine
+
+Checked against Anthropic's [sandbox environments comparison](https://code.claude.com/docs/en/sandbox-environments) and [cloud environments](https://code.claude.com/docs/en/cloud-environments) pages. In [where the agent runs](docs/agent-environment.md):
+
+- **A fourth level, a cloud session or a VM,** where nothing on your machine is in reach.
+- **Cloud sessions:** keep network access at Trusted or Custom, never Full; keys go in network secrets, which the agent can use but never read, not in environment variables, which anyone using the environment can read.
+- **The sandbox covers shell commands only;** hooks, MCP servers and the file tools run outside it. The sandbox runtime wraps the whole process.
+- **Repositories you didn't write** open in a cloud session or a VM, not a dev container, which is for repositories you trust.
+
+**Existing projects:** move any key in a cloud environment's variables to a network secret, and check its network level isn't Full.
+
 ## 2026-11-14 · after `c3ab36e`: modern web guidance, noted not adopted
 
 The [Node pack](templates/stacks/node/README.md) mentions GoogleChrome/modern-web-guidance for browser UI, with a warning: its skill runs an unpinned npm package before every front-end task. It goes in the marketplace only after a trial ([backlog](docs/backlog.md)).

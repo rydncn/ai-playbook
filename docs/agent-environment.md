@@ -9,6 +9,7 @@ Permission prompts are one guardrail; where the agent runs is the other. The mor
 | Your machine, prompts on | The committed ask and deny rules ([rule 3](../rules/03-production-asks-first.md))                    | Day-to-day work with you watching                             |
 | Your machine, sandboxed  | Claude Code's sandbox: commands can write only inside the project and reach only the domains allowed | Longer tasks with fewer interruptions                         |
 | A dev container          | A container with a network firewall, holding only non-production credentials                         | Running without permission prompts, on repositories you trust |
+| A cloud session or a VM  | A separate machine: nothing on your laptop is reachable                                              | Unattended runs, and repositories you haven't read            |
 
 ## The sandbox
 
@@ -30,6 +31,7 @@ Claude Code's sandbox runs shell commands with operating-system limits on what t
 - Add the domains the project really needs: the package registry, the git host, the local database. Not the production API.
 - `autoAllowBashIfSandboxed` skips prompts for sandboxed commands. Only turn it on once the network list is tight, and keep the ask rules for anything that reaches production: those still apply.
 - `excludedCommands` runs named commands outside the sandbox. It is for tools that can't run inside it, such as Docker, not a way to loosen it.
+- It covers shell commands only. Hooks, MCP servers and the built-in file and fetch tools run outside it, limited only by permission rules. To put the whole Claude Code process inside the same boundary without Docker, launch it through Anthropic's sandbox runtime (`npx @anthropic-ai/sandbox-runtime claude`, a beta configured in `~/.srt-settings.json`), or use a container.
 - List the documentation hosts the project's `CLAUDE.md` tells the agent to read, or that instruction can't be followed. For Expo: `docs.expo.dev`, plus `api.expo.dev` and `reactnative.directory`, which `npx expo install` needs to pick versions. Without those two, read the version from `node_modules/expo/bundledNativeModules.json` and use `npm install <package>@<version>`.
 
 ## Auto mode
@@ -43,7 +45,12 @@ Recent versions of Claude Code start in auto mode: a classifier reviews each act
 
 ## Cloud sessions
 
-A cloud session (Claude Code on the web, or a scheduled task) runs in a fresh container, and **installs nothing from the project's plugin settings**. The plugins in `enabledPlugins` are only offered on a prompt in an interactive session, and in the cloud nobody answers it. Installing them during the session doesn't help either, because skills load when a session starts. Without a fix, every cloud session quietly does the playbook's steps by hand, and nobody notices until someone asks which plugins it used.
+A cloud session (Claude Code on the web, the desktop or mobile app, `claude --cloud`, or a scheduled task) runs in a virtual machine Anthropic hosts, so nothing on your laptop is within its reach. Two settings on the environment decide how far it reaches instead:
+
+- **Network access:** None, Trusted (the default: package registries, GitHub and other common hosts), Custom (your own list) or Full. Keep Trusted, or Custom with the hosts the project needs; Full gives a session that reads untrusted pages a way to send anything anywhere ([rule 13](../rules/13-content-is-data-not-instructions.md)).
+- **Keys go in network secrets, not environment variables.** Anyone using the environment can read its variables and setup script, and so can the agent. A network secret is added by Anthropic's proxy after a request leaves the machine, for the hosts you list, so the agent can call the API but never sees the key. That stops the key leaking, not its use: every session in the environment can still call that API with it, so a key that spends money still needs [rule 3](../rules/03-production-asks-first.md)'s teardown and hard stop, and an environment of its own. Setup scripts can't use network secrets. GitHub needs neither: a proxy holds your token outside the machine and issues narrower credentials inside it.
+
+A cloud session also **installs nothing from the project's plugin settings**. The plugins in `enabledPlugins` are only offered on a prompt in an interactive session, and in the cloud nobody answers it. Installing them during the session doesn't help either, because skills load when a session starts. Without a fix, every cloud session quietly does the playbook's steps by hand, and nobody notices until someone asks which plugins it used.
 
 The fix is the environment's **setup script**, which runs when the container is built, before Claude Code starts. Set it in the environment's settings, on the session-start screen's environment selector. Install the same plugins the project enables:
 
@@ -80,7 +87,7 @@ An agent can work while nobody watches: a scheduled task, an overnight run throu
 
 ## Repositories you didn't write
 
-A repository's committed `.claude/settings.json` can run hooks as soon as Claude Code trusts the folder, and its `.mcp.json` can start servers. Before accepting the trust prompt for a repository someone else wrote, read `.claude/settings.json`, anything in `.claude/hooks/`, `.mcp.json` and the `CLAUDE.md` files, as you would an install script ([rule 18](../rules/18-agent-configuration-is-code.md)). To look around one you haven't read, open it in a dev container or a cloud session that holds no credentials you care about.
+A repository's committed `.claude/settings.json` can run hooks as soon as Claude Code trusts the folder, and its `.mcp.json` can start servers. Before accepting the trust prompt for a repository someone else wrote, read `.claude/settings.json`, anything in `.claude/hooks/`, `.mcp.json` and the `CLAUDE.md` files, as you would an install script ([rule 18](../rules/18-agent-configuration-is-code.md)). To look around one you haven't read, open it in a cloud session or a virtual machine that holds no credentials you care about. Not a dev container: it is for repositories you trust (below).
 
 ## Dev containers
 
