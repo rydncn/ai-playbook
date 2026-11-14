@@ -15,6 +15,10 @@ name: CI
 # and marking one ready starts a fresh run, so nothing merges untested, as
 # long as branch protection requires the "Tests" check itself, not only
 # "Types and lint". Require all three jobs.
+#
+# To watch a planted break fail the test job on a draft (rule 15), run
+# `gh workflow run ci.yml --ref <branch>`: workflow_dispatch runs every job
+# without marking the pull request ready.
 
 on:
   push:

@@ -13,6 +13,7 @@ paths:
 - Every endpoint requires authentication unless it is explicitly marked public, and public endpoints are listed here: <list>.
 - Check authorisation for the specific resource, not only that the caller is signed in. Every endpoint that reads or changes a user's data has a test where a different signed-in user is refused.
 - Validate every request body, query and path parameter with a schema at the boundary, before any other code sees it. Reject unknown fields.
+- Every text field refuses a NUL byte and invalid UTF-8 with a validation error, never a 500. Do it once for every field (in the schema's string type or one middleware), not field by field: an input-handling defect in one field is a class, and in the second trial the one a review fixed in one field was found on every other field four slices later.
 - Writes that a client may retry accept an idempotency key.
 - Anything combined from many people's input (ratings, votes, counts, a median) counts each account once per item: its latest contribution. Otherwise one account outvotes everyone else within its rate limit.
 - Every list is bounded: a maximum page size, and a maximum page number or keyset pagination, so no request costs a full scan.
@@ -40,6 +41,7 @@ Every error response, including the framework's own 404, 405 and validation fail
 ## Domain code throws specific errors
 
 - Domain code throws errors named for what went wrong in the domain (`OrderNotFound`, `InsufficientCredit`, `PermissionDenied`), never `new Error("something failed")` or a bare string.
+- Where the domain checks something the handler also checks (most often who may act), the domain check has its own test that calls the domain directly. Over HTTP the handler answers first, so deleting the domain check changes nothing an acceptance test can see, and a planted break there passes ([rule 15](../../rules/15-tests-must-be-seen-to-fail.md)).
 - Domain errors know nothing about HTTP. One mapping at the edge turns each into its problem type and status code, so the same error means the same response everywhere.
 - Catch an error only to add context, recover, or map it at the edge. Don't catch and log and rethrow in every layer.
 
@@ -53,6 +55,7 @@ For a server that renders pages or sets cookies. Leave this section out for an A
 - Nothing says whether an account exists. Sign-in failures share one message. Sign-up shows the same page whether or not the address is taken; the difference is only in the mail sent to that address. An unknown address at sign-in still costs a password hash, against a dummy, so the timing doesn't tell either.
 - Sign-in, sign-up, password change, password reset, account deletion and anything that sends an email are rate limited per account and per IP. Every route that checks a password shares one per-account limit, or each route adds its own allowance of guesses. The attempt is counted atomically before the slow work (the password hash), not recorded after it fails: checked first and counted later, a burst of concurrent attempts all pass. A per-account limit also lets anyone lock a known account out; say in an ADR how the project weighs that.
 - Passwords are hashed with argon2id (or bcrypt where that isn't available) using the library's current recommended parameters, never a general-purpose hash. A password longer than a fixed maximum (for example 1,024 bytes) is refused before hashing, and hashing runs under a concurrency cap (for example one slot per CPU), because each argon2id hash holds its memory for its whole run and a flood of sign-ins can exhaust the server.
+- When a page repeats a form (one per item, such as a hide form beside each flagged report), each validation error is keyed by the item's id as well as the field (`report-8f2c-reason`, not `reason`). Keyed by field name alone, a 422 marks every form on the page invalid, the ARIA ids repeat, and the error summary links to nothing useful.
 - Output is escaped by the template engine's context-aware escaping. Anything that turns it off is a review comment.
 - A user-supplied redirect target (a `next` after sign-in) is checked by parsing it: it parses, has no scheme and no host, its path starts with exactly one `/`, and it contains no control character (below 0x20, or 0x7f) and no `\`. A list of bad characters isn't enough: browsers strip tabs and newlines from URLs, so `/<tab>/evil.example` passes a check for `//` and lands on another site.
 - In development, mail goes to an outbox the developer can read, never into the structured log, which must hold no addresses.
@@ -63,5 +66,8 @@ For a server that renders pages or sets cookies. Leave this section out for an A
 - A browser test follows a redirect after sign-in with a tab, `//`, `/\` and an absolute URL in `next`, and asserts each lands on the site.
 - A test sends 20 concurrent wrong-password attempts and asserts no more than the limit reach the password check; another spreads guesses across every route that checks the password and asserts they share one limit.
 - A test has one account contribute many times to an item others have contributed to, and asserts the combined result is unchanged.
+- A test posts a NUL byte and invalid UTF-8 to every form field and every string in a JSON body, and asserts each gets a validation error (422 for an API), not a 500. It reads the fields from the schemas or routes, so a new field is covered without anyone adding it ([rule 12](../../rules/12-rules-broken-twice-become-checks.md)).
+- A page that repeats a form is tested with two items: one form fails validation, and the test asserts only that form is marked invalid and every id on the page is unique.
+- Each domain check that the handler also makes has a test calling the domain directly, seen to fail with the domain check removed.
 - A contract test calls each endpoint's error paths and asserts the response is valid problem details with the documented `type`.
 - A [rule check](../rule-check) fails on `throw new Error(` in domain folders.
