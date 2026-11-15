@@ -1,7 +1,7 @@
 name: CI
 
-# The ai-playbook's CI for a uv-managed Python project (draft Python pack,
-# from its third trial, a command-line tool). Pull requests start as drafts: the quick checks run
+# The ai-playbook's CI for a uv-managed Python project (draft Python pack).
+# Pull requests start as drafts: the quick checks run
 # on every push, and the tests, mutation testing and the audit wait until the
 # pull request is ready for review. Make every job a required check by name.
 # To watch a planted break fail the tests on a draft (rule 15), run
@@ -103,8 +103,7 @@ jobs:
 
   mutation:
     name: Mutation testing on changed core files
-    # Mutation testing was the largest single cost in the trial, and bought
-    # one planted regression in six. So it runs only on the core: set the
+    # Mutation testing is the slowest check by far, so it runs only on the core: set the
     # repository variable MUTATION_CORE to the paths whose mistakes cost most
     # (money, parsing, permissions), separated by spaces. A pull request that
     # touches none of them runs nothing here.

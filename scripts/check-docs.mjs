@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Checks that the playbook's documents agree with each other and with the
 // files they describe (rule 12: a rule broken twice becomes a check). The
-// documents changed after every trial, and stale copies went unnoticed: the
+// documents changed often, and stale copies went unnoticed: the
 // setup skill said to copy four hooks when there were six, and VERIFICATION.md
 // named four review questions after REVIEW.md had five.
 //

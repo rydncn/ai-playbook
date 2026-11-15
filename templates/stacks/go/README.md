@@ -1,6 +1,6 @@
 # Go pack
 
-From the playbook's second trial: a Go web app (`net/http`, `html/template`, `pgx`) on Postgres, with Playwright end-to-end tests as the only npm.
+Used on a Go web app (`net/http`, `html/template`, `pgx`) on Postgres, with Playwright end-to-end tests as the only npm.
 
 | File                         | Copy to                                                                                                                                                                 |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -9,7 +9,7 @@ From the playbook's second trial: a Go web app (`net/http`, `html/template`, `pg
 
 Permissions to allow in `.claude/settings.json`, beside the template's deny and ask rules: `Bash(go build*)`, `Bash(go vet*)`, `Bash(go test*)`, `Bash(gofmt*)`, `Bash(staticcheck*)`, `Bash(govulncheck*)`, and the project's own database start-up script.
 
-## What the trial learned
+## Notes
 
 - **Test isolation** is `-shuffle=on`, `-count=1` (no cached results) and `t.Parallel()`, with the race detector on. A database per test, created from the migrated schema, kept parallel tests apart; `DROP DATABASE … WITH (FORCE)` needs the right to end the app role's connections, which only development and CI should grant.
 - **Pipes hide failures** unless the shell has `pipefail`: `go test ./... | tee log` exits 0 on a failing test. The CI template sets `shell: bash` for this.

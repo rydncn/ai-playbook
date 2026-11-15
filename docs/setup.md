@@ -11,16 +11,18 @@ How the rules and verification in this repository are installed on my machines. 
 | `security-audit` | A multi-phase security audit, used before releases                                                                                             | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) |
 | `playbook`       | Mine. `init-project` sets up or audits a project against the rules in this repository; `lesson` records a mistake as a rule in the right place | This repository                                                                       |
 
+Which plugin's skill does each step of the work, where two overlap, is in [the path](../VERIFICATION.md#the-path).
+
 Third-party plugins are pulled from their own repositories rather than copied. Each must fill a gap rather than duplicate another, and earn its place: every plugin's skill descriptions load into every session, its hooks run code on every machine, and each is one more upstream whose changes need reading. Check the context the set adds with `claude plugin details` after any change; with the two optional plugins below, the six added about 2,600 tokens to each session.
 
 ### Optional
 
 Listed in the marketplace, not installed by default:
 
-| Plugin     | Why it's optional                                                                                                                                                                                                                                                                                                                                                                                                                                                    | From                                                                  |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `codex`    | A different model's review. In the first trial it found 1 issue where the fresh-context reviews found 30, and its hooks run in every session, so it's for one-way doors touching auth, data, permissions or what leaves the device ([VERIFICATION.md](../VERIFICATION.md#5-independent-review)). Enable it in that project's settings, and run `/codex:setup` once to sign in. Leave its review gate off; an automatic Claude and Codex loop uses up limits quickly. | [openai/codex-plugin-cc](https://github.com/openai/codex-plugin-cc)   |
-| `ponytail` | Pushes towards the simplest code that works. That's already in `user/CLAUDE.md` and the review brief, and its hooks add context on every prompt. Try it on a project that over-builds anyway.                                                                                                                                                                                                                                                                        | [dietrichgebert/ponytail](https://github.com/dietrichgebert/ponytail) |
+| Plugin     | Why it's optional                                                                                                                                                                                                                                                                                                                                                                                                                                            | From                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `codex`    | A different model's review. The gain is small and its hooks run in every session, so it's for one-way doors touching auth, data, permissions or what leaves the device, with its findings verified before anything changes ([VERIFICATION.md](../VERIFICATION.md#5-independent-review)). Enable it in that project's settings, and run `/codex:setup` once to sign in. Leave its review gate off; an automatic Claude and Codex loop uses up limits quickly. | [openai/codex-plugin-cc](https://github.com/openai/codex-plugin-cc)   |
+| `ponytail` | Pushes towards the simplest code that works. That's already in `user/CLAUDE.md` and the review brief, and its hooks add context on every prompt. Try it on a project that over-builds anyway.                                                                                                                                                                                                                                                                | [dietrichgebert/ponytail](https://github.com/dietrichgebert/ponytail) |
 
 ## Stack plugins
 
@@ -77,10 +79,6 @@ Every third-party entry is pinned to a commit (`"sha"` in its `source` in [`.cla
 1. `node scripts/plugin-pins.mjs --updates` lists each plugin whose upstream has moved, with a link to the changes.
 2. Read the changes, the hooks and scripts above all; update this table if what a plugin runs has changed.
 3. Move the `sha`, run `claude plugin validate .`, and commit. Auto-update then carries the new pin to every machine.
-
-## Why Codex, and why it only advises
-
-A reviewer from a different model family catches somewhat different mistakes. Greptile's study of 1,000 real AI-written pull requests found the gain to be real but small, about 2 to 3 points of serious bugs caught. A July 2026 preprint found that direction matters. Claude reviewing Codex's code helped a great deal, and Codex reviewing Claude's code made it worse when its suggestions were applied without checking. For that reason Codex reviews on a read-only profile and its findings are verified before anything changes.
 
 ## Install
 

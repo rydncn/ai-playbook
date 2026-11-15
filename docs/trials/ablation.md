@@ -2,7 +2,7 @@
 
 **Status:** designed, not run · **Waits for:** the consolidation PRs merged, and a brief
 
-The third trial showed the whole playbook beating plain Claude Code (15 of 20 against 13, at about five times the working time), but not which part bought the difference. This trial takes the playbook apart, so each layer keeps its place only by showing an effect worth its cost. It also tries the parts a software factory would stand on: the review gate, agent-ready tickets and an unattended run.
+This trial takes the playbook apart, so each layer keeps its place only by showing an effect worth its cost. It also tries the parts a software factory would stand on: the review gate, agent-ready tickets and an unattended run.
 
 ## Questions, in order of what they decide
 
@@ -13,7 +13,12 @@ The third trial showed the whole playbook beating plain Claude Code (15 of 20 ag
 
 ## Arms
 
-All four arms get one brief, the same model and the same environment. The rules in [Running a trial](../../VERIFICATION.md#running-a-trial) apply.
+All four arms get one brief, the same model and the same environment, under these rules:
+
+- The brief describes the product, not acceptance criteria, and every arm gets the same environment, model and language version. The control's environment has no plugins, because skills such as test-driven development switch themselves on; its setup script fails if any are present.
+- Nobody reviews any build's code until all are done. The owner merges when asked without reading, and answers every arm's questions alike, so the trial measures the playbook and not the owner.
+- Every arm keeps the same effort log, in the same columns.
+- The blind reviewer gets anonymised copies in a random order, and a rubric with objective tests written before it reads any code. Nothing it can see names an arm, including comments in its environment's setup script. Check the anonymiser's own effects too: a redaction can lengthen a line past the linter's limit or replace a URL with a placeholder.
 
 | Arm           | What it gets                                                                                    | Answers                      |
 | ------------- | ----------------------------------------------------------------------------------------------- | ---------------------------- |
@@ -51,10 +56,10 @@ A layer stays in the default only if the arm with it does better on must-fix esc
 - **B against C:** if C doesn't clear the bar, the plugins go optional and the core stands alone.
 - **C against D:** if D clears the bar against C, the layer it adds for two-way doors goes back in. If it doesn't, the door table stands, and the per-slice in-session review stays out.
 - **Unattended:** if any unattended slice needed a person beyond the gate's one-way approval, the factory waits until that cause has a check.
-- **Every arm against A:** if C or B no longer beats the control on must-fix escapes, the playbook's headline claim is withdrawn until a trial shows it again.
+- **Every arm against A:** if C or B no longer beats the control on must-fix escapes, the playbook stops claiming to beat plain Claude Code until a trial shows it again.
 
-One run per arm is still one run. Write the result up with that said, and keep the backlog's "evidence, not proof" line until a second trial agrees.
+One run per arm is still one run. Write the result up with that said, and treat it as evidence, not proof, until a second run agrees.
 
 ## Cost
 
-At the third trial's rates, A takes about 2 hours, B and C about 5 to 8 each, and D about 10. That's about 25 hours of working time and a few hours of a person's, mostly for the brief, the rubric, the unattended slices and reading the results.
+Roughly, A takes about 2 hours, B and C about 5 to 8 each, and D about 10. That's about 25 hours of working time and a few hours of a person's, mostly for the brief, the rubric, the unattended slices and reading the results.

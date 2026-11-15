@@ -1,10 +1,10 @@
 # Stacks
 
-The playbook's ideas don't depend on the language; some of its templates do. This folder says which is which, and holds a pack for each stack the playbook has been trialled on. A pack is the stack-specific half of the setup: CI, the hooks' commands, the permissions to allow, and what the trial learned. Everything else comes from the generic templates.
+The playbook's ideas don't depend on the language; some of its templates do. This folder says which is which, and holds a pack for each stack a project has used it on. A pack is the stack-specific half of the setup: CI, the hooks' commands, the permissions to allow, and what the trial learned. Everything else comes from the generic templates.
 
 | Template                                                                                                                          | Generic or per stack                                                                                                                 |
 | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Rules 1 to 19, `CLAUDE.template.md`, `DESIGN.md`, `ADR.md`, `PLAN.md`, `REVIEW.md`, `GATES.md`, `CODEOWNERS`, `claude-review.yml` | Generic. The second trial used the design template and the ADRs on Go unchanged.                                                     |
+| Rules 1 to 19, `CLAUDE.template.md`, `DESIGN.md`, `ADR.md`, `PLAN.md`, `REVIEW.md`, `GATES.md`, `CODEOWNERS`, `claude-review.yml` | Generic.                                                                                                                             |
 | Hooks: `check-plugins.mjs`, `context-budget.mjs`, `pre-push`                                                                      | Generic.                                                                                                                             |
 | Hooks: `after-edit.mjs`, `before-stop.mjs`                                                                                        | Generic with a `.claude/checks.json` (the pack's), npm defaults without one. They need Node to run, whatever the project's language. |
 | `ci.yml`, `npmrc`, `audit/`, `lint-ratchet/`                                                                                      | Node and npm.                                                                                                                        |
@@ -19,9 +19,9 @@ For a typed language, also install Anthropic's code intelligence plugin for it (
 
 ## Packs
 
-- [`node/`](node): JavaScript and TypeScript, from the first trial (an Expo app). Its files are the top-level templates.
-- [`go/`](go): Go, from the second trial (a web app on Postgres, server-rendered HTML).
-- [`python/`](python): Python with `uv`, from the third trial (a command-line tool on SQLite). A draft until a second project has used it.
+- [`node/`](node): JavaScript and TypeScript. Its files are the top-level templates.
+- [`go/`](go): Go, used on a web app on Postgres with server-rendered HTML.
+- [`python/`](python): Python with `uv`, used on a command-line tool on SQLite. A draft until a second project has used it.
 
 ## Writing a pack for another stack
 
