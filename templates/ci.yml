@@ -6,7 +6,8 @@ name: CI
 # must block merges, not go unnoticed.
 #
 # Expects a committed package-lock.json, an .nvmrc, and package.json scripts
-# typecheck, lint and test:ci (one-shot, never watch mode). Optional:
+# typecheck, lint, test:ci (one-shot, never watch mode) and test:e2e
+# (Playwright), and scripts/check-criteria.mjs (templates/criteria). Optional:
 # check:rules (templates/rule-check) and lint:ratchet (templates/lint-ratchet).
 #
 # Agents open pull requests as drafts while they work. The quick checks run
@@ -14,7 +15,7 @@ name: CI
 # until the pull request is marked ready for review. Drafts can't be merged,
 # and marking one ready starts a fresh run, so nothing merges untested, as
 # long as branch protection requires the "Tests" check itself, not only
-# "Types and lint". Require all three jobs.
+# "Types and lint". Require every job by name.
 #
 # To watch a planted break fail the test job on a draft (rule 15), run
 # `gh workflow run ci.yml --ref <branch>`: workflow_dispatch runs every job
@@ -102,11 +103,6 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # The criteria step reads the pull request and the issue it closes.
-    permissions:
-      contents: read
-      pull-requests: read
-      issues: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -126,20 +122,103 @@ jobs:
         run: npm ci
 
       # test:ci also writes a JUnit report to reports/junit.xml for the
-      # criteria step. For Vitest: vitest run --reporter=default
+      # criteria job. For Vitest: vitest run --reporter=default
       # --reporter=junit --outputFile.junit=reports/junit.xml
       - name: Tests
         run: npm run test:ci
 
-      # Every acceptance criterion the slice issue quotes has a passing test
-      # that names it (templates/criteria). Passes with a note when the pull
-      # request closes no slice issue.
+      # Kept even when the tests fail, so the criteria job can name what
+      # failed rather than only that something did.
+      - name: Keep the test report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-report
+          path: reports/junit.xml
+          if-no-files-found: error
+
+  # The main journeys in a real browser against the real app (rule 16, tier
+  # 2), on every ready commit rather than only before release. Expects a
+  # Playwright config whose webServer starts the app, a JUnit reporter
+  # writing reports/e2e-junit.xml, and a test:e2e script. For a database or
+  # other services the app needs, add them here as in the tests job. Test
+  # names carry the criteria they check ("AC3: …"), like the acceptance tests.
+  e2e:
+    name: End to end
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Use npm 11
+        run: npm install -g npm@11.21.2 # zizmor: ignore[adhoc-packages]
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The browser at the version the lockfile's Playwright expects.
+      - name: Install the browser
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Keep the end-to-end report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-report
+          path: reports/e2e-junit.xml
+          if-no-files-found: error
+
+  # Every acceptance criterion the slice issue quotes has a passing test that
+  # names it, in either report (templates/criteria). Passes with a note when
+  # the pull request closes no slice issue. It runs even when a test job
+  # failed, since a skipped required check counts as passing; a missing
+  # report fails it. Without an e2e job, drop it from needs and the download.
+  criteria:
+    name: Criteria covered
+    needs: [tests, e2e]
+    if: always() && github.event_name == 'pull_request' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Fetch the reports
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: "*-report"
+          path: reports
+          merge-multiple: true
+
       - name: Criteria covered
-        if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: node scripts/check-criteria.mjs reports/junit.xml
+        run: node scripts/check-criteria.mjs reports/junit.xml reports/e2e-junit.xml
 
   security:
     name: Dependencies and secrets

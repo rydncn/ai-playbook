@@ -10,7 +10,8 @@ name: CI
 # For a database, add a Postgres service to the tests job (as the trial did)
 # and a step that applies every migration to the empty database twice, the
 # second applying nothing. For end-to-end tests with Playwright, take the e2e
-# job and the npm supply-chain steps from templates/ci.yml.
+# job and the npm supply-chain steps from templates/ci.yml, and move the
+# criteria step into its own job that reads both reports, as that file does.
 
 on:
   push:

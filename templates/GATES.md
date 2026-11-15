@@ -99,6 +99,7 @@ For React, React Native and TypeScript projects. Each catches something agents g
 
 - [ ] The acceptance-test tier chosen and recorded in an ADR ([rule 16](../rules/16-acceptance-tests-are-isolated-and-real.md))
 - [ ] End-to-end flows for the main journeys, on every platform shipped, before release (tier 2; Maestro for Expo and React Native)
+- [ ] For a web app, those flows on every ready commit, with Playwright in CI ([the `e2e` job](ci.yml)), and always where agents work unattended: the end-to-end tests are the only check that sees the journeys a slice can break
 - [ ] An environment check before any release or over-the-air update
 - [ ] Device checks recorded in `docs/device-checks.md`, dated with the build, for what only a device can show (tier 3)
 

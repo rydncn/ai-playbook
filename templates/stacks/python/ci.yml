@@ -106,7 +106,9 @@ jobs:
       - name: Tests ran
         run: grep -qE '^=+ [0-9]+ passed' test.log || { echo "no test reported passed"; exit 1; }
       # Every acceptance criterion the slice issue quotes has a passing test
-      # that names it (templates/criteria in the playbook): test_AC3_…
+      # that names it (templates/criteria in the playbook): test_AC3_…. With
+      # an e2e job, move this into its own job that reads both reports, as
+      # templates/ci.yml does.
       - name: Criteria covered
         if: github.event_name == 'pull_request'
         env:
