@@ -2,6 +2,19 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-15 · after `620677a`: the documents checked against each other
+
+A review of the whole playbook found five places where one document had fallen behind another, each copied into new projects by the setup skill. Fixed:
+
+- The [setup skill](plugins/playbook/skills/init-project/SKILL.md) said to copy four hooks (there are six files, and a stack pack's `checks.json`), ran the context budget on each message only (it also runs after every tool call), and knew of no stack pack but Go (Python has one). [docs/new-project.md](docs/new-project.md) had the same budget wording.
+- [VERIFICATION.md](VERIFICATION.md#5-independent-review) named four review questions; [`REVIEW.md`](templates/REVIEW.md) asks five.
+- The [CLAUDE template](templates/CLAUDE.template.md)'s review bullet said the should-fix note "asks the five questions by name"; it is the brief that does.
+- [user/CLAUDE.md](user/CLAUDE.md) counted the 100,000 tokens from zero; [rule 17](rules/17-sessions-stay-under-a-context-budget.md) counts what the session added.
+
+So they stay fixed ([rule 12](rules/12-rules-broken-twice-become-checks.md)), [`scripts/check-docs.mjs`](scripts/check-docs.mjs) runs in CI: every relative link and anchor resolves, every "N questions" matches `REVIEW.md`, and every "Copy all N files" matches `templates/hooks`. It was seen to fail on the old text.
+
+**Existing projects:** in `CLAUDE.md`, move "which asks the five questions by name" to follow the review brief, as in the template. Projects set up with the old skill: check `.claude/hooks/` holds all six files and that `settings.hooks.json` runs the context budget after every tool call.
+
 ## 2026-11-14 · after `7ac4e2a`: the second trial's last notes
 
 Eight notes from the second trial were written on two branches and never reached the backlog. Three were already in: plant breaks on a clean tree ([rule 15](rules/15-tests-must-be-seen-to-fail.md)), a handoff describes the work, not the container ([rule 17](rules/17-sessions-stay-under-a-context-budget.md)), and the context-budget hook runs after every tool call. The other five:
