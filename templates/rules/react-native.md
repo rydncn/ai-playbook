@@ -8,7 +8,7 @@ paths:
 
 # React Native conventions
 
-How the playbook's testing rules apply to a phone app, which has no server and no browser. These come from the first trial, where they were the clearest gains over the same app built without the playbook: they are what let a test drive the whole app.
+How the playbook's testing rules apply to a phone app, which has no server and no browser: these are what let a test drive the whole app.
 
 ## The phone is behind adapters
 

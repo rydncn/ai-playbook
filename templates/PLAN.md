@@ -29,7 +29,7 @@ be observed before any code is written (rules 5 and 15). Keep the
 - **Observed by:** <…>
 - **Observed on device by:** <only when nothing automated can see the effect: the entry in docs/device-checks.md>
 
-<A spike, which measures something rather than building it, has no failing test to write first. Its tasks use **Measure** (what and how), **Record** (where the numbers go) and **Decides** (the design number or threshold the result sets) instead of Test, Code and Observed by. Spike code is thrown away, but it still gets the five questions in `templates/REVIEW.md`: a spike's loader that dropped a cut-short file's last line and exited 0 would have skewed every number taken from it.>
+<A spike, which measures something rather than building it, has no failing test to write first. Its tasks use **Measure** (what and how), **Record** (where the numbers go) and **Decides** (the design number or threshold the result sets) instead of Test, Code and Observed by. Spike code is thrown away, but it still gets the five questions in `templates/REVIEW.md`, because every number taken from it depends on it reading its input correctly.>
 
 ## Done when
 
