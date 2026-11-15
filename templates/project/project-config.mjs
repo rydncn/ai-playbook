@@ -40,6 +40,9 @@ const VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 
 const isObject = (v) =>
   v !== null && typeof v === "object" && !Array.isArray(v);
+const JIRA_KEY = /^[A-Z][A-Z0-9_]+$/;
+const JIRA_SITE = /^https:\/\/[^/\s]+\/?$/;
+const matches = (v, pattern) => typeof v === "string" && pattern.test(v);
 const isText = (v) => typeof v === "string" && v.trim() !== "";
 
 function unknownKeys(obj, allowed, prefix) {
@@ -61,22 +64,12 @@ function ticketProblems(tickets) {
     return unknownKeys(tickets, ["source"], "tickets.");
   }
   const out = unknownKeys(tickets, ["source", "project", "site"], "tickets.");
-  if (
-    !(
-      typeof tickets.project === "string" &&
-      /^[A-Z][A-Z0-9_]+$/.test(tickets.project)
-    )
-  ) {
+  if (!matches(tickets.project, JIRA_KEY)) {
     out.push(
       '"tickets.project" is the Jira project key, in capitals, like "KAN".',
     );
   }
-  if (
-    !(
-      typeof tickets.site === "string" &&
-      /^https:\/\/[^/\s]+\/?$/.test(tickets.site)
-    )
-  ) {
+  if (!matches(tickets.site, JIRA_SITE)) {
     out.push(
       '"tickets.site" is the Jira site, like "https://example.atlassian.net".',
     );
