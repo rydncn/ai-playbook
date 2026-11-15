@@ -64,7 +64,7 @@ These load automatically when the agent works on matching files:
 - Review is the CI review and its gate, briefed with `docs/review-brief.md`; don't also start a reviewer for a two-way slice. Fix every must-fix test-first; a should-fix only when it is small and plainly better.
 - One-way doors also get: mutation testing on the changed core files, <a different model's review for auth, data and permissions>, and a person's approval of the commit.
 - Every few slices, and before a release: a whole-codebase review with the same brief. Before a release, also the security audit and mutation testing over everything changed since the last one.
-- When the context budget warns, finish the step and write `docs/handoff.md`: where the work is, what's next, what's undecided. Tools go in the setup script, not the handoff: the next session may start in a fresh container.
+- One task per session. When the work moves to a new session part-way through, write `docs/handoff.md`: where the work is, what's next, what's undecided. Tools go in the setup script, not the handoff: the next session may start in a fresh container.
 - When the agent gets something wrong, record the lesson here or in the matching rules file, never only in local memory. If a rule is broken twice, turn it into a check.
 
 ## Lessons
