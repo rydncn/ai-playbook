@@ -1,0 +1,15 @@
+{
+  "playbook": "1.0.0",
+  "tickets": { "source": "github" },
+  "commands": {
+    "test": "npm test",
+    "testChanged": "npx vitest run --changed",
+    "e2e": "npx playwright test",
+    "lint": "npm run lint",
+    "typecheck": "npx tsc --noEmit",
+    "format": "npx prettier --write .",
+    "formatCheck": "npx prettier --check ."
+  },
+  "oneWayPaths": ["src/auth/", "src/api/public/"],
+  "checks": ["review-gate", "criteria", "dependency-audit"]
+}
