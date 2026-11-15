@@ -2,6 +2,17 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-15 · the expensive layers follow the door
+
+In the third trial, reviews, the audit, mutation testing and their fixes took 44% of the working time, and were spent the same on every slice. [VERIFICATION.md](VERIFICATION.md#5-independent-review) now has a table of which layer runs for a two-way door, a one-way door and a release:
+
+- **One review per slice.** Where the CI review and its gate run, the building session no longer starts its own reviewer for a two-way slice. That subagent read the same diff with the same brief, and inherited the builder's framing as well.
+- **Mutation testing** runs on the core for any change, on every changed file for a one-way door, and over everything changed before a release ([rule 15](rules/15-tests-must-be-seen-to-fail.md)).
+- **A different model's review** is for one-way doors touching auth, data, permissions or what leaves the device. **The security audit** comes before releases and after significant auth or deletion changes.
+- **Records are for trials:** effort logs are kept only when a project is itself a trial of the playbook.
+
+**Existing projects:** replace the review bullets in `CLAUDE.md`'s Workflow section with the template's three.
+
 ## 2026-11-15 · review is a gate, and the one human gate is a check
 
 Until now, every review layer only advised: the building session ran the fresh-context review on itself, the CI review posted comments, and "a person reads every one-way door" was a habit. On a one-person project, CODEOWNERS enforced nothing.
