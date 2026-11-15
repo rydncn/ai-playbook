@@ -8,7 +8,7 @@
     {
       "name": "playbook",
       "source": "./plugins/playbook",
-      "description": "Ryan's own skills: set up a project's CLAUDE.md, and capture lessons from mistakes."
+      "description": "Ryan's own skills: set up a project's CLAUDE.md, interview for a design, split it into slice issues, and capture lessons from mistakes."
     },
     {
       "name": "superpowers",

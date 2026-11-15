@@ -12,7 +12,7 @@ be observed before any code is written (rules 5 and 15). Keep the
 
 **Status:** active · **Satisfies:** AC<n>, AC<n> (in `docs/design.md`) · **Depends on:** <slice numbers, or none>
 
-<Quote the criteria this slice satisfies, word for word, and name the design sections it needs (by heading). A slice session reads this plan and those sections, not the whole design: a long design read in full by every session costs much of the context budget (rule 17).>
+<Quote the criteria this slice satisfies, word for word, and name the design sections it needs (by heading). A slice session reads this plan and those sections, not the whole design: a long design read in full by every session fills much of its context before any work (rule 17).>
 
 <!-- When the slice merges, set Status to "done, merged in #<PR>" in that pull request. A done plan records what was intended then, not what the code does now: agents never build from one, and docs/design.md stays the current description. -->
 

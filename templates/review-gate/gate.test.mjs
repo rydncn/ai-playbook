@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -40,9 +41,24 @@ test("globs match folders, nested names and nothing else", () => {
 
 test("a paths file reads one glob per line, ignoring comments", () => {
   assert.deepEqual(parsePaths("# one-way\n/src/auth/\n\nsupabase/** # db\n"), [
-    "src/auth/",
+    "src/auth",
     "supabase/**",
   ]);
+});
+
+test("the shipped one-way-paths template catches what it lists, folders included", () => {
+  const globs = parsePaths(
+    readFileSync(new URL("./one-way-paths", import.meta.url), "utf8"),
+  );
+  const files = [
+    ".claude/settings.json",
+    ".github/workflows/ci.yml",
+    "db/migrations/1.sql",
+    "scripts/check-criteria.mjs",
+    "web/package.json",
+    "src/a.ts",
+  ];
+  assert.deepEqual(oneWayFiles(files, globs), files.slice(0, 4));
 });
 
 test("the default list catches agent configuration, workflows and migrations", () => {

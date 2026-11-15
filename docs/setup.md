@@ -4,12 +4,12 @@ How the rules and verification in this repository are installed on my machines. 
 
 ## Plugins
 
-| Plugin           | What it does                                                                                                                                   | From                                                                                  |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `superpowers`    | The core loop: brainstorm, plan, test-first execution, review, verification                                                                    | [obra/superpowers](https://github.com/obra/superpowers)                               |
-| `pocock-extras`  | The parts Superpowers lacks: `grill-me`, `handoff`, `retro`, `wait-what` and `improve-codebase-architecture`, plus three skills they depend on | [mattpocock/skills](https://github.com/mattpocock/skills)                             |
-| `security-audit` | A multi-phase security audit, used before releases                                                                                             | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) |
-| `playbook`       | Mine. `init-project` sets up or audits a project against the rules in this repository; `lesson` records a mistake as a rule in the right place | This repository                                                                       |
+| Plugin           | What it does                                                                                                                                                                                                               | From                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `superpowers`    | The core loop: brainstorm, plan, test-first execution, review, verification                                                                                                                                                | [obra/superpowers](https://github.com/obra/superpowers)                               |
+| `pocock-extras`  | The parts Superpowers lacks: `grill-me`, `handoff`, `retro`, `wait-what` and `improve-codebase-architecture`, plus three skills they depend on                                                                             | [mattpocock/skills](https://github.com/mattpocock/skills)                             |
+| `security-audit` | A multi-phase security audit, used before releases                                                                                                                                                                         | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) |
+| `playbook`       | Mine. `init-project` sets up or audits a project against the rules in this repository; `design` interviews you for a design; `slices` splits it into slice issues; `lesson` records a mistake as a rule in the right place | This repository                                                                       |
 
 Which plugin's skill does each step of the work, where two overlap, is in [the path](../VERIFICATION.md#the-path).
 
