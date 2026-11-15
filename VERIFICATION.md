@@ -6,13 +6,13 @@ The steps below are plain documents and commands. Plugins make them quicker (Sup
 
 Where things live in a project:
 
-| Path                    | What it holds                                                                     |
-| ----------------------- | --------------------------------------------------------------------------------- |
-| `docs/design.md`        | The design and its numbered acceptance criteria ([template](templates/DESIGN.md)) |
-| `docs/decisions/`       | One ADR per decision with real alternatives ([template](templates/ADR.md))        |
-| `docs/plans/NNN-*.md`   | One plan per slice of work ([template](templates/PLAN.md))                        |
-| `docs/device-checks.md` | Dated observations only a device can make, for apps with a native surface         |
-| `docs/handoff.md`       | Where the work is, for the next session                                           |
+| Path                    | What it holds                                                                                                     |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `docs/design.md`        | The design and its numbered acceptance criteria ([template](templates/DESIGN.md))                                 |
+| `docs/decisions/`       | One ADR per decision with real alternatives ([template](templates/ADR.md))                                        |
+| `docs/plans/NNN-*.md`   | One plan per slice of work ([template](templates/PLAN.md)), or one issue per slice ([tickets](templates/tickets)) |
+| `docs/device-checks.md` | Dated observations only a device can make, for apps with a native surface                                         |
+| `docs/handoff.md`       | Where the work is, for the next session                                                                           |
 
 A larger project keeps one design per feature in `docs/designs/` instead of a single `docs/design.md`.
 
@@ -26,7 +26,7 @@ Any decision with real alternatives gets a short ADR in `docs/decisions/` ([temp
 
 The acceptance criteria live in the design, numbered, one given/when/then block per behaviour, written before any code. Each becomes an acceptance test that names its number, at the tier of [rule 16](rules/16-acceptance-tests-are-isolated-and-real.md) the design records. They are plain text; a Gherkin toolchain is only worth its upkeep when people outside the team read the specifications.
 
-The design then becomes a plan, one file per slice of work that can be reviewed and merged on its own ([template](templates/PLAN.md)). Each plan names the criteria it satisfies. Tasks are headed `### Task N: <behaviour>`, which is also the shape Superpowers' plan-running scripts look for. Each task says how its effect will be observed before any code is written: the failing test, a command and its expected output, a screenshot comparison, or, for what nothing automated can see, the device check that will be recorded. A task without a check is not ready to start. See [rule 5](rules/05-done-means-the-effect-was-observed.md).
+The design then becomes a plan, one per slice of work that can be reviewed and merged on its own: a file ([template](templates/PLAN.md)), or, where agents take work from a queue, an issue made from the [slice form](templates/tickets), which adds a mode (`afk` or `hitl`), its blockers, and a check that says when it's ready for an agent. Each plan names the criteria it satisfies. Tasks are headed `### Task N: <behaviour>`, which is also the shape Superpowers' plan-running scripts look for. Each task says how its effect will be observed before any code is written: the failing test, a command and its expected output, a screenshot comparison, or, for what nothing automated can see, the device check that will be recorded. A task without a check is not ready to start. See [rule 5](rules/05-done-means-the-effect-was-observed.md).
 
 ## 3. Build against the check
 

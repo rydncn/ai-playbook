@@ -1,0 +1,78 @@
+# Copy to .github/ISSUE_TEMPLATE/slice.yml. One issue per slice: a piece of
+# work that can be reviewed and merged on its own, as one pull request. The
+# issue is the slice's plan (the same shape as templates/PLAN.md), so an
+# agent can claim it, and check-ticket.mjs can say whether it's ready.
+#
+# Labels: every slice gets `slice`. A person adds `afk` (an agent may run it
+# unattended) or `hitl` (it needs a person while it runs), and `ready` once
+# check-ticket.mjs passes. Blockers go in "Blocked by", and in GitHub's own
+# "Blocked by" relationship too, where the plan has it.
+name: Slice
+description: One slice of work, ready for an agent to build test-first.
+title: "<NNN>. <slice name>"
+labels: ["slice"]
+body:
+  - type: textarea
+    id: satisfies
+    attributes:
+      label: Satisfies
+      description: The acceptance criteria this slice satisfies, quoted word for word from the design, with their numbers. A slice session reads this issue and the design sections below, not the whole design.
+      placeholder: |
+        AC3. A refund is stored as money in
+        - Given a statement row with an amount of -1,234.56
+        - When it is imported
+        - Then …
+    validations:
+      required: true
+  - type: input
+    id: design
+    attributes:
+      label: Design sections
+      description: The headings in docs/design.md this slice needs.
+      placeholder: "Shape; Lifecycles: import"
+    validations:
+      required: true
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tasks
+      description: Each task says how its effect will be observed before any code is written. A spike uses Measure, Record and Decides instead.
+      value: |
+        #### Task 1: <the behaviour it adds>
+
+        - **Test:** <the failing test written first, and the assertion it fails on>
+        - **Code:** <what changes, briefly>
+        - **Observed by:** <the test passing, a command and its output, a screenshot, or the device check>
+    validations:
+      required: true
+  - type: input
+    id: check
+    attributes:
+      label: Done when
+      description: The command whose success means this slice is done, which an unattended run uses as its goal. It runs the acceptance tests named for the criteria above.
+      placeholder: "`npm run test:ci -- -t 'AC3|AC4'`"
+    validations:
+      required: true
+  - type: dropdown
+    id: door
+    attributes:
+      label: Door
+      description: One-way if it touches anything hard to undo (migrations or data deletion, auth and permissions, public API or URL shapes, what leaves the device, agent configuration, new dependencies, release settings). Its pull request then waits for a person's approval.
+      options:
+        - Two-way
+        - One-way
+    validations:
+      required: true
+  - type: textarea
+    id: one-way-files
+    attributes:
+      label: One-way files
+      description: For a one-way door, the files or folders that make it one.
+  - type: input
+    id: blocked-by
+    attributes:
+      label: Blocked by
+      description: Issues that must close before this one starts, as "#12, #14", or "None".
+      placeholder: "None"
+    validations:
+      required: true

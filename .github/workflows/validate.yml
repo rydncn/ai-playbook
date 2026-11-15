@@ -62,6 +62,9 @@ jobs:
       - name: Test the hooks template
         run: node --test templates/hooks/hooks.test.mjs
 
+      - name: Test the tickets template
+        run: node --test templates/tickets/check-ticket.test.mjs
+
       - name: Test the review gate template
         run: node --test templates/review-gate/gate.test.mjs
 
