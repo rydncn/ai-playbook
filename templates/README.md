@@ -22,7 +22,8 @@ Starting points for a new project. The project setup skill adapts them, and [doc
 | [`lint-ratchet/`](lint-ratchet)            | Counts ESLint findings per rule for each target and fails CI if any count rises above a committed baseline. Lets stricter rules go on before the backlog is cleared. Tested with `node --test`.                                                                     |
 | [`ci.yml`](ci.yml)                         | Baseline GitHub Actions CI: types, lint, rule checks and tests, then `npm audit` and a gitleaks scan of the full history. Actions pinned to commit SHAs.                                                                                                            |
 | [`dependabot.yml`](dependabot.yml)         | Weekly Dependabot updates for npm and GitHub Actions, grouped so they arrive as a few pull requests.                                                                                                                                                                |
-| [`claude-review.yml`](claude-review.yml)   | A GitHub workflow for an automatic, read-only Claude review on each pull request, using the project's own rules.                                                                                                                                                    |
+| [`claude-review.yml`](claude-review.yml)   | A GitHub workflow for an automatic, read-only Claude review of each ready commit, using the project's own rules, and the review gate job.                                                                                                                           |
+| [`review-gate/`](review-gate)              | The required check that reads the review's verdict: must-fix findings and one-way doors wait for a person's approval of the commit. Tested.                                                                                                                         |
 
 ## Using the rule check
 
