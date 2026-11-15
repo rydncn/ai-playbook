@@ -46,7 +46,8 @@ if claude plugin list 2>/dev/null | grep -E "superpowers@" | grep -vq "superpowe
 fi
 
 FAILED=()
-for plugin in playbook superpowers pocock-extras codex ponytail security-audit; do
+# The default set. codex and ponytail are optional: see docs/setup.md.
+for plugin in playbook superpowers pocock-extras security-audit; do
   claude plugin install "$plugin@ai-playbook" || FAILED+=("$plugin")
 done
 if [ ${#FAILED[@]} -gt 0 ]; then
@@ -54,6 +55,5 @@ if [ ${#FAILED[@]} -gt 0 ]; then
 fi
 
 echo
-echo "Done. Two steps left, in Claude Code:"
-echo "  1. /plugin → Marketplaces → ai-playbook → Enable auto-update, so pushes reach this machine."
-echo "  2. /codex:setup, to check Codex is installed and signed in (leave the review gate off)."
+echo "Done. One step left, in Claude Code:"
+echo "  /plugin → Marketplaces → ai-playbook → Enable auto-update, so pushes reach this machine."

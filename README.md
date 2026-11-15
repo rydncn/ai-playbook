@@ -100,7 +100,7 @@ Each rule has its own file: the rule, why it matters, and how to enforce it. Mos
 
 ## Setup
 
-The repository is a Claude Code plugin marketplace, so a change pushed here reaches every machine with auto-update on. The core loop comes from [Superpowers](https://github.com/obra/superpowers); Codex reviews changes on a read-only profile; a few other plugins fill gaps, and my own `playbook` plugin sets up or audits a project against these rules. Stack-specific skills (Expo, Supabase, React, React Native) are enabled per project. [docs/setup.md](docs/setup.md) lists each plugin, what it runs on your machine, and how to install the lot.
+The repository is a Claude Code plugin marketplace, so a change pushed here reaches every machine with auto-update on. The core loop comes from [Superpowers](https://github.com/obra/superpowers); Matt Pocock's skills and Cloudflare's security audit fill its gaps, and my own `playbook` plugin sets up or audits a project against these rules. Codex, for a different model's review of risky changes, is optional. Stack-specific skills (Expo, Supabase, React, React Native) are enabled per project. [docs/setup.md](docs/setup.md) lists each plugin, what it runs on your machine, and how to install the lot.
 
 The full install is my own setup. The templates and rules stand alone: copy any one into a project without installing anything else.
 
