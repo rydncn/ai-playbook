@@ -2,6 +2,12 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-15 · one project file
+
+The first step to a playbook that works on any stack: [`templates/project`](templates/project) defines `.claude/playbook.json`, the one file where a project says what is specific to it. That is the playbook release it's on, where its tickets live (GitHub issues or Jira), its test, e2e, lint and format commands, its one-way paths, and which optional checks it runs. It comes with a dependency-free reader that reports every problem at once and rejects settings it doesn't know, and examples for Node with Jira, Go and Python. Tested. Nothing reads it yet: the hooks and the review gate move over to it next.
+
+**Existing projects:** nothing to do yet.
+
 ## 2026-11-15 · the ablation trial, designed
 
 [docs/trials/ablation.md](docs/trials/ablation.md) sets out the next trial: four arms on one new brief (plain Claude Code, the playbook's files alone, those with the default plugins and door-aimed layers, and everything on every slice). It asks whether the plugins earn their place, whether aiming the expensive layers by door loses findings, whether dropping the in-session review does, and whether a slice can run unattended through tickets and the review gate. What each result decides is agreed before it runs. [`scripts/session-tokens.mjs`](scripts/session-tokens.mjs) totals a build's tokens from its transcripts, for the cost column. Tested.
