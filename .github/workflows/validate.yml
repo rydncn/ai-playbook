@@ -71,6 +71,9 @@ jobs:
       - name: Test the review gate template
         run: node --test templates/review-gate/gate.test.mjs
 
+      - name: Test the criteria-coverage template
+        run: node --test templates/criteria/check-criteria.test.mjs
+
       - name: Test the audit template
         run: node --test templates/audit/audit.test.mjs
 

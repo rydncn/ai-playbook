@@ -34,6 +34,7 @@ What to consider when setting up gates for a new project. Not every item applies
 - [ ] Mutation testing on the changed files in the core (the modules whose mistakes cost most), and once over everything before a release, for example Stryker in incremental mode ([rule 15](../rules/15-tests-must-be-seen-to-fail.md)). Confirmed with Stryker 10's Jest runner under `jest-expo` 58, scoped to plain TypeScript modules (React Native renders not tried). On any other stack, prove it runs and kills a deliberate mutant before relying on it.
 - [ ] Test lint rules: `jest/expect-expect`, `jest/no-focused-tests`, `jest/valid-expect`, or the Vitest equivalents
 - [ ] The test run fails if no tests ran
+- [ ] Each acceptance criterion a slice quotes has a passing test that names it, checked in CI ([template](criteria))
 
 ## Conventions
 

@@ -102,6 +102,11 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # The criteria step reads the pull request and the issue it closes.
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -120,8 +125,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # test:ci also writes a JUnit report to reports/junit.xml for the
+      # criteria step. For Vitest: vitest run --reporter=default
+      # --reporter=junit --outputFile.junit=reports/junit.xml
       - name: Tests
         run: npm run test:ci
+
+      # Every acceptance criterion the slice issue quotes has a passing test
+      # that names it (templates/criteria). Passes with a note when the pull
+      # request closes no slice issue.
+      - name: Criteria covered
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/check-criteria.mjs reports/junit.xml
 
   security:
     name: Dependencies and secrets

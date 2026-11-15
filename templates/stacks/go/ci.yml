@@ -69,6 +69,11 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # The criteria step reads the pull request and the issue it closes.
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -80,12 +85,24 @@ jobs:
           go-version-file: go.mod
       # Shuffled, uncached and under the race detector: order dependence,
       # stale results and data races all fail here (rule 16).
+      # -json keeps every test's outcome for the criteria step; the readable
+      # log is taken from it.
       - name: Tests
-        run: go test -race -count=1 -shuffle=on ./... 2>&1 | tee test.log
+        run: |
+          go test -race -count=1 -shuffle=on -json ./... | tee test.json \
+            | jq -rj 'select(.Action == "output") | .Output' | tee test.log
       - name: Tests ran
         run: |
           grep -qE '^ok\s' test.log || { echo "no package reported ok"; exit 1; }
           ! grep -qE '^(FAIL|--- FAIL)' test.log || { echo "a test failed"; exit 1; }
+      # Every acceptance criterion the slice issue quotes has a passing test
+      # that names it (templates/criteria in the playbook): TestAC3_…
+      - name: Criteria covered
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/check-criteria.mjs test.json
 
   security:
     name: Dependencies and secrets

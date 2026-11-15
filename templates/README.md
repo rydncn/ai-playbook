@@ -25,6 +25,7 @@ Starting points for a new project. The project setup skill adapts them, and [doc
 | [`dependabot.yml`](dependabot.yml)         | Weekly Dependabot updates for npm and GitHub Actions, grouped so they arrive as a few pull requests.                                                                                                                                                                |
 | [`claude-review.yml`](claude-review.yml)   | A GitHub workflow for an automatic, read-only Claude review of each ready commit, using the project's own rules, and the review gate job.                                                                                                                           |
 | [`review-gate/`](review-gate)              | The required check that reads the review's verdict: must-fix findings and one-way doors wait for a person's approval of the commit. Tested.                                                                                                                         |
+| [`criteria/`](criteria)                    | The required check that every acceptance criterion a slice quotes has a passing test that names it, read from JUnit or `go test -json`. Tested.                                                                                                                     |
 
 ## Using the rule check
 
