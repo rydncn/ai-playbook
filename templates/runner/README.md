@@ -35,6 +35,7 @@ What this does and doesn't stop:
 
 ## Limits
 
+- The allowlist narrows where data can go, but doesn't close it. `github.com`, `api.github.com` and `*.blob.core.windows.net` are on it because Claude Code and Actions need them, and anyone can own a repository or a storage account there. A session talked into leaking its credential could still send it to one. Short-lived federation tokens and a spend limit are what bound that.
 - Fix rounds start by hand (or from a schedule you add): nothing triggers one when a check fails, so a red slice pull request waits until someone runs one or takes it over.
 - The session reads issue text and review comments that people wrote. Only issues an approver wrote are claimed, but comments and review findings come from whoever can post them. On a public repository, read the run's log before merging anything it built.
 - `in-progress` stays on while a pull request is open. If a person closes that pull request without merging, they take the label off too.
