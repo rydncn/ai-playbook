@@ -20,6 +20,14 @@ The door is decided twice. The reviewer reads it from the change, and the gate m
 3. Make **Review gate** a required status check on `main`. Without branch protection (GitHub Free on a private repository), the gate still shows red, but nothing stops a merge. For a personal account, GitHub Pro (about $4 a month) adds protected branches to private repositories and is the recommended setup; without it, write an ADR saying merges wait for the gate ([rule 9](../../rules/09-checks-must-prove-they-ran.md)).
 4. See it work ([rule 9](../../rules/09-checks-must-prove-they-ran.md)): a pull request that touches `.github/one-way-paths` should fail the gate, then pass once you approve it. Next, plant a must-fix bug in a two-way file and watch the gate fail.
 
+## After the merge
+
+The gate decides before a merge; nothing in it sees what happened after. [`outcomes.mjs`](outcomes.mjs), run weekly by [`outcomes.yml`](outcomes.yml), counts the pull requests merged in the last 90 days by how the gate let them through (automated, approved by a person, or unreviewed), and how many of each were later reverted or blamed by a `regression` issue that says "Caused by #n". It fails when automated merges escape at more than 5%, with at least 20 to judge by: then two-way doors go back to needing a person (add `**` to `one-way-paths`) until the cause has a check. Vercel ran the same kind of switch, set at three times its baseline revert rate, before it let pull requests merge unreviewed.
+
+1. Copy `outcomes.mjs` to `scripts/review-outcomes.mjs`, next to `scripts/review-gate.mjs`, and `outcomes.yml` to `.github/workflows/`. Create the `regression` label.
+2. When a bug gets through, open its issue with the `regression` label and "Caused by #n". GitHub's Revert button already writes what the count reads.
+3. See it trip ([rule 15](../../rules/15-tests-must-be-seen-to-fail.md)): run it by hand with `MIN_SAMPLE=1` and `MAX_ESCAPE_RATE=0` after one revert of an automated merge, and watch it fail.
+
 ## Limits
 
 - A pull request can edit the workflow that runs its own checks. Workflows are on the one-way list, so a person has to approve such a change, and that person's reading of the diff is the boundary. An organisation can close this gap with a ruleset that requires the workflow from a protected branch.

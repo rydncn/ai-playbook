@@ -2,6 +2,16 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-15 · what happened after the gate
+
+The review gate decides before a merge, and nothing looked at what came after, so letting two-way doors merge on the automated layers alone had no evidence beyond the trials.
+
+- **[`outcomes.mjs`](templates/review-gate/outcomes.mjs)** and a weekly [workflow](templates/review-gate/outcomes.yml) count merged pull requests by how the gate let them through (automated, approved by a person, unreviewed) and how many of each were reverted or blamed by a `regression` issue. It fails when automated merges escape at more than 5%, with at least 20 to judge by, as a kill switch for unreviewed merges. Tested.
+- **GitHub Pro** is now the recommended fix where the plan has no branch protection ([rule 9](rules/09-checks-must-prove-they-ran.md), [new project](docs/new-project.md), [review gate](templates/review-gate)): about $4 a month for a personal account, and it makes the gate block a merge instead of only showing red. The ADR stays as the fallback.
+- Three items join the [backlog](docs/backlog.md): holdout scenarios for unattended runs, one method instead of three, and feature flags for two-way doors.
+
+**Existing projects:** to track outcomes, copy `outcomes.mjs` to `scripts/review-outcomes.mjs` and `outcomes.yml` to `.github/workflows/`, and create the `regression` label. On GitHub Free with private repositories, consider Pro and then make CI and the review gate required checks.
+
 ## 2026-11-15 · one task per session, instead of a context budget
 
 [Rule 17](rules/17-one-task-per-session.md) set a fixed budget of about 100,000 tokens a session, with a hook that warned past it and a handoff instead of compaction. The number was a practitioner's threshold that no trial measured, it went against Anthropic's own guidance, which is to `/clear` between tasks and let compaction work within one, and it nagged during long single-task runs where stopping cost more than carrying on.

@@ -62,6 +62,9 @@ jobs:
       - name: Test the hooks template
         run: node --test templates/hooks/hooks.test.mjs
 
+      - name: Test the outcomes template
+        run: node --test templates/review-gate/outcomes.test.mjs
+
       - name: Test the trial scripts
         run: node --test scripts/session-tokens.test.mjs
 
