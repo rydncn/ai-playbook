@@ -1,0 +1,22 @@
+{
+  "playbook": "1.0.0",
+  "tickets": {
+    "source": "jira",
+    "project": "KAN",
+    "site": "https://example.atlassian.net"
+  },
+  "commands": {
+    "test": "npm run test:ci",
+    "testChanged": "npx jest --onlyChanged",
+    "e2e": "npm run e2e",
+    "lint": "npm run lint",
+    "typecheck": "npm run typecheck"
+  },
+  "oneWayPaths": [
+    "supabase/migrations/",
+    "supabase/functions/",
+    "app.json",
+    "eas.json"
+  ],
+  "checks": ["review-gate", "criteria", "rule-check", "lint-ratchet"]
+}
