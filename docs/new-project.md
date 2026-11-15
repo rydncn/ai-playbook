@@ -30,7 +30,7 @@ This is the one ordered list of what the playbook asks for on day one. Each item
 ## 3. Branch protection
 
 - [ ] Protect `main`: pull requests only, no force pushes, and all three CI jobs as required checks. `Tests` must be required itself, not only `Types and lint`, or a draft marked ready could merge on a stale run.
-- [ ] Where the plan has no branch protection (GitHub Free on a private repository), write an ADR instead: who merges, on what evidence (all three jobs green), and that CI on `main` is the backstop. The ask rules on pushing to `main` and on `gh pr merge` are then the only mechanical guard, so keep them ([rule 9](../rules/09-checks-must-prove-they-ran.md)).
+- [ ] On GitHub Free with a private repository there is no branch protection. Prefer upgrading the account to GitHub Pro (about $4 a month for a personal account; see your account's billing settings for the current price), which adds protected branches and required status checks to private repositories, so the CI jobs and the [review gate](../templates/review-gate) block a merge rather than only showing red. Make the repository public instead only if it can be. Otherwise, write an ADR instead: who merges, on what evidence (all three jobs green), and that CI on `main` is the backstop. The ask rules on pushing to `main` and on `gh pr merge` are then the only mechanical guard, so keep them ([rule 9](../rules/09-checks-must-prove-they-ran.md)).
 - [ ] Turn on secret scanning and push protection where the plan offers them.
 
 ## 4. Agent permissions and environment

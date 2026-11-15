@@ -17,7 +17,7 @@ The door is decided twice. The reviewer reads it from the change, and the gate m
 
 1. Copy `gate.mjs` to `scripts/review-gate.mjs` and `one-way-paths` to `.github/one-way-paths`, and add the project's own one-way paths to it.
 2. Use the playbook's [`claude-review.yml`](../claude-review.yml), which has the gate job, and follow its setup steps, including `HUMAN_APPROVERS` and the `human-approved` label.
-3. Make **Review gate** a required status check on `main`. Without branch protection (GitHub Free on a private repository), the gate still shows red, but nothing stops a merge: write an ADR saying merges wait for it ([rule 9](../../rules/09-checks-must-prove-they-ran.md)).
+3. Make **Review gate** a required status check on `main`. Without branch protection (GitHub Free on a private repository), the gate still shows red, but nothing stops a merge. For a personal account, GitHub Pro (about $4 a month) adds protected branches to private repositories and is the recommended setup; without it, write an ADR saying merges wait for the gate ([rule 9](../../rules/09-checks-must-prove-they-ran.md)).
 4. See it work ([rule 9](../../rules/09-checks-must-prove-they-ran.md)): a pull request that touches `.github/one-way-paths` should fail the gate, then pass once you approve it. Next, plant a must-fix bug in a two-way file and watch the gate fail.
 
 ## Limits
