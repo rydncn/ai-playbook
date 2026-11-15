@@ -2,6 +2,18 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-15 · the factory's pre-trial pieces
+
+What arm C of the [ablation trial](docs/trials/ablation.md) needs to run slices unattended, each tested and none yet tried in a trial:
+
+- **[Criteria coverage](templates/criteria):** a required check that every criterion a slice's issue quotes has a passing test that names it (`AC3`), read from JUnit XML or `go test -json`. In the Node, Go and Python CI templates as "Criteria covered".
+- **End to end on every ready commit:** an `e2e` Playwright job in [`ci.yml`](templates/ci.yml), whose report the criteria job also reads. [Rule 16](rules/16-acceptance-tests-are-isolated-and-real.md) now runs tier 2 in CI where it can.
+- **`/playbook:design` and `/playbook:slices`:** an interview that writes the design with numbered criteria, and a split into slice issues that pass `check-ticket.mjs`.
+- **[The slice runner](templates/runner):** a workflow that claims one `ready` + `afk` issue, builds it test-first in a fresh session, opens a pull request that closes it, and hands it back as `hitl` if its required checks don't pass. It never merges.
+- The review gate's [`one-way-paths`](templates/review-gate/one-way-paths) template now lists the check scripts, so a pull request can't loosen a check for itself.
+
+**Existing projects:** nothing required. A project using tickets can add the criteria step to its CI; it passes with a note on pull requests that close no slice issue. The Go pack's test step now uses `go test -json`; take it with the criteria step.
+
 ## 2026-11-15 · the ablation trial, designed
 
 [docs/trials/ablation.md](docs/trials/ablation.md) sets out the next trial: four arms on one new brief (plain Claude Code, the playbook's files alone, those with the default plugins and door-aimed layers, and everything on every slice). It asks whether the plugins earn their place, whether aiming the expensive layers by door loses findings, whether dropping the in-session review does, and whether a slice can run unattended through tickets and the review gate. What each result decides is agreed before it runs. [`scripts/session-tokens.mjs`](scripts/session-tokens.mjs) totals a build's tokens from its transcripts, for the cost column. Tested.

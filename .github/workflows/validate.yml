@@ -74,6 +74,9 @@ jobs:
       - name: Test the criteria-coverage template
         run: node --test templates/criteria/check-criteria.test.mjs
 
+      - name: Test the slice runner template
+        run: node --test templates/runner/claim.test.mjs
+
       - name: Test the audit template
         run: node --test templates/audit/audit.test.mjs
 
@@ -97,7 +100,7 @@ jobs:
       - name: Workflow security lint
         env:
           GH_TOKEN: ${{ github.token }}
-        run: zizmor --format=github .github/workflows templates/ci.yml templates/claude-review.yml templates/stacks/go/ci.yml templates/stacks/python/ci.yml
+        run: zizmor --format=github .github/workflows templates/ci.yml templates/claude-review.yml templates/runner/runner.yml templates/stacks/go/ci.yml templates/stacks/python/ci.yml
 
       - name: The Python pack's scripts compile
         run: python3 -m py_compile templates/stacks/python/*.py
