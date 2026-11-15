@@ -59,7 +59,7 @@ It loads into every session, so every line should be something Claude would othe
 - Rules that apply everywhere (security boundaries, branding, conventions, commit format).
 - **Playbook version**: the ai-playbook commit this setup follows, so a later reader knows which changes in its `CHANGELOG.md` the project predates.
 - **Docs layout**: the paths from the ai-playbook repo's `VERIFICATION.md` (`docs/design.md`, `docs/decisions/`, `docs/plans/`, `docs/handoff.md`, and `docs/device-checks.md` for a native app). Create the folders if they don't exist.
-- **Workflow**: fill the template's placeholders with the tools the user actually has, for example the Superpowers flow for non-trivial work, `/codex:review` before merging, adversarial review and a security audit for risky changes, handoffs, and lessons. Leave out any the user doesn't use.
+- **Workflow**: fill the template's placeholders with the tools the user actually has, for example the Superpowers flow for non-trivial work, the CI review and its gate before merging, a different model's review (the optional `codex` plugin) and a security audit for one-way doors touching auth or data, handoffs, and lessons. Leave out any the user doesn't use.
 - **Lessons**: an empty section for `/playbook:lesson`.
 
 Leave out:

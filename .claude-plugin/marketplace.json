@@ -63,9 +63,10 @@
         "path": "plugins/codex",
         "sha": "db52e28f4d9ded852ab3942cea316258ae4ef346"
       },
-      "description": "OpenAI's official plugin: independent Codex reviews from inside Claude Code (/codex:review, /codex:adversarial-review). Needs a ChatGPT plan or OpenAI API key.",
+      "description": "Optional, enable per project for one-way doors touching auth, data or permissions. OpenAI's official plugin: independent Codex reviews from inside Claude Code (/codex:review, /codex:adversarial-review). Needs a ChatGPT plan or OpenAI API key.",
       "homepage": "https://github.com/openai/codex-plugin-cc",
-      "license": "Apache-2.0"
+      "license": "Apache-2.0",
+      "category": "optional"
     },
     {
       "name": "ponytail",
@@ -74,9 +75,10 @@
         "repo": "dietrichgebert/ponytail",
         "sha": "96608e078b2d5ea607c5c3b8b5a54d1c1fba6846"
       },
-      "description": "Stops over-building: simplest solution that works, stdlib first, no unrequested abstractions.",
+      "description": "Optional, not installed by default. Stops over-building: simplest solution that works, stdlib first, no unrequested abstractions.",
       "homepage": "https://github.com/dietrichgebert/ponytail",
-      "license": "MIT"
+      "license": "MIT",
+      "category": "optional"
     },
     {
       "name": "react-best-practices",

@@ -59,10 +59,11 @@ The fix is the environment's **setup script**, which runs when the container is 
 set -euo pipefail
 
 claude plugin marketplace add rydncn/ai-playbook
-for p in playbook superpowers pocock-extras ponytail security-audit break-ui; do
+for p in playbook superpowers pocock-extras security-audit; do
   claude plugin install "$p@ai-playbook"
 done
-# Plus each stack plugin the project enables, for example:
+# Plus each stack or optional plugin the project enables, for example:
+# claude plugin install break-ui@ai-playbook
 # claude plugin marketplace add expo/skills && claude plugin install expo@expo-plugins
 
 claude plugin list

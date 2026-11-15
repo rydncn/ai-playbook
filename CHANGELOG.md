@@ -2,6 +2,15 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-15 · a smaller default plugin set
+
+Every plugin costs something in every session: its skill descriptions load into context, its hooks run code, and its upstream changes need reading before a pin moves. Two no longer earned a place by default, and are now **optional**, still in the marketplace, but no longer installed by `scripts/install.sh` or the cloud setup script ([docs/setup.md](docs/setup.md#optional)):
+
+- **`codex`:** in the first trial it found 1 issue where the fresh-context reviews found 30, and its hooks run in every session. Enable it per project for one-way doors touching auth, data, permissions or what leaves the device.
+- **`ponytail`:** it duplicates the simplest-solution default in `user/CLAUDE.md` and the review brief, and its hooks add context on every prompt.
+
+**Existing machines:** `claude plugin uninstall ponytail@ai-playbook`, and `codex@ai-playbook` unless you use it. **Projects with cloud sessions:** take `ponytail` out of the environment's setup script.
+
 ## 2026-11-15 · the expensive layers follow the door
 
 In the third trial, reviews, the audit, mutation testing and their fixes took 44% of the working time, and were spent the same on every slice. [VERIFICATION.md](VERIFICATION.md#5-independent-review) now has a table of which layer runs for a two-way door, a one-way door and a release:
