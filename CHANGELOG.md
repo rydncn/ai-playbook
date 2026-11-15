@@ -2,6 +2,12 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-15 · the ablation trial, designed
+
+[docs/trials/ablation.md](docs/trials/ablation.md) sets out the next trial: four arms on one new brief (plain Claude Code, the playbook's files alone, those with the default plugins and door-aimed layers, and everything on every slice). It asks whether the plugins earn their place, whether aiming the expensive layers by door loses findings, whether dropping the in-session review does, and whether a slice can run unattended through tickets and the review gate. What each result decides is agreed before it runs. [`scripts/session-tokens.mjs`](scripts/session-tokens.mjs) totals a build's tokens from its transcripts, for the cost column. Tested.
+
+**Existing projects:** nothing to do.
+
 ## 2026-11-15 · agent-ready tickets
 
 A slice can now be a GitHub issue rather than a file, so agents can take work from a queue ([`templates/tickets`](templates/tickets)):

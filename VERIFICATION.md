@@ -130,6 +130,8 @@ What the trials can't show: adoption on an existing codebase, months of upkeep, 
 
 ### Running a trial
 
+The next one is designed: [the ablation trial](docs/trials/ablation.md), which takes the playbook apart layer by layer and tries an unattended run.
+
 - Give both builds one brief that describes the product, not acceptance criteria, and the same environment, model and Python, Node or Go version. The control's environment has no plugins: skills such as test-driven development switch themselves on, and would quietly make the control a playbook build. Its setup script fails if any are present.
 - Nobody reviews either build's code until both are done; the owner merges when asked without reading, and answers both builds' questions alike. In the second trial, the owner's reviews found five defects, which would have measured the owner as well as the playbook.
 - Both builds keep the same effort log, in the same columns.
