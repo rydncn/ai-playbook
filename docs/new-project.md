@@ -64,7 +64,7 @@ This is the one ordered list of what the playbook asks for on day one. Each item
   - the review skips, and shows green, on the pull request that adds or changes the workflow file. Its first real run is on the next pull request, so check that one.
 - [ ] A pull request template with a short checklist: how the change was verified, and whether it touches auth, data or migrations.
 - [ ] Agents open pull requests as drafts while they work.
-- [ ] Before merge, a fresh-context review of each slice, and every few slices a review of the whole codebase against the rules ([VERIFICATION.md](../VERIFICATION.md)).
+- [ ] Before merge, the CI review and its gate on each slice, the deeper layers on one-way doors only, and every few slices a review of the whole codebase against the rules ([VERIFICATION.md](../VERIFICATION.md#5-independent-review)).
 
 ## As the project grows
 

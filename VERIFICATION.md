@@ -59,7 +59,7 @@ CI only protects anything while it runs, so it is a required status check, or, o
 
 The session that built something is the worst-placed to review it: whatever it got wrong, it got wrong for reasons that still seem right to it. Even a reviewer it starts for itself inherits its framing through the brief it writes ("review the card slice"), and reviews what was built rather than what the rules require. So review happens at three distances from the work:
 
-- **Each slice, before merge: a fresh-context review.** A reviewer, usually a subagent, given only the diff, the design and `CLAUDE.md`, never the building session's reasoning. It reports findings verified against the code; the session fixes them test-first or records a ruling.
+- **Each slice, before merge: a fresh-context review.** A reviewer given only the diff, the design and `CLAUDE.md`, never the building session's reasoning. Where the [review gate](templates/review-gate) is set up, this is the CI review: it runs outside the building session, so it can't inherit its framing, and its verdict decides the merge. Without it, a subagent with the brief does the job. It reports findings verified against the code; the session fixes them test-first or records a ruling.
 - **Every few slices, and before a phase ends: a whole-codebase review against the rules.** Briefed from `CLAUDE.md` and the design, not from any diff, and reading the slices together. It finds what per-slice reviews can't: surfaces that must agree but don't (a preview and what prints), rules whose checks cover less than they claim, and two documents that contradict each other. In the first trial of this playbook, four layers of per-slice review passed nine must-fix defects that one such review found; six of the nine only showed when slices were read together.
 - **A different model family for risky changes.** OpenAI's Codex, on a read-only profile, for anything touching data, consent, permissions or what leaves the device. A different model catches somewhat different mistakes. I treat its findings as claims to verify: one study found that Codex reviewing Claude's code made it worse when its suggestions were applied without checking. In the first trial, Codex reviewed 11,000 lines after the fresh-context reviews had run and found one issue, which those reviews had already found and deliberately deferred; the fresh-context reviews found 30 on the same code. One run is weak evidence, so this stays a layer for risky changes on larger projects rather than part of the core.
 
@@ -71,6 +71,22 @@ The session that built something is the worst-placed to review it: whatever it g
 - **Two-way doors**, undone by a revert: screens, copy, internal changes behind tests. The automated layers carry these; a human reads the summary and spot-checks.
 
 Human attention goes where a mistake can't be taken back, instead of being spread thin over every line. A pull request with any one-way file is a one-way door.
+
+**The expensive layers follow the door too.** In the third trial, reviews, the audit, mutation testing and their fixes were 44% of the working time, spent the same on every slice. Each layer runs where its findings can't be had more cheaply:
+
+| Layer                                  | Two-way door              | One-way door                                    | Before a release                          |
+| -------------------------------------- | ------------------------- | ----------------------------------------------- | ----------------------------------------- |
+| Hooks, CI checks, tests                | Yes                       | Yes                                             | Yes                                       |
+| CI review with the brief, and the gate | Yes                       | Yes                                             | Yes                                       |
+| A person approves the commit           | No                        | Yes                                             | The written test plan on real devices     |
+| Mutation testing                       | Changed files in the core | Every changed file                              | Everything changed since the last release |
+| A different model's review             | No                        | Auth, data, permissions, what leaves the device | No                                        |
+| Whole-codebase review                  | Every few slices          | Every few slices                                | Yes                                       |
+| Security audit                         | No                        | After significant auth or deletion changes      | Yes                                       |
+
+- **One review per slice, not two.** Where the CI review runs, the building session doesn't also start its own reviewer for a two-way slice. That subagent would read the same diff with the same brief, and inherit the builder's framing as well. Use `/code-review` while building, for its quick correctness pass.
+- **Model by risk.** The CI review runs on Sonnet. For a project whose one-way doors carry money or personal data, a second review job on Opus can run only for changes that match the one-way paths.
+- **Records are for trials.** The effort logs and per-layer counts, which were the main cost in the first two trials, are kept only when the project is itself a trial of the playbook.
 
 Alongside them:
 
