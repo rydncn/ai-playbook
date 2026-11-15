@@ -59,7 +59,7 @@ In the trial, mutation testing on every changed file was the largest single cost
 
 ## Measuring a session
 
-Rule 17's budget counts what a session added since its first reply. The same arithmetic as `context-budget.mjs`, for the record in `docs/effort.md`, from the session's transcript (`~/.claude/projects/<project>/<session>.jsonl`):
+How much a session added to its context since its first reply, for the record in `docs/effort.md`, from the session's transcript (`~/.claude/projects/<project>/<session>.jsonl`):
 
 ```python
 import json, sys

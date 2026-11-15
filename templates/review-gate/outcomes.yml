@@ -1,0 +1,55 @@
+# What happened after the review gate: once a week, the share of merged pull
+# requests that were later reverted or blamed for a regression, by how the
+# gate let them through (templates/review-gate/outcomes.mjs). It fails when
+# automated merges escape more often than the limit, as a kill switch for
+# letting two-way doors merge without a person.
+#
+# Setup:
+# - Copy outcomes.mjs to scripts/review-outcomes.mjs, next to
+#   scripts/review-gate.mjs, and this file to .github/workflows/.
+# - HUMAN_APPROVERS is the same repository variable the gate uses.
+# - Create a `regression` label. An issue for a bug that got through says
+#   "Caused by #<pull request>" in its body; GitHub's Revert button already
+#   writes what this reads.
+# - Optional repository variables: OUTCOMES_WINDOW_DAYS (90),
+#   OUTCOMES_MAX_ESCAPE_RATE (0.05), OUTCOMES_MIN_SAMPLE (20).
+name: Outcomes
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  outcomes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/review-gate.mjs
+            scripts/review-outcomes.mjs
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: Outcomes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          HUMAN_APPROVERS: ${{ vars.HUMAN_APPROVERS }}
+          WINDOW_DAYS: ${{ vars.OUTCOMES_WINDOW_DAYS }}
+          MAX_ESCAPE_RATE: ${{ vars.OUTCOMES_MAX_ESCAPE_RATE }}
+          MIN_SAMPLE: ${{ vars.OUTCOMES_MIN_SAMPLE }}
+        run: node scripts/review-outcomes.mjs

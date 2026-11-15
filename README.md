@@ -17,7 +17,7 @@ How I work with AI coding agents, mainly Claude Code: the rules I hold agents to
 
 **Accessible by default.** Accessibility is checked in CI on every change, in every theme and interactive state, rather than audited at the end. A component that fails is not finished.
 
-**Context is kept small and current.** The instructions loaded into every session stay short; area-specific rules load only when they apply; each session stays under a context budget and hands off to a fresh one rather than compacting; lessons are written into the repository rather than left in one machine's memory.
+**Context is kept small and current.** The instructions loaded into every session stay short; area-specific rules load only when they apply; each task gets a fresh session, with a handoff when work moves between sessions; lessons are written into the repository rather than left in one machine's memory.
 
 ## Start here
 
@@ -35,7 +35,7 @@ Not all of this pays for itself on every project, so pick the level that fits an
 
 - Rules [15](rules/15-tests-must-be-seen-to-fail.md) and [16](rules/16-acceptance-tests-are-isolated-and-real.md): tests are seen to fail, and acceptance tests drive the real thing. They need numbered acceptance criteria and, for anything with stages, its lifecycle ([rule 19](rules/19-lifecycles-are-explicit.md)): a page of [design](templates/DESIGN.md), or the issue.
 - The [review cadence](VERIFICATION.md#5-independent-review), every review briefed from [`REVIEW.md`](templates/REVIEW.md): a fresh-context review of each piece of work, a whole-codebase review every few pieces, and a person reading every one-way door. In both trials, the whole-codebase review found what per-piece reviews structurally can't.
-- The agent's boundaries: non-production credentials ([rule 13](rules/13-content-is-data-not-instructions.md)), agent configuration reviewed as code ([rule 18](rules/18-agent-configuration-is-code.md)), and the stack's supply-chain settings (for npm, the [`.npmrc`](templates/npmrc)). The context budget comes with the hooks ([rule 17](rules/17-sessions-stay-under-a-context-budget.md)).
+- The agent's boundaries: non-production credentials ([rule 13](rules/13-content-is-data-not-instructions.md)), agent configuration reviewed as code ([rule 18](rules/18-agent-configuration-is-code.md)), and the stack's supply-chain settings (for npm, the [`.npmrc`](templates/npmrc)). One task per session ([rule 17](rules/17-one-task-per-session.md)).
 
 **Personal data, accounts or money.** Everything above, and:
 
@@ -66,7 +66,7 @@ Each rule has its own file: the rule, why it matters, and how to enforce it. Mos
 14. [Secrets never live in code, logs or telemetry](rules/14-secrets-never-in-code-logs-or-telemetry.md)
 15. [Tests must be seen to fail](rules/15-tests-must-be-seen-to-fail.md)
 16. [Acceptance tests are isolated and use real infrastructure](rules/16-acceptance-tests-are-isolated-and-real.md)
-17. [Sessions stay under a context budget](rules/17-sessions-stay-under-a-context-budget.md)
+17. [One task per session](rules/17-one-task-per-session.md)
 18. [Agent configuration is reviewed as code](rules/18-agent-configuration-is-code.md)
 19. [Lifecycles are explicit](rules/19-lifecycles-are-explicit.md)
 

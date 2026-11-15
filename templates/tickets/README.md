@@ -11,7 +11,7 @@ A slice of work as a GitHub issue, so an agent can claim it, a person can see th
 
 An issue is ready for an agent to start when `check-ticket.mjs` passes on it:
 
-- it quotes the acceptance criteria it satisfies, word for word, with their numbers, and names the design sections it needs, so the session reads those and not the whole design ([rule 17](../../rules/17-sessions-stay-under-a-context-budget.md));
+- it quotes the acceptance criteria it satisfies, word for word, with their numbers, and names the design sections it needs, so the session reads those and not the whole design ([rule 17](../../rules/17-one-task-per-session.md));
 - every task names its failing test and how its effect is observed ([rule 5](../../rules/05-done-means-the-effect-was-observed.md)), or, for a spike, what it measures, where the numbers go and what they decide;
 - one command decides when it's done. An unattended run uses it as its goal;
 - its door is decided, and a one-way door names its files;
