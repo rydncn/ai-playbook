@@ -2,6 +2,19 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-15 · the factory's pre-trial pieces
+
+What arm C of the [ablation trial](docs/trials/ablation.md) needs to run slices unattended, each tested and none yet tried in a trial:
+
+- **[Criteria coverage](templates/criteria):** a required check that every criterion a slice's issue quotes has a passing test that names it (`AC3`), read from JUnit XML or `go test -json`. In the Node, Go and Python CI templates as "Criteria covered".
+- **End to end on every ready commit:** an `e2e` Playwright job in [`ci.yml`](templates/ci.yml), whose report the criteria job also reads. [Rule 16](rules/16-acceptance-tests-are-isolated-and-real.md) now runs tier 2 in CI where it can.
+- **`/playbook:design` and `/playbook:slices`:** an interview that writes the design with numbered criteria, and a split into slice issues that pass `check-ticket.mjs`.
+- **[The slice runner](templates/runner):** a workflow that claims one `ready` + `afk` issue an approver wrote and builds it test-first in a session holding only a read-only token. A separate job with no model checks the commits ([`publish-check.mjs`](templates/runner/publish-check.mjs): no workflows, agent configuration, check scripts or test configuration, no one-way paths on a two-way slice), pushes them to `slice/<issue>` only and opens the pull request. Fix rounds, at most two, run by hand. Nothing merges. **Experimental** until the ablation trial's unattended arm passes. Its build job reaches only an allowlist of hosts, through Harden-Runner in block mode, and fails if anything else is reachable.
+- The review gate's [`one-way-paths`](templates/review-gate/one-way-paths) template now lists the check scripts and test runner configuration. **A fix:** a line ending in `/` (`.claude/`, `.github/`, `**/migrations/`) matched nothing, so the shipped list only caught the files named without a slash. Both the gate and the publish check now read `src/auth/` as the folder.
+- The criteria check runs the base branch's copy of its script.
+
+**Existing projects:** a project using the review gate takes the new `gate.mjs` at once: its one-way folders weren't being caught. A project using tickets can add the criteria step to its CI; it passes with a note on pull requests that close no slice issue. The Go pack's test step now uses `go test -json`; take it with the criteria step.
+
 ## 2026-11-15 · what happened after the gate
 
 The review gate decides before a merge, and nothing looked at what came after, so letting two-way doors merge on the automated layers alone had no evidence beyond the trials.

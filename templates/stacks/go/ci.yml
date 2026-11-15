@@ -10,7 +10,8 @@ name: CI
 # For a database, add a Postgres service to the tests job (as the trial did)
 # and a step that applies every migration to the empty database twice, the
 # second applying nothing. For end-to-end tests with Playwright, take the e2e
-# job and the npm supply-chain steps from templates/ci.yml.
+# job and the npm supply-chain steps from templates/ci.yml, and move the
+# criteria step into its own job that reads both reports, as that file does.
 
 on:
   push:
@@ -69,6 +70,11 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # The criteria step reads the pull request and the issue it closes.
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -80,12 +86,36 @@ jobs:
           go-version-file: go.mod
       # Shuffled, uncached and under the race detector: order dependence,
       # stale results and data races all fail here (rule 16).
+      # -json keeps every test's outcome for the criteria step; the readable
+      # log is taken from it.
       - name: Tests
-        run: go test -race -count=1 -shuffle=on ./... 2>&1 | tee test.log
+        run: |
+          go test -race -count=1 -shuffle=on -json ./... | tee test.json \
+            | jq -rj 'select(.Action == "output") | .Output' | tee test.log
       - name: Tests ran
         run: |
           grep -qE '^ok\s' test.log || { echo "no package reported ok"; exit 1; }
           ! grep -qE '^(FAIL|--- FAIL)' test.log || { echo "a test failed"; exit 1; }
+      # Every acceptance criterion the slice issue quotes has a passing test
+      # that names it (templates/criteria in the playbook): TestAC3_…
+      # The base branch's check, never the pull request's, so a pull request
+      # can't loosen the check that judges it. Node and jq come with the
+      # GitHub-hosted runner image; a self-hosted runner needs them.
+      - name: Checkout the base branch's check
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .base
+          persist-credentials: false
+          sparse-checkout: scripts/check-criteria.mjs
+          sparse-checkout-cone-mode: false
+      - name: Criteria covered
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node .base/scripts/check-criteria.mjs test.json
 
   security:
     name: Dependencies and secrets

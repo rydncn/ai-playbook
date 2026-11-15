@@ -34,6 +34,7 @@ What to consider when setting up gates for a new project. Not every item applies
 - [ ] Mutation testing on the changed files in the core (the modules whose mistakes cost most), and once over everything before a release, for example Stryker in incremental mode ([rule 15](../rules/15-tests-must-be-seen-to-fail.md)). Confirmed with Stryker 10's Jest runner under `jest-expo` 58, scoped to plain TypeScript modules (React Native renders not tried). On any other stack, prove it runs and kills a deliberate mutant before relying on it.
 - [ ] Test lint rules: `jest/expect-expect`, `jest/no-focused-tests`, `jest/valid-expect`, or the Vitest equivalents
 - [ ] The test run fails if no tests ran
+- [ ] Each acceptance criterion a slice quotes has a passing test that names it, checked in CI ([template](criteria))
 
 ## Conventions
 
@@ -98,6 +99,7 @@ For React, React Native and TypeScript projects. Each catches something agents g
 
 - [ ] The acceptance-test tier chosen and recorded in an ADR ([rule 16](../rules/16-acceptance-tests-are-isolated-and-real.md))
 - [ ] End-to-end flows for the main journeys, on every platform shipped, before release (tier 2; Maestro for Expo and React Native)
+- [ ] For a web app, those flows on every ready commit, with Playwright in CI ([the `e2e` job](ci.yml)), and always where agents work unattended: the end-to-end tests are the only check that sees the journeys a slice can break
 - [ ] An environment check before any release or over-the-air update
 - [ ] Device checks recorded in `docs/device-checks.md`, dated with the build, for what only a device can show (tier 3)
 

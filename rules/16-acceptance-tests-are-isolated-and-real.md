@@ -18,7 +18,7 @@ How real the infrastructure is comes in tiers. Each costs more to run than the o
 2. **Emulator or full stack.** The built app on an emulator or simulator (Maestro is the simplest for Expo and React Native), or every service running together.
 3. **Real devices.** A written run-through on physical devices, for what nothing automated can observe: pickers, printing, notifications firing, screen readers, orientation.
 
-Every project needs tier 1 in CI. A project that ships needs tier 2 for its main journeys before release, and tier 3 for anything only a device can show. Record the tier chosen and the reason in an ADR, so a reader who sees this rule and a design that stops at tier 1 knows it was a decision, not an oversight. Tier 3 observations go in `docs/device-checks.md`, dated with the build they were made on, and say plainly when a check has not been done.
+Every project needs tier 1 in CI. A project that ships needs tier 2 for its main journeys before release, and tier 3 for anything only a device can show. Where tier 2 can run in CI (a web app in a browser), it runs on every ready commit instead ([the `e2e` job](../templates/ci.yml)), so a slice that breaks a journey fails before it merges, not before the release. Record the tier chosen and the reason in an ADR, so a reader who sees this rule and a design that stops at tier 1 knows it was a decision, not an oversight. Tier 3 observations go in `docs/device-checks.md`, dated with the build they were made on, and say plainly when a check has not been done.
 
 ## Why
 

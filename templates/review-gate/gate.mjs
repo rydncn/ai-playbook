@@ -65,11 +65,15 @@ export function globToRegExp(glob) {
 
 /** The globs in a one-way paths file: one per line, # for comments. */
 export function parsePaths(text) {
-  return text
-    .split("\n")
-    .map((l) => l.replace(/#.*/, "").trim())
-    .filter(Boolean)
-    .map((l) => l.replace(/^\//, ""));
+  return (
+    text
+      .split("\n")
+      .map((l) => l.replace(/#.*/, "").trim())
+      .filter(Boolean)
+      // "src/auth/" means the folder: drop the slashes, since a folder name
+      // already covers what's inside it.
+      .map((l) => l.replace(/^\/|\/$/g, ""))
+  );
 }
 
 /** The changed files that match a one-way glob. */
