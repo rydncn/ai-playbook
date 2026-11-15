@@ -74,7 +74,7 @@ Human attention goes where a mistake can't be taken back, instead of being sprea
 
 Alongside them:
 
-- An automatic Claude review on each pull request reads the project's own `CLAUDE.md` and rules files ([workflow template](templates/claude-review.yml)).
+- An automatic Claude review of every ready commit reads the project's own `CLAUDE.md` and rules files, with the same brief ([workflow template](templates/claude-review.yml)). Its verdict feeds the [review gate](templates/review-gate), a required check: a two-way change with nothing to fix merges on the automated layers alone, while a must-fix finding or a one-way door (by the reviewer's reading or by the changed paths) waits for a person to approve that commit. That makes the one human gate a check rather than a habit, and it's the gate an unattended run stops at.
 - Claude Code's bundled `/code-review` skill, for a quick correctness pass on the current diff in a fresh subagent. Use it freely while building; it doesn't ask the five questions, so the reviews the playbook counts on still get the brief.
 - A security audit before releases and after significant changes to authentication, deletion or anything leaving the device.
 

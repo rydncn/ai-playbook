@@ -2,6 +2,17 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-15 · review is a gate, and the one human gate is a check
+
+Until now, every review layer only advised: the building session ran the fresh-context review on itself, the CI review posted comments, and "a person reads every one-way door" was a habit. On a one-person project, CODEOWNERS enforced nothing.
+
+- The [Claude review workflow](templates/claude-review.yml) now reviews every ready commit, not only when a pull request opens. It returns a verdict (the must-fix and should-fix counts and the door) as structured output, and records it in a comment that only the workflow's own token can post.
+- A new **Review gate** job runs [`templates/review-gate/gate.mjs`](templates/review-gate) from the base branch and makes the result a required check. A two-way change with nothing to fix passes. A must-fix finding, or a one-way door (by the reviewer's reading, or because a changed path matches [`.github/one-way-paths`](templates/review-gate/one-way-paths) on the base branch), fails until a person in `HUMAN_APPROVERS` approves that commit, by a review or by the `human-approved` label, which every push removes. It fails closed when there's no verdict. Tested, with each guard seen to fail when removed.
+- [Rule 18](rules/18-agent-configuration-is-code.md), [CODEOWNERS](templates/CODEOWNERS), [GATES](templates/GATES.md), [VERIFICATION](VERIFICATION.md#5-independent-review) and the setup skill now point at the gate.
+- The docs-only path filter is removed: a required check that doesn't run blocks the merge for ever.
+
+**Existing projects:** replace `.github/workflows/claude-review.yml` with the template and keep your prompt's project-specific items. Copy `gate.mjs` to `scripts/review-gate.mjs` and `one-way-paths` to `.github/one-way-paths`, adding your own one-way paths. Set `HUMAN_APPROVERS`, create the `human-approved` label, and once a real run has shown the gate working, make **Review gate** a required check. If agents push as you, give them their own account first.
+
 ## 2026-11-15 · after `5ef53c8`: templates carry guidance, not history
 
 The templates a project copies (the CLAUDE template, the review brief, design, plan, ADR and the area rules) had collected the trial stories behind each instruction. Those cost context in every session that loads them and every review that reads the brief, and they say nothing the instruction doesn't. They are removed from the templates; the evidence stays in [VERIFICATION.md](VERIFICATION.md#8-what-the-trials-found) and the rules. The copied templates are about 5% shorter, the always-loaded CLAUDE template about 7%. Also:

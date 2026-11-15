@@ -93,7 +93,8 @@ Each rule has its own file: the rule, why it matters, and how to enforce it. Mos
 | [`rules/`](templates/rules)                          | Path-scoped conventions: APIs, errors, logging and correlation IDs for a server; testing and accessibility for React Native                              |
 | [`ci.yml`](templates/ci.yml)                         | Baseline CI: types, lint and tests, then a dependency audit and a secrets scan                                                                           |
 | [`dependabot.yml`](templates/dependabot.yml)         | Weekly, grouped dependency and GitHub Actions updates                                                                                                    |
-| [`claude-review.yml`](templates/claude-review.yml)   | An automatic, read-only Claude review on each pull request                                                                                               |
+| [`claude-review.yml`](templates/claude-review.yml)   | An automatic, read-only Claude review of each ready commit                                                                                               |
+| [`review-gate/`](templates/review-gate)              | A required check from the review's verdict: must-fix findings and one-way doors wait for a person's approval of the commit. Tested                       |
 
 [docs/new-project.md](docs/new-project.md) sets out the order to apply them in on a new project.
 

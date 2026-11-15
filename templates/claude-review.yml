@@ -1,12 +1,29 @@
 name: Claude PR Review
 
 # Automatic review of every pull request by Claude Code, run in a fresh
-# session with the repo's own CLAUDE.md and .claude/rules/. Read-only: it can
-# view the PR and post comments, never push or edit.
+# session with the repo's own CLAUDE.md and .claude/rules/, and a gate that
+# makes it count. Read-only: the reviewer can view the PR and post comments,
+# never push or edit.
 #
-# Runs when a PR is opened, reopened or marked ready for review (not on every
-# push, to keep cost down). To review again after new commits, add the
-# `claude-review` label to the PR.
+# The review runs on every commit of a pull request that isn't a draft.
+# Agents work in drafts, so the cost falls once per ready commit, not per
+# push. It reports a verdict (must-fix count, should-fix count, the door),
+# and the "Review gate" job turns it into a pass or a fail
+# (templates/review-gate in the playbook):
+#   - two-way door, nothing must be fixed: pass;
+#   - a must-fix finding, or a one-way door (by the reviewer's reading or by
+#     the changed paths matching .github/one-way-paths on the base branch):
+#     fail until a person in HUMAN_APPROVERS approves this commit, or adds
+#     the `human-approved` label, which every push removes.
+# Make "Review gate" a required status check. Copy the playbook's
+# templates/review-gate/gate.mjs to scripts/review-gate.mjs; the gate runs it
+# from the base branch, so a pull request can't change its own gate.
+#
+# What it can't stop: a pull request can edit this workflow itself, and on
+# GitHub a pull request's checks run its own version of the workflow. Every
+# workflow is a one-way path, so such a change needs a person, and that
+# person reading the workflow diff is the boundary. An organisation can close
+# the gap with a ruleset that requires this workflow from a protected branch.
 #
 # Template from the ai-playbook repo; see VERIFICATION.md there.
 #
@@ -35,15 +52,20 @@ name: Claude PR Review
 #      review fails with "Credit balance is too low".
 #   4. Keep "Send write tokens to workflows from pull requests" off under
 #      Settings > Actions > General.
+#   5. Add the HUMAN_APPROVERS repository variable: the GitHub logins of the
+#      people who may approve, comma-separated. Never a bot or the account
+#      agents push as, if they push as a person. Create the `human-approved`
+#      label.
 # Fallback: an ANTHROPIC_API_KEY repository secret, a dedicated key with a
 # spend limit. Remove it once federation works. With neither, the review job
 # fails with an error naming both, rather than passing without a review.
 #
 # First run: the action refuses to run a workflow that differs from the one
 # on the default branch, so on the pull request that adds or changes this
-# file it skips and shows GREEN without reviewing anything. Its first real
-# run is the next pull request after this file is on main: read that run's
-# log and check a review was posted (rule 9 in the playbook).
+# file it skips without reviewing anything. The gate then finds no verdict
+# and fails until a person approves, as it should for a workflow change. Its
+# first real run is the next pull request after this file is on main: read
+# that run's log and check a review and a verdict were posted (rule 9).
 #
 # When the review fails within seconds, with is_error and no cost, the API
 # refused it, and the action hides why. Debug logging doesn't show it. In
@@ -67,25 +89,47 @@ name: Claude PR Review
 # For a deeper second opinion on risky changes, run /codex:review or
 # /codex:adversarial-review locally.
 
+# No paths filter: the gate is a required check, and a required check that
+# doesn't run blocks the merge for ever.
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review, labeled]
-    paths-ignore:
-      # Docs only. Markdown elsewhere is reviewed, because CLAUDE.md and
-      # .claude/rules/ are instructions to the agent.
-      - "docs/**"
+    types: [opened, reopened, synchronize, ready_for_review, labeled, unlabeled]
 
+# A new commit cancels the review of the old one. A label event only reruns
+# the gate, in its own group, so adding a label never cancels a review.
 concurrency:
-  group: claude-review-${{ github.event.pull_request.number }}
+  group: claude-review-${{ github.event.pull_request.number }}-${{ contains(fromJSON('["labeled","unlabeled"]'), github.event.action) && 'gate' || 'review' }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
+  # Every push takes away an earlier approval: `human-approved` always means
+  # "since the last commit".
+  reset-approval:
+    name: Reset approval
+    if: github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'human-approved')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Remove the approval label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: gh pr edit "$PR" --repo "$REPO" --remove-label human-approved
+
   review:
     name: Claude review
     if: >-
       github.event.pull_request.draft == false &&
       github.event.pull_request.user.login != 'dependabot[bot]' &&
-      (github.event.action != 'labeled' || github.event.label.name == 'claude-review')
+      !contains(fromJSON('["labeled","unlabeled"]'), github.event.action)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -104,6 +148,7 @@ jobs:
           fetch-depth: 1
 
       - name: Review
+        id: review
         uses: anthropics/claude-code-action@d70510b174a1244958df0b03166a54912811f3e6 # v1.0.264
         with:
           anthropic_federation_rule_id: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
@@ -192,9 +237,69 @@ jobs:
               nothing, say "No high-confidence issues found" and list what
               you checked.
             - Only post GitHub comments; don't return the review as a
-              message.
+              message, except for the verdict: return the counts of
+              must-fix and should-fix issues you posted, and the door, as
+              the structured output. A required check reads it: a must-fix
+              or a one-way door waits for a person.
 
           claude_args: |
             --model sonnet
             --max-turns 40
+            --json-schema '{"type":"object","properties":{"must_fix":{"type":"integer","minimum":0},"should_fix":{"type":"integer","minimum":0},"door":{"enum":["one-way","two-way"]},"one_way_files":{"type":"array","items":{"type":"string"}}},"required":["must_fix","should_fix","door"]}'
             --allowedTools "Read,Glob,Grep,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),mcp__github_inline_comment__create_inline_comment"
+
+      # The verdict, as a comment only this workflow's token can post, marked
+      # with the commit it is for. The gate reads it from there, so a label
+      # event can rerun the gate without rerunning the review.
+      - name: Record the verdict
+        if: steps.review.outputs.structured_output != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          VERDICT: ${{ steps.review.outputs.structured_output }}
+        run: |
+          {
+            echo "<!-- review-gate-verdict $HEAD_SHA -->"
+            echo '```json'
+            printf '%s\n' "$VERDICT"
+            echo '```'
+          } > "$RUNNER_TEMP/verdict.md"
+          gh pr comment "$PR" --repo "$REPO" --body-file "$RUNNER_TEMP/verdict.md"
+
+  gate:
+    name: Review gate
+    needs: [reset-approval, review]
+    # Runs even when the review was skipped (a label event) or failed: a
+    # skipped required check counts as passing, so the gate must always run
+    # and decide.
+    if: always() && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+    steps:
+      # The base branch's gate, never the pull request's.
+      - name: Checkout the base branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+          sparse-checkout: scripts/review-gate.mjs
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: Gate
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HUMAN_APPROVERS: ${{ vars.HUMAN_APPROVERS }}
+          REVIEW_RESULT: ${{ needs.review.result }}
+        run: node scripts/review-gate.mjs

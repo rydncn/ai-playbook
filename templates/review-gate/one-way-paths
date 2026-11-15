@@ -1,0 +1,32 @@
+# Copy to .github/one-way-paths. The review gate reads it from the base
+# branch: a change to any file matching a line here needs a person to approve
+# the commit before it merges, whatever the reviewer says. One glob per line
+# (** for any folders, * within one); a folder name covers what's inside it.
+# Without this file the gate uses the defaults in gate.mjs, which are the
+# same list without the last group.
+
+# Agent configuration (rule 18) and CI
+.claude/
+.mcp.json
+**/CLAUDE.md
+**/AGENTS.md
+.github/
+.devcontainer/
+
+# Dependencies and how the software is built
+package.json
+package-lock.json
+go.mod
+go.sum
+pyproject.toml
+uv.lock
+**/Dockerfile
+
+# Data that can't be taken back
+**/migrations/
+
+# This project's own one-way doors: authentication and permissions, what
+# leaves the device, public API and URL shapes, release settings. For example:
+# src/auth/
+# src/api/public/
+# app.json
