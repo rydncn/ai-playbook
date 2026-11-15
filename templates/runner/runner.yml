@@ -1,5 +1,9 @@
 name: Slice runner
 
+# EXPERIMENTAL: this has run in no trial. It stays optional until the
+# ablation trial's unattended arm (docs/trials/ablation.md there) shows a
+# slice can finish without a person stepping in beyond the gate.
+#
 # Builds one slice issue that may run unattended (labelled `slice`, `ready`
 # and `afk`, written by a person in HUMAN_APPROVERS, and passing
 # check-ticket.mjs now) in a fresh Claude Code session, and opens a pull
@@ -38,12 +42,20 @@ name: Slice runner
 #      made with the default GITHUB_TOKEN start no workflows, so CI would
 #      never run on the pull request. Without Workflows, GitHub itself
 #      refuses a push that changes .github/workflows/.
-#   5. Fill in the TODOs: the project's setup, the services its tests need,
+#   5. The build job's network: the session gets only the hosts in its
+#      allowlist, through Harden-Runner in block mode, and a step after it
+#      fails the job if anything else is reachable. Harden-Runner's free
+#      tier covers public repositories on GitHub-hosted runners; a private
+#      repository needs its paid tier. Without it, run unattended slices in
+#      a cloud session whose environment has a custom network allowlist
+#      instead (docs/agent-environment.md), or set the repository variable
+#      SLICE_EGRESS to `open` to accept an open network knowingly.
+#   6. Fill in the TODOs: the project's setup, the services its tests need,
 #      and the commands the session may run.
-#   6. Run it once by hand (Actions > Slice runner > Run workflow) on a slice
+#   7. Run it once by hand (Actions > Slice runner > Run workflow) on a slice
 #      you watch, and read the whole log (rule 9): a claimed issue, a pull
 #      request from slice/<issue> that closes it, and CI running on it.
-#   7. Only then add the schedule below, if wanted.
+#   8. Only then add the schedule below, if wanted.
 
 on:
   workflow_dispatch:
@@ -150,6 +162,47 @@ jobs:
     # TODO before use: the services the tests job in ci.yml uses (a
     # database, a queue), so the done command runs against real ones.
     steps:
+      # First, so it covers every step. The session's shell can run any
+      # code, so what it can reach is the only limit on where the job's
+      # Claude credential and the code can go. Block mode refuses
+      # everything not listed, and disables sudo so a step can't undo it.
+      - name: Limit the network
+        if: vars.SLICE_EGRESS != 'open'
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: block
+          disable-sudo-and-containers: true
+          disable-telemetry: true
+          # TODO before use: the project's package registries (for npm,
+          # registry.npmjs.org:443) and any host its tests reach. Run once
+          # with egress-policy: audit on a watched slice to see the full list.
+          allowed-endpoints: >
+            api.anthropic.com:443
+            claude.ai:443
+            downloads.claude.ai:443
+            storage.googleapis.com:443
+            bun.sh:443
+            github.com:443
+            api.github.com:443
+            codeload.github.com:443
+            objects.githubusercontent.com:443
+            release-assets.githubusercontent.com:443
+            results-receiver.actions.githubusercontent.com:443
+            *.blob.core.windows.net:443
+            token.actions.githubusercontent.com:443
+
+      # Fails closed: a limit that isn't working (an unsupported plan, a
+      # self-hosted runner where the action does nothing) stops the run
+      # rather than leaving the network open without anyone knowing.
+      - name: See the limit hold
+        if: vars.SLICE_EGRESS != 'open'
+        run: |
+          if curl -sS --max-time 10 -o /dev/null https://example.com; then
+            echo "::error::example.com is reachable: the network limit isn't working. See setup step 5 at the top of runner.yml."
+            exit 1
+          fi
+          echo "example.com is blocked, as it should be."
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

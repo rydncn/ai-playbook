@@ -1,5 +1,7 @@
 # Slice runner
 
+**Experimental.** It has run in no trial, so it isn't part of any level in the [README's start here](../../README.md#start-here). It stays optional until the [ablation trial's](../../docs/trials/ablation.md) unattended arm shows a slice can finish with no person stepping in beyond the gate. Until then, an unattended slice is as easily run by hand in a cloud session, from the issue, with its done command as the `/goal`.
+
 Runs one slice unattended, from a `ready` issue to a pull request that meets the same gates as anyone's. It's the execution step of the loop: the [design](../../plugins/playbook/skills/design/SKILL.md) and [slices](../../plugins/playbook/skills/slices/SKILL.md) skills write the issues, the [ticket check](../tickets) says when one is agent-ready, and the runner takes it from there. CI, the [criteria check](../criteria) and the [review gate](../review-gate) judge the result, and a person merges it.
 
 ## The boundary
@@ -18,16 +20,17 @@ What this does and doesn't stop:
 - **The session can't write to the repository.** Its token is read-only, and the Claude GitHub App's token isn't in its job. Whatever it runs, the only way out for its code is the bundle, and the publish check reads that as data, in a job the session never touched.
 - **Only `slice/<issue>` is pushed.** The refspec is fixed by the workflow, not the session. A new slice won't overwrite an existing branch, and a fix round only adds to the commit it started from.
 - **The publish token can't change workflows.** Without the Workflows permission, GitHub itself refuses a push that touches `.github/workflows/`, even if the publish check had a gap.
-- **The session can read its own job's Claude credential,** and its network isn't limited, so assume that credential can leak. Use workload identity federation, so it's a token that lasts minutes, and a spend limit on the workspace. With the API key fallback, use a dedicated key and rotate it if a run looks wrong. The job's `id-token: write` also lets the session mint GitHub OIDC tokens, so don't let any cloud account trust this repository's tokens more broadly than this one federation rule.
+- **The session reaches only the hosts on the build job's allowlist.** Harden-Runner in block mode refuses the rest and turns off `sudo`, and the next step fails the job if `example.com` is reachable, so a limit that isn't working stops the run rather than going unnoticed. Harden-Runner's free tier covers public repositories; on a private one, use its paid tier, run unattended slices in a cloud session with a custom network allowlist ([where the agent runs](../../docs/agent-environment.md)), or set `SLICE_EGRESS` to `open` and accept the risk below. DNS and the allowed hosts are still ways out, so the allowlist narrows the leak rather than closing it.
+- **The session can read its own job's Claude credential,** so assume that credential can leak. Use workload identity federation, so it's a token that lasts minutes, and a spend limit on the workspace. With the API key fallback, use a dedicated key and rotate it if a run looks wrong. The job's `id-token: write` also lets the session mint GitHub OIDC tokens, so don't let any cloud account trust this repository's tokens more broadly than this one federation rule.
 - **Nothing here merges.** On GitHub Free with a private repository there's no branch protection, so a required check can't stop a merge: the person merging reads the gates first, and the review gate's README asks for an ADR saying so. The publish token can push to the default branch if misused, which is why it lives only in a job with no model and fixed commands.
 
 ## Using it
 
 1. Set up the [tickets](../tickets), the [criteria check](../criteria) and the [review gate](../review-gate) first. The runner relies on all three to judge a slice.
 2. Copy `claim.mjs` and `publish-check.mjs` to `scripts/`, next to `check-ticket.mjs`, and `runner.yml` to `.github/workflows/`. Create the labels `in-progress`, `fix-round-1` and `fix-round-2`.
-3. Follow the setup steps at the top of `runner.yml`: `HUMAN_APPROVERS`, the Claude API authentication, `SLICE_PUBLISH_TOKEN`, the project's setup and services, and the commands the session may run.
+3. Follow the setup steps at the top of `runner.yml`: `HUMAN_APPROVERS`, the Claude API authentication, `SLICE_PUBLISH_TOKEN`, the network allowlist, the project's setup and services, and the commands the session may run.
 4. Watch the first run in full ([unattended runs](../../docs/agent-environment.md#unattended-runs)). Check that it claimed the issue, opened a pull request from `slice/<issue>` that closes it, and that CI ran on that pull request.
-5. See the boundary hold ([rule 15](../../rules/15-tests-must-be-seen-to-fail.md)): give it a slice whose done command can't pass, and check that the issue comes back as `hitl`. Then a slice whose task asks for a change to `.github/`, and check that the publish check refuses it.
+5. See the boundary hold ([rule 15](../../rules/15-tests-must-be-seen-to-fail.md)): give it a slice whose done command can't pass, and check that the issue comes back as `hitl`. Then a slice whose task asks for a change to `.github/`, and check that the publish check refuses it. Then one whose task fetches a host not on the allowlist, and check the fetch fails in the log.
 6. For a fix round, run the workflow with the pull request's number once its checks or the review have finished.
 
 ## Limits
