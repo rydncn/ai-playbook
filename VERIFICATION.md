@@ -18,7 +18,7 @@ A larger project keeps one design per feature in `docs/designs/` instead of a si
 
 ## 1. Design before code
 
-Non-trivial work starts with a short written design ([template](templates/DESIGN.md)). For a design that already exists, it is questioned one point at a time until each branch has been tested; Superpowers' brainstorming and a grilling skill do this, or a reviewer by hand. Agents build from the written design and plan.
+Non-trivial work starts with a short written design ([template](templates/DESIGN.md)). For a design that already exists, it is questioned one point at a time until each branch has been tested; Superpowers' brainstorming and a grilling skill do this, or a reviewer by hand. For a new design, [`/playbook:design`](plugins/playbook/skills/design/SKILL.md) interviews the person the same way and writes it from the template, and [`/playbook:slices`](plugins/playbook/skills/slices/SKILL.md) splits it into slice issues. Agents build from the written design and plan.
 
 Any decision with real alternatives gets a short ADR in `docs/decisions/` ([template](templates/ADR.md)), including the options that were rejected and why. Agents lose that context between sessions; written down in the repository, it stops them proposing the same rejected options again. The design links to its ADRs rather than restating them, so there is one place to change. Changing a decision means a new ADR that replaces the old one, not a quiet change in the code.
 
