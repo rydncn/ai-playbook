@@ -1,7 +1,9 @@
 # <NNN>. <Slice name>
 
 <!--
-Copy to docs/plans/NNN-short-name.md. One file per slice: a piece of work
+Copy to docs/plans/NNN-short-name.md, or use the issue form in
+templates/tickets, which has the same shape plus a mode and blockers for a
+queue. One file per slice: a piece of work
 that can be reviewed and merged on its own, as one draft pull request. Tasks
 are small enough to finish in one sitting, and each says how its effect will
 be observed before any code is written (rules 5 and 15). Keep the

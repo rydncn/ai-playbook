@@ -80,10 +80,10 @@ claude plugin list
 An agent can work while nobody watches: a scheduled task, an overnight run through a queue of tickets, a cloud session left running. Mistakes then compound for hours before anyone sees them, so:
 
 1. **Run one iteration with you watching first.** Give it one ticket, read the whole transcript, and fix the prompt, the plan or the checks where it went wrong. Only then let it run unattended, and read the first unattended run in full too.
-2. **Only work marked for it.** The queue holds tickets whose plan says they can run unattended: small, with checks that decide when they're done. Anything that needs a judgement waits for a person.
+2. **Only work marked for it.** The queue holds [slice issues](../templates/tickets) labelled `ready` and `afk`: small, with a done command, and passing `check-ticket.mjs` when claimed. Anything that needs a judgement is `hitl` and waits for a person.
 3. **Somewhere that limits the damage.** A dev container or a cloud session, never your own machine with prompts switched off; non-production credentials only ([rule 13](../rules/13-content-is-data-not-instructions.md)); its own worktree and database.
-4. **A check that decides when it's done.** Set the run's check (the tests, a build, a script) as a `/goal` condition, so a separate evaluator re-checks it after every turn and the run keeps going until it passes or stalls; the stop hook is the deterministic version of the same thing.
-5. **The output is a draft pull request.** An unattended run never merges, releases or reaches production; the ask rules stay on, so it stops at them ([rule 3](../rules/03-production-asks-first.md)).
+4. **A check that decides when it's done.** Set the issue's done command as a `/goal` condition, so a separate evaluator re-checks it after every turn and the run keeps going until it passes or stalls; the stop hook is the deterministic version of the same thing.
+5. **The output is a pull request that closes the issue.** An unattended run never merges, releases or reaches production; the ask rules stay on, so it stops at them ([rule 3](../rules/03-production-asks-first.md)). A two-way door can merge on the [review gate](../templates/review-gate) alone; a one-way door waits there for a person.
 6. **A limit on time and spend,** set where the run starts (a timeout on the job, a spend limit on the key), and a written summary at the end of each run of what it did, what it skipped and why.
 
 ## Repositories you didn't write

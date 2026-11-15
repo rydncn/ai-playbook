@@ -83,6 +83,7 @@ Each rule has its own file: the rule, why it matters, and how to enforce it. Mos
 | [`ADR.md`](templates/ADR.md)                         | A decision record, with the options rejected, so agents stop proposing them again                                                                        |
 | [`DESIGN.md`](templates/DESIGN.md)                   | A design with numbered given/when/then acceptance criteria                                                                                               |
 | [`PLAN.md`](templates/PLAN.md)                       | One slice of work: test-first tasks, each saying how its effect is observed                                                                              |
+| [`tickets/`](templates/tickets)                      | The same slice as a GitHub issue for a queue: `afk` or `hitl`, blockers, and a check that says whether it's agent-ready. Tested                          |
 | [`GATES.md`](templates/GATES.md)                     | A checklist for deciding a project's gates, starting with whether CI runs at all                                                                         |
 | [`settings.json`](templates/settings.json)           | Shared agent permissions: deny secret files, ask before production                                                                                       |
 | [`hooks/`](templates/hooks)                          | Check the enabled plugins loaded; format and lint each edit; run the type check and changed tests before the agent finishes; a git pre-push hook. Tested |

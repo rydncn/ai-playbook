@@ -2,6 +2,17 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-15 · agent-ready tickets
+
+A slice can now be a GitHub issue rather than a file, so agents can take work from a queue ([`templates/tickets`](templates/tickets)):
+
+- **[`slice.yml`](templates/tickets/slice.yml):** an issue form in the shape of [`PLAN.md`](templates/PLAN.md), with the criteria quoted, the design sections, test-first tasks, the command that decides when it's done, the door, and "Blocked by".
+- **Labels:** `afk` (an agent may run it unattended) or `hitl` (it needs a person while it runs), and `ready`.
+- **[`check-ticket.mjs`](templates/tickets/check-ticket.mjs):** the definition of agent-ready as a check. It names everything missing, and refuses an issue whose blockers are still open. Tested, including that the form's fields are the ones it reads and that the form's starting text isn't ready.
+- [Unattended runs](docs/agent-environment.md#unattended-runs) now take only `ready` and `afk` issues, use the issue's done command as the `/goal`, and end in a pull request that closes the issue. A two-way door can merge on the review gate alone.
+
+**Existing projects:** nothing required. To use a queue, copy the form and the check, and create the four labels.
+
 ## 2026-11-15 · a smaller default plugin set
 
 Every plugin costs something in every session: its skill descriptions load into context, its hooks run code, and its upstream changes need reading before a pin moves. Two no longer earned a place by default, and are now **optional**, still in the marketplace, but no longer installed by `scripts/install.sh` or the cloud setup script ([docs/setup.md](docs/setup.md#optional)):
