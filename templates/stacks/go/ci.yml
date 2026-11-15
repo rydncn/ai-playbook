@@ -1,13 +1,12 @@
 name: CI
 
-# The ai-playbook's CI template for Go, taken from its second trial (a Go web
-# app on Postgres). Copy to .github/workflows/ci.yml. Pull requests start as
+# The ai-playbook's CI template for Go. Copy to .github/workflows/ci.yml. Pull requests start as
 # drafts: the quick checks run on every push, and the tests wait until the
 # pull request is ready for review. Make every job a required check by name.
 # To watch a planted break fail the tests on a draft (rule 15), run
 # `gh workflow run ci.yml --ref <branch>`: workflow_dispatch runs every job.
 #
-# For a database, add a Postgres service to the tests job (as the trial did)
+# For a database, add a Postgres service to the tests job
 # and a step that applies every migration to the empty database twice, the
 # second applying nothing. For end-to-end tests with Playwright, take the e2e
 # job and the npm supply-chain steps from templates/ci.yml, and move the

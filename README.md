@@ -3,7 +3,7 @@
 [![Validate](https://github.com/rydncn/ai-playbook/actions/workflows/validate.yml/badge.svg)](https://github.com/rydncn/ai-playbook/actions/workflows/validate.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-How I work with AI coding agents, mainly Claude Code: the rules I hold agents to, the checks that enforce them, and templates for Node, Go and Python. In a controlled trial, the same brief was built under it and by plain Claude Code, then reviewed blind: the playbook build avoided the worst defects, such as a payment silently stored as income, at about five times the working time. [The results](VERIFICATION.md#8-what-the-trials-found), including what got through.
+How I work with AI coding agents, mainly Claude Code: the rules I hold agents to, the checks that enforce them, and templates for Node, Go and Python.
 
 ## Principles
 
@@ -21,9 +21,7 @@ How I work with AI coding agents, mainly Claude Code: the rules I hold agents to
 
 ## Start here
 
-Not all of this pays for itself on every project, so pick the level that fits and leave the rest until it earns its place.
-
-**What the trials showed.** In the third, the same brief (a Python tool that imports bank statements) was built twice, once under the playbook and once by plain Claude Code, and a reviewer compared them blind. The playbook build scored 15 of 20 against 13, and the difference was where it mattered most: the plain build silently stored a payment as income and let a hostile file write to the terminal, while the playbook build's worst defect was a feature that was hard to reach. It cost about five times the working time, mostly mutation testing and reviews, and it was harder for a new user to pick up. The first two trials, on an Expo app and a Go web app, pointed the same way. Every trial found things the playbook got wrong, and it changed after each; [VERIFICATION.md](VERIFICATION.md#8-what-the-trials-found) has all three, including what got through.
+Not all of this pays for itself on every project, so pick the level that fits and leave the rest until it earns its place. These levels say what to take; [docs/new-project.md](docs/new-project.md) is the one ordered list of how to set it up.
 
 **A prototype** (a spike, a script, anything you would throw away). About an hour:
 
@@ -34,7 +32,7 @@ Not all of this pays for itself on every project, so pick the level that fits an
 **A product** (people will rely on it). The core, an afternoon's setup. Everything above, and:
 
 - Rules [15](rules/15-tests-must-be-seen-to-fail.md) and [16](rules/16-acceptance-tests-are-isolated-and-real.md): tests are seen to fail, and acceptance tests drive the real thing. They need numbered acceptance criteria and, for anything with stages, its lifecycle ([rule 19](rules/19-lifecycles-are-explicit.md)): a page of [design](templates/DESIGN.md), or the issue.
-- The [review cadence](VERIFICATION.md#5-independent-review), every review briefed from [`REVIEW.md`](templates/REVIEW.md): a fresh-context review of each piece of work, a whole-codebase review every few pieces, and a person reading every one-way door. In both trials, the whole-codebase review found what per-piece reviews structurally can't.
+- The [review cadence](VERIFICATION.md#5-independent-review), every review briefed from [`REVIEW.md`](templates/REVIEW.md): a fresh-context review of each piece of work, a whole-codebase review every few pieces, and a person reading every one-way door. The whole-codebase review finds what per-piece reviews structurally can't.
 - The agent's boundaries: non-production credentials ([rule 13](rules/13-content-is-data-not-instructions.md)), agent configuration reviewed as code ([rule 18](rules/18-agent-configuration-is-code.md)), and the stack's supply-chain settings (for npm, the [`.npmrc`](templates/npmrc)). One task per session ([rule 17](rules/17-one-task-per-session.md)).
 
 **Personal data, accounts or money.** Everything above, and:
@@ -72,34 +70,11 @@ Each rule has its own file: the rule, why it matters, and how to enforce it. Mos
 
 ## How work gets to done
 
-[VERIFICATION.md](VERIFICATION.md) sets out the path from a written design to a merged change: a plan of test-first tasks, each stating how its effect will be observed; checks in the agent's loop and in CI; independent review by a second model; guardrails on the agent; and capturing what went wrong. [docs/agent-environment.md](docs/agent-environment.md) covers where the agent runs: the sandbox, dev containers and parallel sessions in worktrees.
+[VERIFICATION.md](VERIFICATION.md) starts with [the path](VERIFICATION.md#the-path): which plugin's skill does each step, from design to merge. It then sets out each step from a written design to a merged change: a plan of test-first tasks, each stating how its effect will be observed; checks in the agent's loop and in CI; independent review by a second model; guardrails on the agent; and capturing what went wrong. [docs/agent-environment.md](docs/agent-environment.md) covers where the agent runs: the sandbox, dev containers and parallel sessions in worktrees.
 
 ## Templates
 
-| Template                                             | What it is                                                                                                                                               |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`CLAUDE.template.md`](templates/CLAUDE.template.md) | The structure for a project's root instructions, kept under 200 lines                                                                                    |
-| [`RULE.md`](templates/RULE.md)                       | One rule per file: the rule, why, and how to enforce it                                                                                                  |
-| [`ADR.md`](templates/ADR.md)                         | A decision record, with the options rejected, so agents stop proposing them again                                                                        |
-| [`DESIGN.md`](templates/DESIGN.md)                   | A design with numbered given/when/then acceptance criteria                                                                                               |
-| [`PLAN.md`](templates/PLAN.md)                       | One slice of work: test-first tasks, each saying how its effect is observed                                                                              |
-| [`tickets/`](templates/tickets)                      | The same slice as a GitHub issue for a queue: `afk` or `hitl`, blockers, and a check that says whether it's agent-ready. Tested                          |
-| [`GATES.md`](templates/GATES.md)                     | A checklist for deciding a project's gates, starting with whether CI runs at all                                                                         |
-| [`settings.json`](templates/settings.json)           | Shared agent permissions: deny secret files, ask before production                                                                                       |
-| [`hooks/`](templates/hooks)                          | Check the enabled plugins loaded; format and lint each edit; run the type check and changed tests before the agent finishes; a git pre-push hook. Tested |
-| [`audit/`](templates/audit)                          | A dependency audit with a dated allowlist, for advisories nobody can fix yet. Tested                                                                     |
-| [`npmrc`](templates/npmrc)                           | npm supply-chain hardening: install scripts off, a minimum release age, exact versions                                                                   |
-| [`rule-check/`](templates/rule-check)                | A dependency-free, tested CI check that turns written rules into build failures                                                                          |
-| [`lint-ratchet/`](templates/lint-ratchet)            | A CI check that stops any ESLint rule's count rising, so stricter rules can go on before the backlog is cleared                                          |
-| [`rules/`](templates/rules)                          | Path-scoped conventions: APIs, errors, logging and correlation IDs for a server; testing and accessibility for React Native                              |
-| [`ci.yml`](templates/ci.yml)                         | Baseline CI: types, lint and tests, then a dependency audit and a secrets scan                                                                           |
-| [`dependabot.yml`](templates/dependabot.yml)         | Weekly, grouped dependency and GitHub Actions updates                                                                                                    |
-| [`claude-review.yml`](templates/claude-review.yml)   | An automatic, read-only Claude review of each ready commit                                                                                               |
-| [`review-gate/`](templates/review-gate)              | A required check from the review's verdict: must-fix findings and one-way doors wait for a person's approval of the commit. Tested                       |
-| [`criteria/`](templates/criteria)                    | A required check that every acceptance criterion a slice quotes has a passing test that names it. Tested                                                 |
-| [`runner/`](templates/runner)                        | Experimental: builds one agent-ready slice unattended with a read-only token; a job with no model checks and publishes it to `slice/<issue>`             |
-
-[docs/new-project.md](docs/new-project.md) sets out the order to apply them in on a new project.
+[`templates/README.md`](templates/README.md) lists every template: a project's `CLAUDE.md`, rules, ADRs, designs and plans, slice tickets, the hooks, CI, the review gate and the checks. [docs/new-project.md](docs/new-project.md) sets out the order to apply them in on a new project.
 
 ## Setup
 

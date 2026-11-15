@@ -15,7 +15,7 @@ import {
 } from "./check-docs.mjs";
 
 test("headings become GitHub's anchors, with repeats numbered", () => {
-  assert.equal(slug("8. What the trials found"), "8-what-the-trials-found");
+  assert.equal(slug("5. Independent review"), "5-independent-review");
   assert.equal(slug("The `pre-push` hook"), "the-pre-push-hook");
   assert.deepEqual(
     [...anchors("# A\n## B\n## B\n```\n# not a heading\n```\n")],

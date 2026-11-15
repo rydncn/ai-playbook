@@ -2,6 +2,16 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-15 · one path, and no trial write-ups
+
+The playbook is shorter, with nothing taken out of what it asks for:
+
+- **One path through the plugins.** [VERIFICATION.md](VERIFICATION.md#the-path) opens with one table: which skill does each step, from design to release, and which overlapping skill isn't used for it. `user/CLAUDE.md` and [docs/setup.md](docs/setup.md) point at it rather than retelling the flow.
+- **Each thing said once.** The README no longer repeats the templates table (it's in [templates/README.md](templates/README.md)) and points at [docs/new-project.md](docs/new-project.md) as the one setup order. The case for Codex is in VERIFICATION.md only.
+- **The trial write-ups are gone:** VERIFICATION's "What the trials found" and "Running a trial", the README's trial paragraphs, and the trial stories in the rules, stack packs and backlog. Each rule keeps its reason. The stack packs keep their practical notes, and the Python pack drops its session-measuring script. The planned [ablation trial](docs/trials/ablation.md) stays, with its rules for running it inside it.
+
+**Existing projects:** nothing required. A project `CLAUDE.md` that says "the Superpowers flow" can point at the path instead.
+
 ## 2026-11-15 · the factory's pre-trial pieces
 
 What arm C of the [ablation trial](docs/trials/ablation.md) needs to run slices unattended, each tested and none yet tried in a trial:
@@ -84,7 +94,7 @@ Until now, every review layer only advised: the building session ran the fresh-c
 
 ## 2026-11-15 · after `5ef53c8`: templates carry guidance, not history
 
-The templates a project copies (the CLAUDE template, the review brief, design, plan, ADR and the area rules) had collected the trial stories behind each instruction. Those cost context in every session that loads them and every review that reads the brief, and they say nothing the instruction doesn't. They are removed from the templates; the evidence stays in [VERIFICATION.md](VERIFICATION.md#8-what-the-trials-found) and the rules. The copied templates are about 5% shorter, the always-loaded CLAUDE template about 7%. Also:
+The templates a project copies (the CLAUDE template, the review brief, design, plan, ADR and the area rules) had collected the trial stories behind each instruction. Those cost context in every session that loads them and every review that reads the brief, and they say nothing the instruction doesn't. They are removed from the templates; the evidence stays in VERIFICATION.md and the rules. The copied templates are about 5% shorter, the always-loaded CLAUDE template about 7%. Also:
 
 - The review brief asks reviewers to report few should-fixes, instead of asking the builder to ignore most of them.
 - The note on Claude Code's `/code-review` moves from the brief to [VERIFICATION.md](VERIFICATION.md#5-independent-review): it is for the person setting up reviews, not the reviewer.
@@ -160,7 +170,7 @@ Checked against the [Claude Code best practices](https://code.claude.com/docs/en
 
 ## 2026-11-12 · after `dfc984a`: what the third trial taught
 
-The third trial was the first controlled one: the same brief built under the playbook and by plain Claude Code, then a blind review. The playbook build scored 15 of 20 against 13 and avoided the worst defect (silently storing a payment as income), at about five times the working time, and was harder for a new user to pick up. [VERIFICATION.md](VERIFICATION.md#8-what-the-trials-found) has the detail and how to run a trial fairly.
+The third trial was the first controlled one: the same brief built under the playbook and by plain Claude Code, then a blind review. The playbook build scored 15 of 20 against 13 and avoided the worst defect (silently storing a payment as income), at about five times the working time, and was harder for a new user to pick up. VERIFICATION.md has the detail and how to run a trial fairly.
 
 - **A fifth review question,** in [`templates/REVIEW.md`](templates/REVIEW.md), the review workflow and the design template: what does the caller learn when it only partly works? Both builds exited 0 on a partial import.
 - **The brief's inputs are fixtures** ([rule 16](rules/16-acceptance-tests-are-isolated-and-real.md), the design template, the review brief): read as given, never edited so a test passes. The playbook build edited its copy of a sample it couldn't parse.

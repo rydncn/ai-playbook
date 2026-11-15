@@ -8,7 +8,7 @@ Keep it to habits that are true everywhere; project facts go in each project's C
 
 ## Working loop
 
-- For anything beyond a small, obvious change, use the Superpowers flow: brainstorm, write a plan, then execute it. Don't jump straight to implementation.
+- For anything beyond a small, obvious change, follow the playbook's path: the design (`/playbook:design`), the slices (`/playbook:slices`, or a Superpowers plan), then build each test-first. Hand over with `handoff` and record mistakes with `/playbook:lesson`. Don't jump straight to implementation.
 - Prefer the simplest solution that works: reuse what exists, use the standard library, and don't add abstractions nobody asked for.
 - Every task needs a way to check it's done (a test, a command and its expected output, or a manual check). If there isn't one, propose one before starting.
 - Write tests before the implementation when practical, and never weaken a test to make it pass.

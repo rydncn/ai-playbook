@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 Write the design for: $ARGUMENTS
 
-The design says what to build and how it behaves, not how to build it. Everything after it depends on it: the slices quote its criteria, the tests name them, and CI checks that each one quoted has a passing test. A gap here passes every gate. So the user answers the questions, not you. In the second trial, a person found four design gaps before any code, and that was the cheapest place to find them.
+The design says what to build and how it behaves, not how to build it. Everything after it depends on it: the slices quote its criteria, the tests name them, and CI checks that each one quoted has a passing test. A gap here passes every gate. So the user answers the questions, not you: a gap is cheapest to find here, before any code.
 
 ## 1. Read first, then ask
 
