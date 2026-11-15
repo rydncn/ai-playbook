@@ -44,6 +44,9 @@ jobs:
       - name: Third-party plugins are pinned to commits
         run: node --test scripts/plugin-pins.test.mjs && node scripts/plugin-pins.mjs
 
+      - name: The documents agree with each other
+        run: node --test scripts/check-docs.test.mjs && node scripts/check-docs.mjs
+
       - name: Check formatting
         run: npx --yes prettier@3 --check .
 
