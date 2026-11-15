@@ -18,6 +18,14 @@ scripts/review-gate.mjs
 scripts/check-criteria.mjs
 scripts/check-ticket.mjs
 scripts/claim.mjs
+scripts/publish-check.mjs
+
+# Test runner configuration: a change here can quietly leave tests out
+**/playwright.config.*
+**/vitest.config.*
+**/jest.config.*
+**/conftest.py
+pytest.ini
 
 # Dependencies and how the software is built
 package.json

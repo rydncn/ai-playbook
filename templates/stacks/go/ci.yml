@@ -98,12 +98,24 @@ jobs:
           ! grep -qE '^(FAIL|--- FAIL)' test.log || { echo "a test failed"; exit 1; }
       # Every acceptance criterion the slice issue quotes has a passing test
       # that names it (templates/criteria in the playbook): TestAC3_…
+      # The base branch's check, never the pull request's, so a pull request
+      # can't loosen the check that judges it. Node and jq come with the
+      # GitHub-hosted runner image; a self-hosted runner needs them.
+      - name: Checkout the base branch's check
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .base
+          persist-credentials: false
+          sparse-checkout: scripts/check-criteria.mjs
+          sparse-checkout-cone-mode: false
       - name: Criteria covered
         if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: node scripts/check-criteria.mjs test.json
+        run: node .base/scripts/check-criteria.mjs test.json
 
   security:
     name: Dependencies and secrets

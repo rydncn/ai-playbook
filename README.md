@@ -97,7 +97,7 @@ Each rule has its own file: the rule, why it matters, and how to enforce it. Mos
 | [`claude-review.yml`](templates/claude-review.yml)   | An automatic, read-only Claude review of each ready commit                                                                                               |
 | [`review-gate/`](templates/review-gate)              | A required check from the review's verdict: must-fix findings and one-way doors wait for a person's approval of the commit. Tested                       |
 | [`criteria/`](templates/criteria)                    | A required check that every acceptance criterion a slice quotes has a passing test that names it. Tested                                                 |
-| [`runner/`](templates/runner)                        | Takes one agent-ready slice issue, builds it unattended and opens a pull request for the gates; hands it back to a person if they fail                   |
+| [`runner/`](templates/runner)                        | Builds one agent-ready slice unattended with a read-only token; a job with no model checks and publishes it to `slice/<issue>`                           |
 
 [docs/new-project.md](docs/new-project.md) sets out the order to apply them in on a new project.
 

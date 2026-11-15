@@ -26,7 +26,7 @@ A test names its criterion with the number in capitals, anywhere in its name or 
 
 ## Using it
 
-1. Copy `check-criteria.mjs` to `scripts/check-criteria.mjs`. The [review gate's](../review-gate) `one-way-paths` template lists it, so a pull request that changes the check needs a person's approval; keep that line in the project's copy.
+1. Copy `check-criteria.mjs` to `scripts/check-criteria.mjs`. CI runs the base branch's copy, never the pull request's, so a pull request can't loosen the check that judges it. The [review gate's](../review-gate) `one-way-paths` template lists it too.
 2. Have the test run write a report. Vitest: `vitest run --reporter=default --reporter=junit --outputFile.junit=reports/junit.xml`. Jest: `jest-junit`. pytest: `--junitxml=reports/junit.xml`. Go: `go test -json`.
 3. Add the "Criteria covered" step after the tests. It's already in [`ci.yml`](../ci.yml) and the [Go](../stacks/go/ci.yml) and [Python](../stacks/python/ci.yml) packs. The tests job needs `pull-requests: read` and `issues: read`.
 4. See it fail ([rule 15](../../rules/15-tests-must-be-seen-to-fail.md)): on a slice's pull request, rename the test for one of its criteria so the number is gone, and watch the check name that criterion.
@@ -34,6 +34,7 @@ A test names its criterion with the number in capitals, anywhere in its name or 
 ## Limits
 
 - It checks that a test naming the criterion passed, not that the test checks the criterion. A test called `AC3` that asserts nothing passes. That's for the review and mutation testing to catch.
+- It reads the pull request body when CI runs. Editing "Closes #n" afterwards isn't rechecked until the next push, and an issue linked only in the sidebar or as "Part of #n" isn't read at all.
 - The criteria come from the issue as it is when the check runs. Someone who edits the Satisfies field can narrow what is checked. The issue's history shows the edit.
 
 The tests run with `node --test templates/criteria/check-criteria.test.mjs`.

@@ -186,10 +186,12 @@ jobs:
   # the pull request closes no slice issue. It runs even when a test job
   # failed, since a skipped required check counts as passing; a missing
   # report fails it. Without an e2e job, drop it from needs and the download.
+  # It reads the pull request body when CI runs: an edit to "Closes #n"
+  # afterwards isn't rechecked until the next push.
   criteria:
     name: Criteria covered
     needs: [tests, e2e]
-    if: always() && github.event_name == 'pull_request' && !github.event.pull_request.draft
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -197,10 +199,17 @@ jobs:
       pull-requests: read
       issues: read
     steps:
-      - name: Checkout
+      # The base branch's check, never the pull request's, so a pull request
+      # can't loosen the check that judges it.
+      - name: Checkout the base branch's check
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
+          sparse-checkout: |
+            scripts/check-criteria.mjs
+            .nvmrc
+          sparse-checkout-cone-mode: false
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0

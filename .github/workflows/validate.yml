@@ -75,7 +75,7 @@ jobs:
         run: node --test templates/criteria/check-criteria.test.mjs
 
       - name: Test the slice runner template
-        run: node --test templates/runner/claim.test.mjs
+        run: node --test templates/runner/claim.test.mjs templates/runner/publish-check.test.mjs
 
       - name: Test the audit template
         run: node --test templates/audit/audit.test.mjs

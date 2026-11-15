@@ -26,7 +26,7 @@ Starting points for a new project. The project setup skill adapts them, and [doc
 | [`claude-review.yml`](claude-review.yml)   | A GitHub workflow for an automatic, read-only Claude review of each ready commit, using the project's own rules, and the review gate job.                                                                                                                           |
 | [`review-gate/`](review-gate)              | The required check that reads the review's verdict: must-fix findings and one-way doors wait for a person's approval of the commit. Tested.                                                                                                                         |
 | [`criteria/`](criteria)                    | The required check that every acceptance criterion a slice quotes has a passing test that names it, read from JUnit or `go test -json`. Tested.                                                                                                                     |
-| [`runner/`](runner)                        | A workflow that takes one `ready` + `afk` slice issue, builds it test-first in a fresh session, opens a pull request that closes it, and hands it back as `hitl` if the checks don't pass. Its claim script is tested.                                              |
+| [`runner/`](runner)                        | A workflow that takes one `ready` + `afk` slice issue an approver wrote and builds it in a session with a read-only token; a separate job with no model checks the commits and pushes them to `slice/<issue>` only, then opens the pull request. Tested.            |
 
 ## Using the rule check
 

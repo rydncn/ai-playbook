@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Claims the next slice issue an unattended run may take: the oldest open
-// issue labelled `slice`, `ready` and `afk`, not already `in-progress`, that
+// issue labelled `slice`, `ready` and `afk`, written by a person in
+// HUMAN_APPROVERS, not already `in-progress`, that
 // passes check-ticket.mjs again now (its blockers may have reopened since a
 // person added `ready`). It labels the issue `in-progress` and writes its
 // number to GITHUB_OUTPUT as `issue`, or writes an empty `issue` when nothing
@@ -10,7 +11,8 @@
 // then hands the issue back to a person if the session didn't finish.
 // Dependency-free; Node 20 or later.
 //
-// Usage: node claim.mjs, with GITHUB_TOKEN and GITHUB_REPOSITORY set, and
+// Usage: node claim.mjs, with GITHUB_TOKEN, GITHUB_REPOSITORY and
+// HUMAN_APPROVERS set, and
 // check-ticket.mjs next to it (scripts/ in a project).
 
 import { spawnSync } from "node:child_process";
@@ -25,9 +27,17 @@ const names = (issue) =>
     (typeof l === "string" ? l : l.name).toLowerCase(),
   );
 
-/** Whether an issue is a candidate before the ticket check runs. */
-export function candidate(issue) {
+/**
+ * Whether an issue is a candidate before the ticket check runs. Only issues
+ * written by a person in HUMAN_APPROVERS: the issue's body becomes the
+ * session's brief, and only its author (or a maintainer) can edit it after
+ * `ready` goes on.
+ */
+export function candidate(issue, approvers) {
   if (issue.pull_request || issue.state !== "open") return false;
+  const author = issue.user?.login?.toLowerCase();
+  if (!author || issue.user?.type === "Bot" || !approvers.includes(author))
+    return false;
   const l = names(issue);
   return (
     ["slice", "ready", "afk"].every((n) => l.includes(n)) &&
@@ -40,9 +50,11 @@ export function candidate(issue) {
  * The first candidate, oldest first, that passes the ticket check, and the
  * candidates passed over with the reason. `isReady(number)` runs the check.
  */
-export function pickNext(issues, isReady) {
+export function pickNext(issues, isReady, approvers) {
   const skipped = [];
-  const queue = issues.filter(candidate).sort((a, b) => a.number - b.number);
+  const queue = issues
+    .filter((i) => candidate(i, approvers))
+    .sort((a, b) => a.number - b.number);
   for (const issue of queue) {
     const result = isReady(issue.number);
     if (result.ok) return { issue, skipped };
@@ -72,6 +84,14 @@ function output(name, value) {
 
 async function main() {
   const { GITHUB_TOKEN: token, GITHUB_REPOSITORY: repo } = process.env;
+  const approvers = (process.env.HUMAN_APPROVERS ?? "")
+    .split(/[\s,]+/)
+    .map((l) => l.trim().toLowerCase())
+    .filter(Boolean);
+  if (approvers.length === 0)
+    throw new Error(
+      "No approvers: set the HUMAN_APPROVERS repository variable. Only issues they wrote are claimed.",
+    );
   if (!token || !repo)
     throw new Error(
       "usage: GITHUB_TOKEN=… GITHUB_REPOSITORY=owner/repo node claim.mjs",
@@ -94,7 +114,7 @@ async function main() {
     return { ok: r.status === 0, output: `${r.stdout}${r.stderr}` };
   };
 
-  const { issue, skipped } = pickNext(issues, isReady);
+  const { issue, skipped } = pickNext(issues, isReady, approvers);
   for (const s of skipped)
     console.log(`Passed over #${s.number}:\n${s.reason}`);
   if (!issue) {
