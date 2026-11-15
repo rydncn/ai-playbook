@@ -15,6 +15,25 @@ What arm C of the [ablation trial](docs/trials/ablation.md) needs to run slices 
 
 **Existing projects:** a project using the review gate takes the new `gate.mjs` at once: its one-way folders weren't being caught. A project using tickets can add the criteria step to its CI; it passes with a note on pull requests that close no slice issue. The Go pack's test step now uses `go test -json`; take it with the criteria step.
 
+## 2026-11-15 · what happened after the gate
+
+The review gate decides before a merge, and nothing looked at what came after, so letting two-way doors merge on the automated layers alone had no evidence beyond the trials.
+
+- **[`outcomes.mjs`](templates/review-gate/outcomes.mjs)** and a weekly [workflow](templates/review-gate/outcomes.yml) count merged pull requests by how the gate let them through (automated, approved by a person, unreviewed) and how many of each were reverted or blamed by a `regression` issue. It fails when automated merges escape at more than 5%, with at least 20 to judge by, as a kill switch for unreviewed merges. Tested.
+- **GitHub Pro** is now the recommended fix where the plan has no branch protection ([rule 9](rules/09-checks-must-prove-they-ran.md), [new project](docs/new-project.md), [review gate](templates/review-gate)): about $4 a month for a personal account, and it makes the gate block a merge instead of only showing red. The ADR stays as the fallback.
+- Three items join the [backlog](docs/backlog.md): holdout scenarios for unattended runs, one method instead of three, and feature flags for two-way doors.
+
+**Existing projects:** to track outcomes, copy `outcomes.mjs` to `scripts/review-outcomes.mjs` and `outcomes.yml` to `.github/workflows/`, and create the `regression` label. On GitHub Free with private repositories, consider Pro and then make CI and the review gate required checks.
+
+## 2026-11-15 · one task per session, instead of a context budget
+
+[Rule 17](rules/17-one-task-per-session.md) set a fixed budget of about 100,000 tokens a session, with a hook that warned past it and a handoff instead of compaction. The number was a practitioner's threshold that no trial measured, it went against Anthropic's own guidance, which is to `/clear` between tasks and let compaction work within one, and it nagged during long single-task runs where stopping cost more than carrying on.
+
+- Rule 17 is now **one task per session**: a fresh session per task, subagents for exploration, a fresh start after two failed corrections, a handoff when work moves between sessions, and compaction allowed within a task.
+- The `context-budget.mjs` hook and its tests are removed, and `settings.hooks.json` no longer runs it. [`user/CLAUDE.md`](user/CLAUDE.md) and the [CLAUDE template](templates/CLAUDE.template.md) say the same in one line.
+
+**Existing projects:** delete `.claude/hooks/context-budget.mjs`, remove its `UserPromptSubmit` and `PostToolUse` entries from `.claude/settings.json`, drop `CLAUDE_CONTEXT_BUDGET` from its `env` block, and replace the context-budget line in `CLAUDE.md` with the template's.
+
 ## 2026-11-15 · the ablation trial, designed
 
 [docs/trials/ablation.md](docs/trials/ablation.md) sets out the next trial: four arms on one new brief (plain Claude Code, the playbook's files alone, those with the default plugins and door-aimed layers, and everything on every slice). It asks whether the plugins earn their place, whether aiming the expensive layers by door loses findings, whether dropping the in-session review does, and whether a slice can run unattended through tickets and the review gate. What each result decides is agreed before it runs. [`scripts/session-tokens.mjs`](scripts/session-tokens.mjs) totals a build's tokens from its transcripts, for the cost column. Tested.
@@ -80,7 +99,7 @@ A review of the whole playbook found five places where one document had fallen b
 - The [setup skill](plugins/playbook/skills/init-project/SKILL.md) said to copy four hooks (there are six files, and a stack pack's `checks.json`), ran the context budget on each message only (it also runs after every tool call), and knew of no stack pack but Go (Python has one). [docs/new-project.md](docs/new-project.md) had the same budget wording.
 - [VERIFICATION.md](VERIFICATION.md#5-independent-review) named four review questions; [`REVIEW.md`](templates/REVIEW.md) asks five.
 - The [CLAUDE template](templates/CLAUDE.template.md)'s review bullet said the should-fix note "asks the five questions by name"; it is the brief that does.
-- [user/CLAUDE.md](user/CLAUDE.md) counted the 100,000 tokens from zero; [rule 17](rules/17-sessions-stay-under-a-context-budget.md) counts what the session added.
+- [user/CLAUDE.md](user/CLAUDE.md) counted the 100,000 tokens from zero; [rule 17](rules/17-one-task-per-session.md) counts what the session added.
 
 So they stay fixed ([rule 12](rules/12-rules-broken-twice-become-checks.md)), [`scripts/check-docs.mjs`](scripts/check-docs.mjs) runs in CI: every relative link and anchor resolves, every "N questions" matches `REVIEW.md`, and every "Copy all N files" matches `templates/hooks`. It was seen to fail on the old text.
 
@@ -88,7 +107,7 @@ So they stay fixed ([rule 12](rules/12-rules-broken-twice-become-checks.md)), [`
 
 ## 2026-11-14 · after `7ac4e2a`: the second trial's last notes
 
-Eight notes from the second trial were written on two branches and never reached the backlog. Three were already in: plant breaks on a clean tree ([rule 15](rules/15-tests-must-be-seen-to-fail.md)), a handoff describes the work, not the container ([rule 17](rules/17-sessions-stay-under-a-context-budget.md)), and the context-budget hook runs after every tool call. The other five:
+Eight notes from the second trial were written on two branches and never reached the backlog. Three were already in: plant breaks on a clean tree ([rule 15](rules/15-tests-must-be-seen-to-fail.md)), a handoff describes the work, not the container ([rule 17](rules/17-one-task-per-session.md)), and the context-budget hook runs after every tool call. The other five:
 
 - **An input-handling defect is a class** ([`api.md`](templates/rules/api.md), [`REVIEW.md`](templates/REVIEW.md)): every text field refuses a NUL byte and invalid UTF-8 with a validation error, done once for all fields, with a test that posts both to every field. A NUL byte that became a 500 in one field was found on every other field four slices later.
 - **A repeated form keys its errors by the item** ([`api.md`](templates/rules/api.md)): with one form per item and errors keyed by field name, a 422 marked every form invalid and repeated the ARIA ids. The test has two items; the trial's had one.
@@ -175,7 +194,7 @@ The third trial was the first controlled one: the same brief built under the pla
 - **Hooks for any language:** `after-edit.mjs` and `before-stop.mjs` read the project's commands from `.claude/checks.json` (shared code in `checks.mjs`), falling back to the npm defaults without one. A broken `checks.json` is reported, never skipped.
 - [`templates/stacks/`](templates/stacks): which templates are generic and which per stack, a Node pack (the existing templates), a Go pack from the trial (CI, `checks.json`, permissions, notes), how to write one, and which rules apply to projects without a UI.
 - **"Start here" in three levels:** a prototype, a product (the core), and personal data, accounts or money. The README leads with what the trials showed; [VERIFICATION.md](VERIFICATION.md) has both trials' results side by side.
-- Smaller: the [ADR template](templates/ADR.md) says to write one only where a real alternative was rejected; [rule 18](rules/18-agent-configuration-is-code.md) and [CODEOWNERS](templates/CODEOWNERS) say code-owner review enforces nothing on a one-person project; [rule 17](rules/17-sessions-stay-under-a-context-budget.md) and the CLAUDE template say a handoff describes the work, with tool installs in a setup script.
+- Smaller: the [ADR template](templates/ADR.md) says to write one only where a real alternative was rejected; [rule 18](rules/18-agent-configuration-is-code.md) and [CODEOWNERS](templates/CODEOWNERS) say code-owner review enforces nothing on a one-person project; [rule 17](rules/17-one-task-per-session.md) and the CLAUDE template say a handoff describes the work, with tool installs in a setup script.
 
 **Existing projects:**
 
@@ -194,7 +213,7 @@ The third trial was the first controlled one: the same brief built under the pla
 
 ## 2026-11-08 · after `f46009a`: the context budget counts what the session added
 
-- [`context-budget.mjs`](templates/hooks/context-budget.mjs) counted the total, so in a cloud session, where the harness's own instructions take about 80,000 tokens before any work, it warned almost at once (found by the second trial). It now counts what the session added since its first reply, or since its last compaction, and reports the total alongside. [Rule 17](rules/17-sessions-stay-under-a-context-budget.md) says why that is a compromise.
+- `context-budget.mjs` counted the total, so in a cloud session, where the harness's own instructions take about 80,000 tokens before any work, it warned almost at once (found by the second trial). It now counts what the session added since its first reply, or since its last compaction, and reports the total alongside. [Rule 17](rules/17-one-task-per-session.md) says why that is a compromise.
 
 **Existing projects:** copy the new `context-budget.mjs` over the old one.
 
@@ -206,7 +225,7 @@ The third trial was the first controlled one: the same brief built under the pla
 
 ## 2026-11-08 · after `79ec5df`: context budget, agent configuration as code, review by door
 
-- **[Rule 17](rules/17-sessions-stay-under-a-context-budget.md): sessions stay under a context budget,** about 100,000 tokens, then hand off to a fresh session rather than compacting. A new [`context-budget.mjs`](templates/hooks/context-budget.mjs) hook reads the size from the transcript on each message and, past the budget, tells Claude and the user; `CLAUDE_CONTEXT_BUDGET` changes it. The personal defaults say the same for projects without the hook.
+- **[Rule 17](rules/17-one-task-per-session.md): sessions stay under a context budget,** about 100,000 tokens, then hand off to a fresh session rather than compacting. A new `context-budget.mjs` hook reads the size from the transcript on each message and, past the budget, tells Claude and the user; `CLAUDE_CONTEXT_BUDGET` changes it. The personal defaults say the same for projects without the hook.
 - **[Rule 18](rules/18-agent-configuration-is-code.md): agent configuration is reviewed as code.** A new [`templates/CODEOWNERS`](templates/CODEOWNERS); a CI step that flags any pull request touching `.claude/`, `.mcp.json`, `CLAUDE.md`, `AGENTS.md`, the workflows or the dev container; the review prompt puts these first and says a human must read them. [docs/agent-environment.md](docs/agent-environment.md) says to read a repository's hooks before trusting a folder you didn't write. The review action restores the root agent configuration from the base branch, but not a `CLAUDE.md` in a subfolder.
 - **Review by door** ([VERIFICATION.md](VERIFICATION.md#5-independent-review)): each pull request says whether it is a one-way door (hard to undo) or a two-way door, and a human reads the diff of every one-way file. The review summary names them.
 - **Unattended runs** ([docs/agent-environment.md](docs/agent-environment.md#unattended-runs)): one watched iteration first, only work marked for it, a container or cloud session, a draft pull request as the output, limits on time and spend.

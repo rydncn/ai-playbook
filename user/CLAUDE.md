@@ -19,7 +19,7 @@ Keep it to habits that are true everywhere; project facts go in each project's C
 - Ask when a choice is ambiguous and expensive to undo; otherwise make a sensible call and say what you chose.
 - Be direct about uncertainty and about things that didn't work. Don't report success you haven't verified.
 - Keep summaries short: what changed, how it was checked, what's left.
-- When a session has added about 100,000 tokens of context since it started, or the work moves to a new session, offer to write a handoff and continue fresh rather than relying on compaction. Don't stop in the middle of a step to do it.
+- One task per session: suggest `/clear` or a fresh session before starting unrelated work, and after two failed corrections on the same problem. When the work moves to a new session part-way through, offer to write a handoff first.
 
 ## Code
 
