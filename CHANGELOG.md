@@ -2,6 +2,16 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-15 · after `5ef53c8`: templates carry guidance, not history
+
+The templates a project copies (the CLAUDE template, the review brief, design, plan, ADR and the area rules) had collected the trial stories behind each instruction. Those cost context in every session that loads them and every review that reads the brief, and they say nothing the instruction doesn't. They are removed from the templates; the evidence stays in [VERIFICATION.md](VERIFICATION.md#8-what-the-trials-found) and the rules. The copied templates are about 5% shorter, the always-loaded CLAUDE template about 7%. Also:
+
+- The review brief asks reviewers to report few should-fixes, instead of asking the builder to ignore most of them.
+- The note on Claude Code's `/code-review` moves from the brief to [VERIFICATION.md](VERIFICATION.md#5-independent-review): it is for the person setting up reviews, not the reviewer.
+- The CLAUDE template's workflow says the same in fewer lines.
+
+**Existing projects:** nothing required. To save the context, update `docs/review-brief.md` from [`templates/REVIEW.md`](templates/REVIEW.md) and the Workflow section of `CLAUDE.md` from the template.
+
 ## 2026-11-15 · after `620677a`: the documents checked against each other
 
 A review of the whole playbook found five places where one document had fallen behind another, each copied into new projects by the setup skill. Fixed:

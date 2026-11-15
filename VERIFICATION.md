@@ -75,6 +75,7 @@ Human attention goes where a mistake can't be taken back, instead of being sprea
 Alongside them:
 
 - An automatic Claude review on each pull request reads the project's own `CLAUDE.md` and rules files ([workflow template](templates/claude-review.yml)).
+- Claude Code's bundled `/code-review` skill, for a quick correctness pass on the current diff in a fresh subagent. Use it freely while building; it doesn't ask the five questions, so the reviews the playbook counts on still get the brief.
 - A security audit before releases and after significant changes to authentication, deletion or anything leaving the device.
 
 ## 6. Guardrails on the agent

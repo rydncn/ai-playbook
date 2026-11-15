@@ -13,7 +13,7 @@ paths:
 - Every endpoint requires authentication unless it is explicitly marked public, and public endpoints are listed here: <list>.
 - Check authorisation for the specific resource, not only that the caller is signed in. Every endpoint that reads or changes a user's data has a test where a different signed-in user is refused.
 - Validate every request body, query and path parameter with a schema at the boundary, before any other code sees it. Reject unknown fields.
-- Every text field refuses a NUL byte and invalid UTF-8 with a validation error, never a 500. Do it once for every field (in the schema's string type or one middleware), not field by field: an input-handling defect in one field is a class, and in the second trial the one a review fixed in one field was found on every other field four slices later.
+- Every text field refuses a NUL byte and invalid UTF-8 with a validation error, never a 500. Do it once for every field (in the schema's string type or one middleware), not field by field: an input-handling defect in one field is a class.
 - Writes that a client may retry accept an idempotency key.
 - Anything combined from many people's input (ratings, votes, counts, a median) counts each account once per item: its latest contribution. Otherwise one account outvotes everyone else within its rate limit.
 - Every list is bounded: a maximum page size, and a maximum page number or keyset pagination, so no request costs a full scan.
