@@ -27,8 +27,9 @@ Copy into the prompt for every review the project runs: the fresh-context review
 
 ## How to report
 
-- Only what you have checked against the code and are confident is real. Try to disprove each finding before reporting it; drop it if you can't confirm it. Where you can, prove it: a failing test, a query against a real database, a request in a real browser.
-- Ignore formatting and lint (CI checks those), problems outside the scope, and matters of taste.
+- Only what you have checked against the code and are confident is real. Try to disprove each finding before reporting it. One you can't confirm goes in a separate **to verify** list, with what would settle it, not among the findings. Where you can, prove it: a failing test, a query against a real database, a request in a real browser.
+- A finding's title and label say no more than its evidence shows: a dialog that Escape closes is not a focus trap.
+- Ignore formatting and lint (CI checks those), problems outside the scope, and matters of taste. Don't flag how a standard platform or design-system component behaves, only how this code configures or combines it.
 - For each finding: where, what is wrong, why it matters, and the fix. Mark each **must fix** or **should fix**. Must fix is only what affects correctness, security, data, accessibility or a stated requirement, including a gap any of the five questions found. Everything else is should fix.
 - A reviewer asked to find gaps finds some even in sound work, and acting on all of them over-builds. So report few should-fixes, and only ones that are small and plainly better; the builder fixes every must-fix, test-first, and leaves the rest for the pull request or the backlog.
 - End with the door, the answers to the five questions, and anything that needs a person's decision. If you found nothing, say what you checked.

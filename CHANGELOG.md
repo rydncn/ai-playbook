@@ -5,9 +5,12 @@ Newest first. Each entry names the commit it follows and says what a project set
 ## 2026-11-16 · repository settings, and accessibility beyond the checkers
 
 - **Repository settings** join the [gate checklist](templates/GATES.md#repository-settings): read-only workflow tokens that can't approve pull requests, an allowlist of actions, approval for fork runs and private vulnerability reporting on public repositories, and protected release tags. A scheduled audit of them is in the [backlog](docs/backlog.md).
-- **Accessibility** in the checklist adds a screen-reader pass through each main journey, and a design review against Microsoft's [Accessibility Considerations Toolkit](https://github.com/microsoft/Microsoft-Accessibility/tree/main/Accessibility-Considerations-Toolkit) for what automated checks can't see.
+- **Accessibility** in the checklist adds a screen-reader pass through each main journey, and a design review against Microsoft's [Accessibility Considerations Toolkit](https://github.com/microsoft/Microsoft-Accessibility/tree/main/Accessibility-Considerations-Toolkit) for what automated checks can't see, and a device check for pointer and motion: a single-tap alternative to every gesture, nothing that needs shaking or tilting, either orientation, and a way back from an accidental tap.
+- **Voice control:** the React Native [tree walk](templates/rules/react-native.md#the-accessibility-gate-walks-the-rendered-tree) also asserts that each pressable's name contains its visible text (WCAG 2.5.3).
+- **[`REVIEW.md`](templates/REVIEW.md):** a finding the reviewer can't confirm goes in a "to verify" list instead of being dropped; a finding's title claims no more than its evidence; and a standard component's own behaviour isn't flagged, only how the code uses it.
+- **[Rule 14](rules/14-secrets-never-in-code-logs-or-telemetry.md):** assistive-technology settings are personal data in telemetry.
 
-**Existing projects:** check the repository settings once by hand (Settings → Actions → General, and Rules for tags). Add the screen-reader pass to the device checks.
+**Existing projects:** check the repository settings once by hand (Settings → Actions → General, and Rules for tags). Add the screen-reader and pointer passes to the device checks. On React Native, add the Label in Name assertion to the tree walk. Check whether analytics attach assistive-technology settings to identified users. Copy the new `REVIEW.md` reporting lines into the project's review brief.
 
 ## 2026-11-15 · one path, and no trial write-ups
 
