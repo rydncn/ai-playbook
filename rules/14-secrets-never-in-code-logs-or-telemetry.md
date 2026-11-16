@@ -21,4 +21,5 @@ Agents also add logging freely while debugging, and the quickest thing to log is
 - Redact by field name in the logging wrapper (`authorization`, `token`, `password`, `email`, and the project's own sensitive fields), and test it with a payload that contains each.
 - Set the error reporter's scrubbing hook (for Sentry, `beforeSend` and `beforeBreadcrumb`) and turn off sending default personal data. Test the hook directly.
 - Send analytics events with explicit properties rather than spreading whole objects, and identify users by an opaque ID, never an email address.
+- Treat assistive-technology settings (screen reader on, zoom, large text, reduced motion) as personal data, since they suggest a disability. Count them in aggregate rather than on events tied to an identified user, unless a decision records why.
 - Add a [rule check](../templates/rule-check) for raw `console.log` in application code, so new logging goes through the wrapper. Conventions for log structure and correlation IDs are in the [observability template](../templates/rules/observability.md).
