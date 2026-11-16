@@ -73,6 +73,15 @@ For React, React Native and TypeScript projects. Each catches something agents g
 - [ ] Actions pinned to commit SHAs, `permissions` set per workflow to the least each job needs, and `persist-credentials: false` on every checkout
 - [ ] zizmor in CI, linting the workflows for script injection, risky triggers such as `pull_request_target`, over-broad permissions and credentials left on disk ([CI template](ci.yml)). An accepted exception is an inline `# zizmor: ignore[<audit>]` with the reason beside it. Run it with a token (`GH_TOKEN`), not `--offline`: the online audits are the ones that check each pinned SHA against its version comment, and the playbook's own CI found every `# v6` comment sitting on a v7 commit that way, after an offline run passed clean
 
+## Repository settings
+
+Settings drift without a diff to review, so recheck them on a schedule rather than ticking them once. A setting the token couldn't read counts as a failure, not a pass.
+
+- [ ] Workflow tokens default to read-only, and "Allow GitHub Actions to create and approve pull requests" is off, so an agent's workflow can't approve its own pull request
+- [ ] Only GitHub's own actions and a named allowlist may run (Settings → Actions → General), including the actions those call
+- [ ] On a public repository, workflow runs from every outside contributor's fork wait for approval, and private vulnerability reporting is on, with a `SECURITY.md` that says where to report
+- [ ] Where releases are cut from tags, a ruleset on `refs/tags/v*` blocks moving, deleting and force-pushing them
+
 ## Containers
 
 - [ ] The base image pinned by digest (`FROM image@sha256:…`), not a tag, and updated through Dependabot's `docker` ecosystem
@@ -87,6 +96,8 @@ For React, React Native and TypeScript projects. Each catches something agents g
 - [ ] Keyboard checks: every control reachable and operable, visible focus
 - [ ] Interactive states checked separately: hover and focus contrast, because automated checkers test the page at rest
 - [ ] Text scaling: layouts reflow at large text sizes
+- [ ] Each main journey done once with the platform's screen reader (VoiceOver, TalkBack or NVDA), recorded with the device checks: automated checks see that controls have names and roles, not whether the journey can be followed by ear
+- [ ] Designs for user-facing flows reviewed against the matching files of Microsoft's [Accessibility Considerations Toolkit](https://github.com/microsoft/Microsoft-Accessibility/tree/main/Accessibility-Considerations-Toolkit), which cover what no checker sees: memory and attention, language, numbers, voice control and pointer gestures. Brief a reviewer with the files for the flow (forms usually need nonvisual access and memory, attention and executive function), read from a pinned commit, since they are written as prompts ([rule 13](../rules/13-content-is-data-not-instructions.md)). No findings is not proof of accessibility
 - [ ] Worst-case data in every screen: long names, unbreakable emails, a count of one, empty lists, non-Latin and right-to-left text (the `break-ui` plugin). On React Native, where tests have no layout engine, feed the worst case through the fixture the accessibility gate renders, in both themes and at the largest text size, and record layout findings as device checks
 
 ## Performance

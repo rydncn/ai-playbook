@@ -2,6 +2,13 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-16 · repository settings, and accessibility beyond the checkers
+
+- **Repository settings** join the [gate checklist](templates/GATES.md#repository-settings): read-only workflow tokens that can't approve pull requests, an allowlist of actions, approval for fork runs and private vulnerability reporting on public repositories, and protected release tags. A scheduled audit of them is in the [backlog](docs/backlog.md).
+- **Accessibility** in the checklist adds a screen-reader pass through each main journey, and a design review against Microsoft's [Accessibility Considerations Toolkit](https://github.com/microsoft/Microsoft-Accessibility/tree/main/Accessibility-Considerations-Toolkit) for what automated checks can't see.
+
+**Existing projects:** check the repository settings once by hand (Settings → Actions → General, and Rules for tags). Add the screen-reader pass to the device checks.
+
 ## 2026-11-15 · one path, and no trial write-ups
 
 The playbook is shorter, with nothing taken out of what it asks for:
