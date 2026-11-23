@@ -2,6 +2,13 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-23 · the ablation trial tests naming subagent models
+
+- **Arm E** in the [ablation trial](docs/trials/ablation.md) is arm C with a model named for every subagent: the session's model for judgment, Haiku only for mechanical work. It becomes the default only if it costs at least 20% less per criterion and loses no findings. The idea comes from ChiefGyk3D's [department-of-internal-arguments](https://github.com/ChiefGyk3D/department-of-internal-arguments/blob/main/policies/model-routing.md), which never lets an agent inherit its model.
+- **[`session-tokens.mjs`](scripts/session-tokens.mjs)** also totals tokens per model, for the trial's new cost column and to show a pinned model actually answered. Tested.
+
+**Existing projects:** nothing to do.
+
 ## 2026-11-16 · repository settings, and accessibility beyond the checkers
 
 - **Repository settings** join the [gate checklist](templates/GATES.md#repository-settings): read-only workflow tokens that can't approve pull requests, an allowlist of actions, approval for fork runs and private vulnerability reporting on public repositories, and protected release tags. A scheduled audit of them is in the [backlog](docs/backlog.md).

@@ -6,7 +6,10 @@
 // session's JSONL under ~/.claude/projects/, and any subagent files beside
 // it). Each assistant reply is counted once, by its message id, because one
 // reply can be written over several lines. Cache reads are listed apart from
-// fresh input, because they cost about a tenth as much. Dependency-free.
+// fresh input, because they cost about a tenth as much. Each model's replies
+// are also totalled apart, since a Haiku token costs a fraction of an Opus one,
+// and a subagent pinned to a model only took effect if its replies show that
+// model. Dependency-free.
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -24,16 +27,30 @@ export function totals(texts) {
       const usage = row?.message?.usage;
       if (row?.type !== "assistant" || !usage) continue;
       // The last line of a reply carries its final usage.
-      seen.set(row.message.id ?? row.uuid ?? seen.size, usage);
+      seen.set(row.message.id ?? row.uuid ?? seen.size, {
+        usage,
+        model: row.message.model ?? "unknown",
+      });
     }
   }
-  const t = { replies: 0, input: 0, cacheWrite: 0, cacheRead: 0, output: 0 };
-  for (const u of seen.values()) {
+  const empty = () => ({
+    replies: 0,
+    input: 0,
+    cacheWrite: 0,
+    cacheRead: 0,
+    output: 0,
+  });
+  const add = (t, u) => {
     t.replies++;
     t.input += u.input_tokens ?? 0;
     t.cacheWrite += u.cache_creation_input_tokens ?? 0;
     t.cacheRead += u.cache_read_input_tokens ?? 0;
     t.output += u.output_tokens ?? 0;
+  };
+  const t = { ...empty(), byModel: {} };
+  for (const { usage, model } of seen.values()) {
+    add(t, usage);
+    add((t.byModel[model] ??= empty()), usage);
   }
   return t;
 }
@@ -48,7 +65,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   const t = totals(files.map((f) => readFileSync(f, "utf8")));
   const n = (x) => x.toLocaleString("en-GB");
-  console.log(
-    `replies ${n(t.replies)} · input ${n(t.input)} · cache write ${n(t.cacheWrite)} · cache read ${n(t.cacheRead)} · output ${n(t.output)}`,
-  );
+  const line = (label, x) =>
+    `${label}replies ${n(x.replies)} · input ${n(x.input)} · cache write ${n(x.cacheWrite)} · cache read ${n(x.cacheRead)} · output ${n(x.output)}`;
+  console.log(line("", t));
+  for (const [model, x] of Object.entries(t.byModel))
+    console.log(line(`  ${model}: `, x));
 }
