@@ -76,6 +76,27 @@ export function parsePaths(text) {
   );
 }
 
+/**
+ * The one-way paths in the project file, .claude/playbook.json, as globs:
+ * they add to the paths file or the defaults, never replace them. No file
+ * means none. A file that can't be read throws, so the gate fails closed
+ * rather than quietly dropping the project's own one-way doors.
+ */
+export function projectPaths(text) {
+  if (text == null) return [];
+  let config;
+  try {
+    config = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`.claude/playbook.json can't be read: ${error.message}`);
+  }
+  const paths = config?.oneWayPaths ?? [];
+  if (!Array.isArray(paths) || !paths.every((p) => typeof p === "string")) {
+    throw new Error('.claude/playbook.json: "oneWayPaths" is a list of globs.');
+  }
+  return parsePaths(paths.join("\n"));
+}
+
 /** The changed files that match a one-way glob. */
 export function oneWayFiles(files, globs) {
   const res = globs.map(globToRegExp);
@@ -254,9 +275,20 @@ async function main() {
     `/repos/${repo}/contents/.github/one-way-paths?ref=${pull.base.sha}`,
     token,
   );
-  const globs = listed?.content
-    ? parsePaths(Buffer.from(listed.content, "base64").toString("utf8"))
-    : DEFAULT_ONE_WAY;
+  const project = await github(
+    `/repos/${repo}/contents/.claude/playbook.json?ref=${pull.base.sha}`,
+    token,
+  );
+  const globs = [
+    ...(listed?.content
+      ? parsePaths(Buffer.from(listed.content, "base64").toString("utf8"))
+      : DEFAULT_ONE_WAY),
+    ...projectPaths(
+      project?.content
+        ? Buffer.from(project.content, "base64").toString("utf8")
+        : null,
+    ),
+  ];
 
   const { pass, lines } = decide({
     verdictText,

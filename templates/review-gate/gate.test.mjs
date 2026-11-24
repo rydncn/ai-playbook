@@ -10,6 +10,7 @@ import {
   oneWayFiles,
   parsePaths,
   parseVerdict,
+  projectPaths,
   recordedVerdict,
 } from "./gate.mjs";
 
@@ -59,6 +60,24 @@ test("the shipped one-way-paths template catches what it lists, folders included
     "src/a.ts",
   ];
   assert.deepEqual(oneWayFiles(files, globs), files.slice(0, 4));
+});
+
+test("the project file's one-way paths are read as folders, and add to the list", () => {
+  const text = JSON.stringify({
+    playbook: "1.0.0",
+    oneWayPaths: ["/supabase/migrations/", "app.json"],
+  });
+  assert.deepEqual(projectPaths(text), ["supabase/migrations", "app.json"]);
+  assert.deepEqual(projectPaths(JSON.stringify({ playbook: "1.0.0" })), []);
+  assert.deepEqual(projectPaths(null), []);
+});
+
+test("a project file the gate can't read fails it closed", () => {
+  assert.throws(() => projectPaths("{ nope"), /playbook\.json/);
+  assert.throws(
+    () => projectPaths(JSON.stringify({ oneWayPaths: "app.json" })),
+    /oneWayPaths/,
+  );
 });
 
 test("the default list catches agent configuration, workflows and migrations", () => {

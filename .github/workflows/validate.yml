@@ -53,6 +53,9 @@ jobs:
       - name: Lint shell scripts
         run: shellcheck scripts/*.sh templates/hooks/pre-push templates/stacks/python/pre-push
 
+      - name: Test the project config reader
+        run: node --test templates/hooks/project-config.test.mjs
+
       - name: Test the rule-check template
         run: node --test templates/rule-check/check-rules.test.js
 

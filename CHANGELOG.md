@@ -2,6 +2,17 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-24 · one project file
+
+The playbook now works the same on any stack, with what's specific to a project in one file, `.claude/playbook.json` ([`templates/project`](templates/project)). It holds the playbook release the project is on, where its tickets live (GitHub issues or Jira), its test, e2e, lint and format commands, its edit checks, its one-way paths and its optional checks. It has examples for Node with Jira, Go and Python.
+
+- **The hooks read it.** Before Claude finishes a turn, the stop hook runs the project's format check, lint, type check and changed tests (or the whole suite) through the shell. The edit hook runs its `afterEdit` checks. A file that can't be read is reported, naming every problem; an unknown setting is a problem.
+- **The review gate reads it.** Its `oneWayPaths` are added to `.github/one-way-paths` or the defaults, from the base branch. A project file the gate can't read fails it.
+- **Not yet acted on:** `tickets`, `checks` and the release. The ticket check and the runner still read GitHub issues, and nothing warns yet when a project is behind.
+- The reader, `project-config.mjs`, sits with the hooks, so the hooks are now six files to copy. Tested, including a real shell run.
+
+**Existing projects:** nothing required; `.claude/checks.json` and the npm defaults still work. To move over, copy `project-config.mjs` and the updated `checks.mjs`, `after-edit.mjs` and `before-stop.mjs` into `.claude/hooks/`, write `.claude/playbook.json` from the closest example (a `checks.json`'s `afterEdit` moves in as is, its stop checks become `commands`), delete `checks.json`, and copy the updated `gate.mjs` to `scripts/review-gate.mjs`. Then break one command on purpose and watch the stop hook send Claude back.
+
 ## 2026-11-23 · the ablation trial tests naming subagent models
 
 - **Arm E** in the [ablation trial](docs/trials/ablation.md) is arm C with a model named for every subagent: the session's model for judgment, Haiku only for mechanical work. It becomes the default only if it costs at least 20% less per criterion and loses no findings. The idea comes from ChiefGyk3D's [department-of-internal-arguments](https://github.com/ChiefGyk3D/department-of-internal-arguments/blob/main/policies/model-routing.md), which never lets an agent inherit its model.

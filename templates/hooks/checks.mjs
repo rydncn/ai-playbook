@@ -26,6 +26,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
+import { loadProjectConfig, stopCommands } from "./project-config.mjs";
+
 export const CHECKS_FILE = path.join(".claude", "checks.json");
 
 const isRun = (run) =>
@@ -49,11 +51,32 @@ function validEntries(entries, needsExtensions) {
 }
 
 /**
+ * The project's checks, from .claude/playbook.json when it has one, then from
+ * the older .claude/checks.json, or null when it has neither. playbook.json's
+ * commands are command lines, so its stop checks run through the shell
+ * (`shell: true`). Without "afterEdit" in it, `afterEdit` is null and the edit
+ * hook keeps its npm defaults. Throws when either file can't be used.
+ */
+export function loadChecks(projectDir) {
+  const config = loadProjectConfig(projectDir);
+  if (config) {
+    return {
+      afterEdit: config.afterEdit ?? null,
+      beforeStop: stopCommands(config).map((line) => ({
+        run: [line],
+        shell: true,
+      })),
+    };
+  }
+  return loadChecksFile(projectDir);
+}
+
+/**
  * The project's checks, or null when it has no checks.json. Throws an Error
  * naming the file when it exists but can't be used, so a broken file is
  * reported rather than silently checking nothing.
  */
-export function loadChecks(projectDir) {
+function loadChecksFile(projectDir) {
   const file = path.join(projectDir, CHECKS_FILE);
   if (!existsSync(file)) return null;
   let checks;

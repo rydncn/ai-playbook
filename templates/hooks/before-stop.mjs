@@ -3,9 +3,9 @@
 // fast checks. If one fails, Claude is sent back to fix it, or to tell the
 // user plainly that it couldn't, rather than reporting the work as done.
 //
-// The checks come from .claude/checks.json's "beforeStop" when the project has
-// one (any language; see checks.mjs), and otherwise from the package.json
-// scripts in CHECKS.
+// The checks come from .claude/playbook.json's commands, or the older
+// .claude/checks.json's "beforeStop" (any language; see checks.mjs), and
+// otherwise from the package.json scripts in CHECKS.
 //
 // It sends Claude back once per stop. If the checks still fail on the next
 // attempt (stop_hook_active is true), it lets Claude stop, so a check that
@@ -24,12 +24,12 @@ import { failed, loadChecks, shown } from "./checks.mjs";
 export const CHECKS = ["typecheck", "lint", "test:changed"];
 const MAX_OUTPUT = 4000;
 
-function defaultExec(command, args, cwd) {
+function defaultExec(command, args, cwd, { shell = false } = {}) {
   const result = spawnSync(command, args, {
     cwd,
     encoding: "utf8",
     timeout: 300_000,
-    shell: process.platform === "win32",
+    shell: shell || process.platform === "win32",
   });
   return {
     status: result.status ?? 1,
@@ -70,7 +70,9 @@ export function beforeStop(
   if (configured) {
     for (const entry of configured.beforeStop) {
       const [command, ...args] = entry.run;
-      const run = exec(command, args, projectDir);
+      const run = exec(command, args, projectDir, {
+        shell: entry.shell === true,
+      });
       if (failed(entry, run)) return blocked(shown(entry.run), run.output);
     }
     return null;

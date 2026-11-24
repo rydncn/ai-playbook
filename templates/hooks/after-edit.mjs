@@ -3,9 +3,9 @@
 // just changed and lints it, so the agent sees problems while it is still
 // working on that file rather than at CI time.
 //
-// The commands come from .claude/checks.json when the project has one (any
-// language; see checks.mjs). Without it: Prettier and ESLint from the
-// project's node_modules.
+// The commands come from .claude/playbook.json's "afterEdit", or the older
+// .claude/checks.json (any language; see checks.mjs). Without either:
+// Prettier and ESLint from the project's node_modules.
 //
 // Exit 0: nothing to report. Exit 2: a failing check, shown to Claude (the
 // edit has already happened; this cannot block it). Tools the project hasn't
@@ -77,7 +77,7 @@ export function afterEdit(input, { projectDir, exec = defaultExec }) {
   } catch (error) {
     return { code: 2, stderr: `${error.message}\n` };
   }
-  if (checks)
+  if (checks?.afterEdit)
     return configured(
       checks.afterEdit,
       extension,
