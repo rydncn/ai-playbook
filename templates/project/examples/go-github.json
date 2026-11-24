@@ -1,6 +1,8 @@
 {
   "playbook": "1.0.0",
-  "tickets": { "source": "github" },
+  "tickets": {
+    "source": "github"
+  },
   "commands": {
     "test": "go test -count=1 -race -shuffle=on ./...",
     "e2e": "go test -count=1 -tags=e2e ./e2e/...",
@@ -9,5 +11,16 @@
     "formatCheck": "test -z \"$(gofmt -l .)\""
   },
   "oneWayPaths": ["internal/auth/"],
-  "checks": ["review-gate", "criteria", "dependency-audit"]
+  "checks": ["review-gate", "criteria", "dependency-audit"],
+  "afterEdit": [
+    {
+      "extensions": [".go"],
+      "run": ["gofmt", "-w", "{file}"],
+      "fix": true
+    },
+    {
+      "extensions": [".go"],
+      "run": ["go", "vet", "{dir}"]
+    }
+  ]
 }

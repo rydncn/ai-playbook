@@ -35,7 +35,14 @@ export const CHECKS = [
 
 export const TICKET_SOURCES = ["github", "jira"];
 
-const KEYS = ["playbook", "tickets", "commands", "oneWayPaths", "checks"];
+const KEYS = [
+  "playbook",
+  "tickets",
+  "commands",
+  "oneWayPaths",
+  "checks",
+  "afterEdit",
+];
 const VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 
 const isObject = (v) =>
@@ -113,6 +120,11 @@ export function problems(config) {
       '"oneWayPaths" is a list of globs, like ["src/auth/", "**/migrations/"].',
     );
   }
+  if ("afterEdit" in config && !validEditChecks(config.afterEdit)) {
+    out.push(
+      '"afterEdit" is a list of { "extensions": [".go"], "run": ["gofmt", "-w", "{file}"] }, with "fix": true for a formatter.',
+    );
+  }
   if ("checks" in config) {
     if (!Array.isArray(config.checks)) {
       out.push(`"checks" is a list drawn from ${CHECKS.join(", ")}.`);
@@ -127,6 +139,32 @@ export function problems(config) {
     }
   }
   return out;
+}
+
+function validEditChecks(entries) {
+  return (
+    Array.isArray(entries) &&
+    entries.every(
+      (e) =>
+        isObject(e) &&
+        Array.isArray(e.run) &&
+        e.run.length > 0 &&
+        e.run.every(isText) &&
+        Array.isArray(e.extensions) &&
+        e.extensions.every(isText),
+    )
+  );
+}
+
+/**
+ * The commands the stop hook runs, in order: the fast checks, then the tests
+ * for what changed, or the whole suite when the project has no such command.
+ */
+export function stopCommands(config) {
+  const c = config.commands;
+  return [c.formatCheck, c.lint, c.typecheck, c.testChanged ?? c.test].filter(
+    Boolean,
+  );
 }
 
 /**

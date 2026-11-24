@@ -9,6 +9,7 @@ import {
   isBehind,
   loadProjectConfig,
   problems,
+  stopCommands,
 } from "./project-config.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -35,7 +36,9 @@ test("the shipped examples are valid", () => {
     "examples/node-jira.json",
     "examples/python-github.json",
   ]) {
-    const config = JSON.parse(readFileSync(path.join(here, name), "utf8"));
+    const config = JSON.parse(
+      readFileSync(path.join(here, "..", "project", name), "utf8"),
+    );
     assert.deepEqual(problems(config), [], name);
   }
 });
@@ -169,4 +172,53 @@ test("a project is behind when the playbook has a newer release", () => {
   assert.equal(isBehind("1.0.0", "1.0.1"), true);
   assert.equal(isBehind("1.2.0", "1.10.0"), true);
   assert.equal(isBehind("2.0.0", "1.9.9"), false);
+});
+
+test("edit checks take the same shape as checks.json's afterEdit", () => {
+  const afterEdit = [
+    { extensions: [".go"], run: ["gofmt", "-w", "{file}"], fix: true },
+  ];
+  assert.deepEqual(problems({ ...minimal(), afterEdit }), []);
+  assert.ok(
+    problems({ ...minimal(), afterEdit: [{ run: ["gofmt"] }] }).some((p) =>
+      p.includes('"afterEdit"'),
+    ),
+  );
+  assert.ok(
+    problems({
+      ...minimal(),
+      afterEdit: [{ extensions: [".go"], run: "gofmt" }],
+    }).length > 0,
+  );
+});
+
+test("the stop checks are the fast commands, in order, with the changed tests", () => {
+  const config = {
+    ...minimal(),
+    commands: {
+      test: "npm test",
+      testChanged: "npx vitest run --changed",
+      e2e: "npx playwright test",
+      lint: "npm run lint",
+      typecheck: "tsc --noEmit",
+      format: "prettier --write .",
+      formatCheck: "prettier --check .",
+    },
+  };
+  assert.deepEqual(stopCommands(config), [
+    "prettier --check .",
+    "npm run lint",
+    "tsc --noEmit",
+    "npx vitest run --changed",
+  ]);
+});
+
+test("without changed-tests, the stop checks run the whole suite", () => {
+  assert.deepEqual(
+    stopCommands({
+      ...minimal(),
+      commands: { test: "go test ./...", lint: "go vet ./..." },
+    }),
+    ["go vet ./...", "go test ./..."],
+  );
 });

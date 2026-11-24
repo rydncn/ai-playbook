@@ -304,6 +304,131 @@ test("before-stop sends Claude back once when checks.json can't be read", () => 
   assert.match(result.reason, /\.claude\/checks\.json/);
 });
 
+// .claude/playbook.json: the one project file. Its commands are command
+// lines, run through the shell; it wins over an older checks.json.
+
+const playbook = {
+  playbook: "1.0.0",
+  tickets: { source: "github" },
+  commands: {
+    test: "go test -count=1 ./...",
+    lint: "go vet ./...",
+    formatCheck: 'test -z "$(gofmt -l .)"',
+  },
+  afterEdit: [
+    { extensions: [".go"], run: ["gofmt", "-w", "{file}"], fix: true },
+  ],
+};
+
+function playbookProject(config = playbook, { withChecks = false } = {}) {
+  const dir = withChecks
+    ? goProject()
+    : project({ bins: ["prettier", "eslint"] });
+  mkdirSync(path.join(dir, "internal", "web"), { recursive: true });
+  writeFileSync(
+    path.join(dir, "internal", "web", "server.go"),
+    "package web\n",
+  );
+  mkdirSync(path.join(dir, ".claude"), { recursive: true });
+  writeFileSync(
+    path.join(dir, ".claude", "playbook.json"),
+    typeof config === "string" ? config : JSON.stringify(config),
+  );
+  return dir;
+}
+
+// Records each call as the command line it would run.
+function shellRecorder(results = {}) {
+  const calls = [];
+  const exec = (command, args, cwd, options = {}) => {
+    const line = options.shell
+      ? command
+      : [path.basename(command), ...args].join(" ");
+    calls.push({ line, shell: options.shell === true });
+    return (
+      results[line] ??
+      results[path.basename(command)] ?? { status: 0, output: "" }
+    );
+  };
+  return { calls, exec };
+}
+
+test("before-stop runs playbook.json's commands through the shell, in order, stopping at the first failure", () => {
+  const dir = playbookProject(playbook, { withChecks: true });
+  const { calls, exec } = shellRecorder({
+    git: { status: 0, output: " M internal/web/server.go\n" },
+    "go vet ./...": { status: 1, output: "server.go:3: unreachable code" },
+  });
+  const result = beforeStop({}, { projectDir: dir, exec });
+  assert.equal(result.decision, "block");
+  assert.match(result.reason, /`go vet \.\/\.\.\.`/);
+  assert.deepEqual(
+    calls.filter((c) => c.line !== "git status --porcelain"),
+    [
+      { line: 'test -z "$(gofmt -l .)"', shell: true },
+      { line: "go vet ./...", shell: true },
+    ],
+  );
+});
+
+test("before-stop passes when every playbook.json command passes, ending with the tests", () => {
+  const dir = playbookProject();
+  const { calls, exec } = shellRecorder({
+    git: { status: 0, output: " M internal/web/server.go\n" },
+  });
+  assert.equal(beforeStop({}, { projectDir: dir, exec }), null);
+  assert.equal(calls.at(-1).line, "go test -count=1 ./...");
+});
+
+test("after-edit runs playbook.json's edit checks, instead of checks.json or the npm defaults", () => {
+  const dir = playbookProject(playbook, { withChecks: true });
+  const { calls, exec } = shellRecorder();
+  const file = path.join(dir, "internal", "web", "server.go");
+  const result = afterEdit(
+    { tool_input: { file_path: file } },
+    { projectDir: dir, exec },
+  );
+  assert.equal(result.code, 0);
+  assert.deepEqual(calls, [{ line: `gofmt -w ${file}`, shell: false }]);
+});
+
+test("after-edit keeps the npm defaults when playbook.json has no edit checks", () => {
+  const { afterEdit: _, ...noEdit } = playbook;
+  const dir = playbookProject(noEdit);
+  const { calls, exec } = shellRecorder();
+  const result = afterEdit(
+    { tool_input: { file_path: path.join(dir, "src", "a.ts") } },
+    { projectDir: dir, exec },
+  );
+  assert.equal(result.code, 0);
+  assert.deepEqual(
+    calls.map((c) => c.line.split(" ")[0]),
+    ["prettier", "eslint"],
+  );
+});
+
+test("both hooks report a broken playbook.json, naming every problem, rather than checking nothing", () => {
+  const dir = playbookProject({
+    ...playbook,
+    commands: { lint: "x" },
+    oneWayPath: [],
+  });
+  const { exec } = shellRecorder({ git: { status: 0, output: " M a\n" } });
+  const stop = beforeStop({}, { projectDir: dir, exec });
+  assert.equal(stop.decision, "block");
+  assert.match(stop.reason, /playbook\.json/);
+  assert.match(stop.reason, /commands\.test/);
+  assert.match(stop.reason, /oneWayPath/);
+  const edit = afterEdit(
+    {
+      tool_input: { file_path: path.join(dir, "internal", "web", "server.go") },
+    },
+    { projectDir: dir, exec },
+  );
+  assert.equal(edit.code, 2);
+  assert.match(edit.stderr, /playbook\.json/);
+});
+
 // End to end: the scripts as Claude Code runs them, reading JSON on stdin.
 
 test("before-stop prints a block decision on stdout and exits 0", () => {
@@ -324,6 +449,32 @@ test("before-stop prints a block decision on stdout and exits 0", () => {
   const output = JSON.parse(run.stdout);
   assert.equal(output.decision, "block");
   assert.match(output.reason, /npm run typecheck/);
+});
+
+test("before-stop runs playbook.json's command lines through a real shell", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "hooks-e2e-"));
+  spawnSync("git", ["init", "-q"], { cwd: dir });
+  mkdirSync(path.join(dir, ".claude"));
+  writeFileSync(
+    path.join(dir, ".claude", "playbook.json"),
+    JSON.stringify({
+      playbook: "1.0.0",
+      tickets: { source: "github" },
+      commands: {
+        lint: 'node -e "process.exit(0)" && echo lint-ok',
+        test: 'node -e "process.exit(3)"',
+      },
+    }),
+  );
+  const run = spawnSync("node", [path.join(here, "before-stop.mjs")], {
+    input: JSON.stringify({ hook_event_name: "Stop", stop_hook_active: false }),
+    env: { ...process.env, CLAUDE_PROJECT_DIR: dir },
+    encoding: "utf8",
+  });
+  assert.equal(run.status, 0, run.stderr);
+  const output = JSON.parse(run.stdout);
+  assert.equal(output.decision, "block");
+  assert.match(output.reason, /process\.exit\(3\)/);
 });
 
 test("after-edit exits 0 with no output on input it can't use", () => {

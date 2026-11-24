@@ -11,11 +11,11 @@ Makes review a gate rather than advice. The [Claude review workflow](../claude-r
 
 A person approves with an approving review on the current commit, or the `human-approved` label, which every push removes. Either counts only from a login in the `HUMAN_APPROVERS` repository variable, and never from a bot. That puts the one human gate where a mistake can't be undone, and lets every two-way change merge on the automated layers alone, which is what an unattended run needs.
 
-The door is decided twice. The reviewer reads it from the change, and the gate matches the changed files against [`one-way-paths`](one-way-paths), read from the base branch so a pull request can't take itself off the list. Either one saying one-way is enough.
+The door is decided twice. The reviewer reads it from the change, and the gate matches the changed files against [`one-way-paths`](one-way-paths) plus the `oneWayPaths` in the project's [`.claude/playbook.json`](../project), both read from the base branch so a pull request can't take itself off the list. A project file the gate can't read fails it. Either one saying one-way is enough.
 
 ## Using it
 
-1. Copy `gate.mjs` to `scripts/review-gate.mjs` and `one-way-paths` to `.github/one-way-paths`, and add the project's own one-way paths to it.
+1. Copy `gate.mjs` to `scripts/review-gate.mjs` and `one-way-paths` to `.github/one-way-paths`. Put the project's own one-way paths in `oneWayPaths` in `.claude/playbook.json`, or in that file.
 2. Use the playbook's [`claude-review.yml`](../claude-review.yml), which has the gate job, and follow its setup steps, including `HUMAN_APPROVERS` and the `human-approved` label.
 3. Make **Review gate** a required status check on `main`. Without branch protection (GitHub Free on a private repository), the gate still shows red, but nothing stops a merge. For a personal account, GitHub Pro (about $4 a month) adds protected branches to private repositories and is the recommended setup; without it, write an ADR saying merges wait for the gate ([rule 9](../../rules/09-checks-must-prove-they-ran.md)).
 4. See it work ([rule 9](../../rules/09-checks-must-prove-they-ran.md)): a pull request that touches `.github/one-way-paths` should fail the gate, then pass once you approve it. Next, plant a must-fix bug in a two-way file and watch the gate fail.

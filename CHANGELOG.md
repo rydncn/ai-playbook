@@ -4,9 +4,14 @@ Newest first. Each entry names the commit it follows and says what a project set
 
 ## 2026-11-24 · one project file
 
-The first step to a playbook that works on any stack: [`templates/project`](templates/project) defines `.claude/playbook.json`, the one file where a project says what is specific to it. That is the playbook release it's on, where its tickets live (GitHub issues or Jira), its test, e2e, lint and format commands, its one-way paths, and which optional checks it runs. It comes with a dependency-free reader that reports every problem at once and rejects settings it doesn't know, and examples for Node with Jira, Go and Python. Tested. Nothing reads it yet: the hooks and the review gate move over to it next.
+The playbook now works the same on any stack, with what's specific to a project in one file, `.claude/playbook.json` ([`templates/project`](templates/project)). It holds the playbook release the project is on, where its tickets live (GitHub issues or Jira), its test, e2e, lint and format commands, its edit checks, its one-way paths and its optional checks. It has examples for Node with Jira, Go and Python.
 
-**Existing projects:** nothing to do yet.
+- **The hooks read it.** Before Claude finishes a turn, the stop hook runs the project's format check, lint, type check and changed tests (or the whole suite) through the shell. The edit hook runs its `afterEdit` checks. A file that can't be read is reported, naming every problem; an unknown setting is a problem.
+- **The review gate reads it.** Its `oneWayPaths` are added to `.github/one-way-paths` or the defaults, from the base branch. A project file the gate can't read fails it.
+- **Not yet acted on:** `tickets`, `checks` and the release. The ticket check and the runner still read GitHub issues, and nothing warns yet when a project is behind.
+- The reader, `project-config.mjs`, sits with the hooks, so the hooks are now six files to copy. Tested, including a real shell run.
+
+**Existing projects:** nothing required; `.claude/checks.json` and the npm defaults still work. To move over, copy `project-config.mjs` and the updated `checks.mjs`, `after-edit.mjs` and `before-stop.mjs` into `.claude/hooks/`, write `.claude/playbook.json` from the closest example (a `checks.json`'s `afterEdit` moves in as is, its stop checks become `commands`), delete `checks.json`, and copy the updated `gate.mjs` to `scripts/review-gate.mjs`. Then break one command on purpose and watch the stop hook send Claude back.
 
 ## 2026-11-23 · the ablation trial tests naming subagent models
 

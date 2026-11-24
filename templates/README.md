@@ -27,7 +27,7 @@ Starting points for a new project. The project setup skill adapts them, and [doc
 | [`review-gate/`](review-gate)              | The required check that reads the review's verdict: must-fix findings and one-way doors wait for a person's approval of the commit. Tested.                                                                                                                            |
 | [`criteria/`](criteria)                    | The required check that every acceptance criterion a slice quotes has a passing test that names it, read from JUnit or `go test -json`. Tested.                                                                                                                        |
 | [`runner/`](runner)                        | Experimental. A workflow that takes one `ready` + `afk` slice issue an approver wrote and builds it in a session with a read-only token; a separate job with no model checks the commits and pushes them to `slice/<issue>` only, then opens the pull request. Tested. |
-| [`project/`](project)                      | Draft. `.claude/playbook.json`, the one file where a project states its specifics: playbook release, ticket source (GitHub or Jira), commands, one-way paths and optional checks. A tested reader; nothing reads the file yet.                                         |
+| [`project/`](project)                      | `.claude/playbook.json`, the one file where a project states its specifics: playbook release, ticket source (GitHub or Jira), commands, one-way paths and optional checks. The hooks take their commands from it and the review gate its one-way paths.                |
 
 ## Using the rule check
 

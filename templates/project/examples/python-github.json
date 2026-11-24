@@ -1,6 +1,8 @@
 {
   "playbook": "1.0.0",
-  "tickets": { "source": "github" },
+  "tickets": {
+    "source": "github"
+  },
   "commands": {
     "test": "uv run pytest -n auto",
     "e2e": "uv run pytest tests/acceptance -n auto",
@@ -9,5 +11,16 @@
     "format": "uv run ruff format .",
     "formatCheck": "uv run ruff format --check ."
   },
-  "checks": ["review-gate", "criteria", "mutation"]
+  "checks": ["review-gate", "criteria", "mutation"],
+  "afterEdit": [
+    {
+      "extensions": [".py"],
+      "run": ["uv", "run", "--no-build", "ruff", "format", "{file}"],
+      "fix": true
+    },
+    {
+      "extensions": [".py"],
+      "run": ["uv", "run", "--no-build", "ruff", "check", "{file}"]
+    }
+  ]
 }
