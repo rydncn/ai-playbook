@@ -4,7 +4,7 @@
 
 ## Rule
 
-A test only counts once it has been seen to fail when the behaviour it protects is broken. A new test fails before the implementation exists, for the reason it was written for: an assertion on the missing behaviour, not an import error or a typo. A test added to existing code is checked by breaking that code on purpose and watching the test fail. Mutation testing on changed code does this check mechanically.
+A test only counts once it has been seen to fail when the behaviour it protects is broken. A new test fails before the implementation exists, for the reason it was written for: an assertion on the missing behaviour, not an import error or a typo. A test added to existing code, or one that passes the first time it runs, is checked by breaking that code on purpose and watching the test fail: prove the test bites. Much of what a task asks for may already exist, so a first run that passes is common. It is not evidence; the failure output is. Mutation testing on changed code does this check mechanically.
 
 ## Why
 
@@ -12,8 +12,8 @@ A test that cannot fail is vacuous. Agents produce vacuous tests often: an asser
 
 ## How to enforce it
 
-- In the plan, each task records the failing test run before the implementation and the passing run after ([VERIFICATION.md](../VERIFICATION.md)).
+- In the plan, each task records the failing test run before the implementation and the passing run after ([VERIFICATION.md](../VERIFICATION.md)). Where the test passed first time, it records the break that was planted and the failure it produced instead. Ask a subagent for that output, not for an assurance that the test was seen to fail.
 - Turn on lint rules that catch the common forms: `jest/expect-expect`, `jest/no-focused-tests`, `jest/valid-expect` and `@typescript-eslint/no-floating-promises`, or the Vitest equivalents.
 - Run mutation testing on the changed files in the core: the modules whose mistakes cost most (money, parsing, permissions, the domain rules), for example Stryker's `--incremental` mode for JavaScript and TypeScript, or mutmut with the Python pack's `MUTATION_CORE`. A surviving mutant is a behaviour no test protects. Before a release, run it once over everything changed since the last one. Outside the core, a two-way change doesn't need it ([VERIFICATION.md](../VERIFICATION.md#5-independent-review)). Mutation testing on every changed file is slow and buys little outside the core, so aim it rather than spread it.
-- Break things on a clean tree. Commit or stash before planting a break, and undo it with an edit or a `git checkout` of that clean commit. Undoing a break with `git checkout -- file` on a dirty tree restores the committed file and silently erases the uncommitted work in it.
+- Break things on a clean tree, and undo the break with an edit that reverses it. Commit or stash before planting one. Don't undo it with `git checkout -- file`: on a dirty tree it restores the committed file and silently erases the uncommitted work in it, and on Windows with `core.autocrlf` it rewrites the file with CRLF line endings, so the linter flags every line.
 - Fail the test run if no tests ran ([rule 9](09-checks-must-prove-they-ran.md)).

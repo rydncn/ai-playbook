@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// PostToolUse hook for Edit, Write and MultiEdit: formats the file that was
+// PostToolUse hook for Edit, Write, MultiEdit and Bash: formats the file that was
 // just changed and lints it, so the agent sees problems while it is still
 // working on that file rather than at CI time.
 //
@@ -7,12 +7,19 @@
 // .claude/checks.json (any language; see checks.mjs). Without either:
 // Prettier and ESLint from the project's node_modules.
 //
+// Shell edits too: a `sed -i` or a script that rewrites files would otherwise
+// reach the commit unchecked. Before each Bash command it notes the time;
+// after it, it checks every changed file in git's view that the command
+// touched (up to MAX_SHELL_FILES), the same way as an edited one.
+//
 // Exit 0: nothing to report. Exit 2: a failing check, shown to Claude (the
 // edit has already happened; this cannot block it). Tools the project hasn't
 // installed are skipped, so the hook never breaks a session.
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -35,6 +42,13 @@ const FORMAT_EXTENSIONS = new Set([
 ]);
 const LINT_EXTENSIONS = new Set([".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx"]);
 const MAX_OUTPUT = 4000;
+const MAX_SHELL_FILES = 20;
+
+// A multi-step change often adds an import before the code that uses it, so
+// "unused" mid-change is expected. Said once, here, rather than filtered out:
+// an unused import at the end of a change is a real slip.
+const FIX_HINT =
+  "Fix them before moving on. If one is only a name that a later step of this same change will use, carry on and use it.";
 
 const WINDOWS = process.platform === "win32";
 
@@ -64,11 +78,84 @@ function localBin(projectDir, name) {
   return null;
 }
 
-export function afterEdit(
-  input,
+export function afterEdit(input, options) {
+  if (input?.tool_name === "Bash") return afterShell(input, options);
+  return checkFile(input?.tool_input?.file_path, options);
+}
+
+/**
+ * Before a Bash command (PreToolUse), record when it started; after it
+ * (PostToolUse), check the files it changed. One stamp per session and
+ * subagent, so agents working side by side don't share one.
+ */
+function afterShell(input, options) {
+  const { projectDir, exec = defaultExec, stampDir = tmpdir() } = options;
+  if (typeof input.session_id !== "string") return { code: 0 };
+  const key = createHash("sha256")
+    .update(`${input.session_id}\0${input.agent_id ?? "main"}\0${projectDir}`)
+    .digest("hex")
+    .slice(0, 16);
+  const stamp = path.join(stampDir, `playbook-shell-${key}`);
+
+  if (input.hook_event_name === "PreToolUse") {
+    try {
+      writeFileSync(stamp, String(Date.now()));
+    } catch {
+      // Nothing to compare against afterwards, so nothing is checked.
+    }
+    return { code: 0 };
+  }
+
+  let started;
+  try {
+    started = Number(readFileSync(stamp, "utf8"));
+  } catch {
+    return { code: 0 };
+  }
+  if (!Number.isFinite(started)) return { code: 0 };
+
+  const status = exec(
+    "git",
+    ["status", "--porcelain", "--untracked-files=all"],
+    projectDir,
+  );
+  if (status.status !== 0) return { code: 0 };
+  const touched = changedPaths(status.output).filter((file) => {
+    try {
+      // A second of slack for file systems with coarse timestamps.
+      return statSync(path.join(projectDir, file)).mtimeMs >= started - 1000;
+    } catch {
+      return false;
+    }
+  });
+
+  const reports = [];
+  for (const file of touched.slice(0, MAX_SHELL_FILES)) {
+    const result = checkFile(file, options);
+    if (result.code !== 0) reports.push(result.stderr);
+  }
+  if (reports.length === 0) return { code: 0 };
+  return {
+    code: 2,
+    stderr: `That shell command changed files the edit checks cover, and they found problems:\n\n${reports.join("\n")}`,
+  };
+}
+
+/** The paths in `git status --porcelain` output, renamed ones by their new name. */
+function changedPaths(porcelain) {
+  return porcelain
+    .split("\n")
+    .filter(
+      (line) => line.length > 3 && !line.startsWith("D ") && line[1] !== "D",
+    )
+    .map((line) => line.slice(3).split(" -> ").at(-1))
+    .filter((file) => !file.startsWith('"'));
+}
+
+function checkFile(
+  filePath,
   { projectDir, exec = defaultExec, windows = WINDOWS },
 ) {
-  const filePath = input?.tool_input?.file_path;
   if (typeof filePath !== "string" || filePath === "") return { code: 0 };
 
   const absolute = path.resolve(projectDir, filePath);
@@ -122,7 +209,7 @@ export function afterEdit(
     if (lint.status !== 0) {
       return {
         code: 2,
-        stderr: `ESLint found problems in ${relative}. Fix them before moving on:\n${lint.output.slice(-MAX_OUTPUT)}`,
+        stderr: `ESLint found problems in ${relative}. ${FIX_HINT}\n${lint.output.slice(-MAX_OUTPUT)}`,
       };
     }
   }
@@ -144,7 +231,7 @@ function configured(entries, extension, absolute, relative, projectDir, exec) {
     if (entry.fix !== true && failed(entry, result)) {
       return {
         code: 2,
-        stderr: `\`${shown([command, ...args])}\` found problems in ${relative}. Fix them before moving on:\n${result.output.slice(-MAX_OUTPUT)}`,
+        stderr: `\`${shown([command, ...args])}\` found problems in ${relative}. ${FIX_HINT}\n${result.output.slice(-MAX_OUTPUT)}`,
       };
     }
   }

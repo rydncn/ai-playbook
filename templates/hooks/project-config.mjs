@@ -7,8 +7,10 @@
 // agent configuration and reviewed as code (rule 18). Dependency-free, so it
 // runs anywhere Node does, whatever the project's own language.
 
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export const CONFIG_FILE = path.join(".claude", "playbook.json");
 
@@ -16,7 +18,9 @@ export const CONFIG_FILE = path.join(".claude", "playbook.json");
 export const COMMANDS = [
   "test", // the whole suite, as CI runs it
   "testChanged", // the tests for what changed, fast enough for every turn
+  "integration", // a second test tier: real services the project owns, such as its database
   "e2e", // the end-to-end or acceptance tests, against the real thing
+  "coverage", // the suite with the project's coverage threshold enforced
   "lint",
   "typecheck",
   "format", // fixes formatting across the project
@@ -228,3 +232,82 @@ export function isBehind(project, current) {
   }
   return false;
 }
+
+/**
+ * Runs each named command once, in the order of COMMANDS, and returns what
+ * happened to each. By default every command but `format`, which rewrites
+ * files. Used at setup and after editing the file, so a command that fails on
+ * a clean checkout, or a threshold nobody runs, is found then and not weeks
+ * later (rule 9).
+ */
+export function runCommands(
+  config,
+  { projectDir = process.cwd(), only, exec = shellExec } = {},
+) {
+  const wanted = only?.length ? only : COMMANDS.filter((n) => n !== "format");
+  return COMMANDS.filter(
+    (name) => wanted.includes(name) && config.commands[name],
+  ).map((name) => {
+    const started = Date.now();
+    const run = exec(config.commands[name], projectDir);
+    return {
+      name,
+      line: config.commands[name],
+      passed: run.status === 0,
+      seconds: Math.round((Date.now() - started) / 1000),
+      output: run.output,
+    };
+  });
+}
+
+function shellExec(line, cwd) {
+  const result = spawnSync(line, { cwd, shell: true, encoding: "utf8" });
+  return {
+    status: result.status ?? 1,
+    output: `${result.stdout ?? ""}${result.stderr ?? ""}`,
+  };
+}
+
+function main(args) {
+  const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  let config;
+  try {
+    config = loadProjectConfig(projectDir);
+  } catch (error) {
+    process.stderr.write(`${error.message}\n`);
+    return 1;
+  }
+  if (!config) {
+    process.stderr.write(`There is no ${CONFIG_FILE} here.\n`);
+    return 1;
+  }
+  const unknown = args.filter((a) => !COMMANDS.includes(a));
+  if (unknown.length > 0) {
+    process.stderr.write(
+      `Not a command the file can name: ${unknown.join(", ")}. They are ${COMMANDS.join(", ")}.\n`,
+    );
+    return 1;
+  }
+  const results = runCommands(config, { projectDir, only: args });
+  for (const r of results) {
+    if (!r.passed)
+      process.stdout.write(`\n--- ${r.name} ---\n${r.output.slice(-4000)}\n`);
+  }
+  process.stdout.write("\n");
+  for (const r of results) {
+    process.stdout.write(
+      `${r.passed ? "pass" : "FAIL"}  ${r.name} (${r.seconds}s): ${r.line}\n`,
+    );
+  }
+  const missing = COMMANDS.filter((n) => !config.commands[n]);
+  if (missing.length > 0) {
+    process.stdout.write(`Not in the file: ${missing.join(", ")}.\n`);
+  }
+  return results.every((r) => r.passed) ? 0 : 1;
+}
+
+if (
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
+)
+  process.exit(main(process.argv.slice(2)));

@@ -6,6 +6,7 @@ import {
   writeFileSync,
   chmodSync,
   readFileSync,
+  utimesSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -95,6 +96,76 @@ test("after-edit reports lint errors to Claude with exit 2", () => {
   assert.equal(result.code, 2);
   assert.match(result.stderr, /src[/\\]a\.ts/);
   assert.match(result.stderr, /no-explicit-any/);
+});
+
+test("after-edit says an unused name a later step will use can wait", () => {
+  const dir = project({ bins: ["prettier", "eslint"] });
+  const { exec } = recorder({
+    eslint: { status: 1, output: "1:1 error 'x' is defined but never used" },
+  });
+  const result = afterEdit(
+    { tool_input: { file_path: "src/a.ts" } },
+    { projectDir: dir, exec },
+  );
+  assert.equal(result.code, 2);
+  assert.match(result.stderr, /later step of this same change will use/);
+});
+
+function shellRun(dir, results) {
+  const stampDir = mkdtempSync(path.join(tmpdir(), "stamps-"));
+  const { calls, exec } = recorder(results);
+  const hook = (event, extra = {}) =>
+    afterEdit(
+      {
+        hook_event_name: event,
+        tool_name: "Bash",
+        session_id: "s1",
+        tool_input: { command: "sed -i s/a/b/ src/b.ts" },
+        ...extra,
+      },
+      { projectDir: dir, exec, stampDir },
+    );
+  return { calls, hook };
+}
+
+test("after-edit checks the files a shell command changed, and only those", () => {
+  const dir = project({ bins: ["prettier", "eslint"] });
+  const old = new Date(Date.now() - 60_000);
+  utimesSync(path.join(dir, "src", "a.ts"), old, old);
+  const { calls, hook } = shellRun(dir, {
+    git: { status: 0, output: " M src/a.ts\n?? src/b.ts\n D src/gone.ts\n" },
+    eslint: { status: 1, output: "1:1 error no-non-null-assertion" },
+  });
+  assert.equal(hook("PreToolUse").code, 0);
+  writeFileSync(path.join(dir, "src", "b.ts"), "export const b = x!;\n");
+  const result = hook("PostToolUse");
+  assert.equal(result.code, 2);
+  assert.match(result.stderr, /shell command changed files/);
+  assert.match(result.stderr, /src[/\\]b\.ts/);
+  assert.doesNotMatch(result.stderr, /a\.ts/);
+  assert.deepEqual(
+    calls.filter((c) => c[0] === "eslint").map((c) => path.basename(c.at(-1))),
+    ["b.ts"],
+    "the file changed earlier, and the deleted one, aren't checked",
+  );
+});
+
+test("after-edit checks nothing after a shell command when it saw no start, or nothing changed", () => {
+  const dir = project({ bins: ["prettier", "eslint"] });
+  const { calls, hook } = shellRun(dir, {
+    git: { status: 0, output: " M src/a.ts\n" },
+  });
+  assert.equal(hook("PostToolUse").code, 0, "no start recorded");
+  const old = new Date(Date.now() - 60_000);
+  utimesSync(path.join(dir, "src", "a.ts"), old, old);
+  hook("PreToolUse");
+  assert.equal(hook("PostToolUse").code, 0);
+  assert.equal(calls.filter((c) => c[0] === "eslint").length, 0);
+  assert.equal(
+    hook("PostToolUse", { session_id: undefined }).code,
+    0,
+    "no session to key the start on",
+  );
 });
 
 test("after-edit skips tools the project hasn't installed", () => {
@@ -213,6 +284,46 @@ test("before-stop does nothing outside a git repository", () => {
   const { calls, exec } = recorder();
   assert.equal(beforeStop({}, { projectDir: dir, exec }), null);
   assert.equal(calls.length, 0);
+});
+
+test("before-stop only warns while a background agent of this session is still working", () => {
+  const dir = project({ scripts: { typecheck: "tsc" } });
+  const { calls, exec } = recorder({
+    git: { status: 0, output: " M src/a.ts\n" },
+    typecheck: { status: 2, output: "a test failing on purpose" },
+  });
+  const working = {
+    background_tasks: [
+      {
+        id: "a1",
+        type: "subagent",
+        status: "running",
+        description: "Task 3: implementer",
+      },
+    ],
+  };
+  const result = beforeStop(working, { projectDir: dir, exec });
+  assert.equal(result.decision, undefined, "doesn't send Claude back");
+  assert.match(result.systemMessage, /1 background agent is still working/);
+  assert.match(result.systemMessage, /Task 3: implementer/);
+  assert.equal(calls.filter((c) => c[0] === "npm").length, 0);
+
+  const done = beforeStop({ background_tasks: [] }, { projectDir: dir, exec });
+  assert.equal(done.decision, "block", "checks once nothing is in flight");
+});
+
+test("before-stop still checks while only a background shell runs", () => {
+  const dir = project({ scripts: { typecheck: "tsc" } });
+  const { exec } = recorder({
+    git: { status: 0, output: " M src/a.ts\n" },
+    typecheck: { status: 2, output: "TS2322" },
+  });
+  const input = {
+    background_tasks: [
+      { id: "b1", type: "shell", status: "running", description: "dev server" },
+    ],
+  };
+  assert.equal(beforeStop(input, { projectDir: dir, exec }).decision, "block");
 });
 
 // .claude/checks.json: the project's own commands, for any language.
@@ -519,6 +630,34 @@ test("before-stop runs playbook.json's command lines through a real shell", () =
   const output = JSON.parse(run.stdout);
   assert.equal(output.decision, "block");
   assert.match(output.reason, /process\.exit\(3\)/);
+});
+
+test("after-edit, run as Claude Code runs it, lints a file a shell command rewrote", () => {
+  const dir = project({ git: false });
+  spawnSync("git", ["init", "-q"], { cwd: dir });
+  mkdirSync(path.join(dir, "node_modules", ".bin"), { recursive: true });
+  const eslint = path.join(dir, "node_modules", ".bin", "eslint");
+  writeFileSync(eslint, '#!/bin/sh\necho "$1: unused import"\nexit 1\n');
+  chmodSync(eslint, 0o755);
+  const session = `e2e-${process.pid}-${Date.now()}`;
+  const hook = (event) =>
+    spawnSync("node", [path.join(here, "after-edit.mjs")], {
+      input: JSON.stringify({
+        hook_event_name: event,
+        tool_name: "Bash",
+        session_id: session,
+        cwd: dir,
+        tool_input: { command: "sed -i ..." },
+      }),
+      encoding: "utf8",
+      env: { ...process.env, CLAUDE_PROJECT_DIR: dir },
+    });
+  assert.equal(hook("PreToolUse").status, 0);
+  writeFileSync(path.join(dir, "src", "a.ts"), "import x from 'y';\n");
+  const after = hook("PostToolUse");
+  assert.equal(after.status, 2);
+  assert.match(after.stderr, /src[/\\]a\.ts/);
+  assert.match(after.stderr, /unused import/);
 });
 
 test("after-edit exits 0 with no output on input it can't use", () => {

@@ -2,6 +2,23 @@
 
 Newest first. Each entry says what a project set up against an earlier version should do about it. From v1.0.0, releases are git tags and a project records its release as `"playbook"` in `.claude/playbook.json`; before that, it recorded a commit in its `CLAUDE.md`. To catch up, read from that release or commit upwards.
 
+## 2026-11-25 · v1.1.0: feedback from a build phase
+
+A project's first build phase, with an orchestrating session handing tasks to subagents, found these:
+
+- **Two more command slots.** `.claude/playbook.json` now takes `integration`, a second test tier such as a real-database suite, and `coverage`, the suite with its threshold enforced. No hook runs either.
+- **Every command once, at setup.** `node .claude/hooks/project-config.mjs` runs each command in the file (all but `format`) and says which fail. The setup skill and [docs/new-project.md](docs/new-project.md) now ask for it. Tested, including a real shell run.
+- **The stop hook waits for background agents.** It fired about ten times on a session that edited nothing, each time on a subagent's deliberate failing-test step. While a background subagent or workflow is running it now only warns, and it checks at the first stop after they finish. It reads Claude Code's `background_tasks` in the Stop input; a version that doesn't send it checks every time. Tested with recorded input, not yet in a real session.
+- **Shell edits are checked.** A `sed -i` reached the pre-commit hook unlinted. The edit hook now also runs after each Bash command, on the files it changed (up to 20), using a new `PreToolUse` entry to note when the command started. Tested, including a real git run.
+- **"Unused" mid-change.** The edit hook's message now says an unused name that a later step will use can wait, rather than hiding those errors.
+- **The unit tier can't reach a database** ([rule 16](rules/16-acceptance-tests-are-isolated-and-real.md)). The stop hook's changed-tests run picked up a new real-database test under the unit config; a finished one would have connected with whatever `.env` holds. The unit setup now points the database URL at nothing, the other tier's files are excluded by pattern before the first is written, and each real-database test refuses a non-local host. The [project file's README](templates/project/README.md#choosing-commands) says `testChanged` runs only the unit tier.
+- **Prove the test bites** ([rule 15](rules/15-tests-must-be-seen-to-fail.md)). Many behaviours already existed and their tests passed first time. A test that passes first time now records a planted break and the failure it gave, in the plan and slice templates too.
+- **Undo a break by an edit** (rule 15). `git checkout -- file` on Windows with `core.autocrlf` rewrote a file with CRLF, and the linter flagged every line.
+- **Subagents** ([VERIFICATION.md](VERIFICATION.md#3-build-against-the-check)): one implementer at a time in a working tree, a read-only reviewer alongside, commits one at a time because lint-staged stashes the tree, and evidence rather than a report.
+- **What only a real browser or screen reader can show.** The design, plan and slice templates now ask it of each criterion and task, and the [review brief](templates/REVIEW.md) lists it, with two more test gaps an independent review found: a concurrency test whose runs never overlap, and a clause of a criterion with no test.
+
+**Existing projects:** copy the updated `after-edit.mjs`, `before-stop.mjs` and `project-config.mjs` into `.claude/hooks/`, and merge the new `PreToolUse` entry and the `Bash` matcher from `settings.hooks.json`. Add `integration` and `coverage` to `.claude/playbook.json` where the project has them, then run `node .claude/hooks/project-config.mjs` and fix what fails. Add the database line to the unit tests' setup, and exclude real-database tests from the unit config. Copy the new `REVIEW.md` items into `docs/review-brief.md`.
+
 ## 2026-11-25 · v1.0.0: fixes from the first project on the project file
 
 The first project to use `.claude/playbook.json` (a Node app on Windows, with Husky) found these:

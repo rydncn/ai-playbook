@@ -40,9 +40,10 @@ body:
       value: |
         #### Task 1: <the behaviour it adds>
 
-        - **Test:** <the failing test written first, and the assertion it fails on>
+        - **Test:** <the failing test written first, and the assertion it fails on; or, if it passes first time, the break planted and the failure it gave>
         - **Code:** <what changes, briefly>
         - **Observed by:** <the test passing, a command and its output, a screenshot, or the device check>
+        - **Only a real browser, device or screen reader shows:** <what goes in docs/device-checks.md, or none>
     validations:
       required: true
   - type: input

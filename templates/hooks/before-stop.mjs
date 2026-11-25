@@ -7,6 +7,13 @@
 // .claude/checks.json's "beforeStop" (any language; see checks.mjs), and
 // otherwise from the package.json scripts in CHECKS.
 //
+// While a background subagent or workflow of this session is still running,
+// it only warns: the tree holds that agent's work in progress (often a test
+// it is deliberately failing), and checking it would send back a session
+// that changed nothing. The checks run at the first stop with nothing in
+// flight. Claude Code lists that work in the Stop input's background_tasks;
+// an older version that doesn't checks every time, as before.
+//
 // It sends Claude back once per stop. If the checks still fail on the next
 // attempt (stop_hook_active is true), it lets Claude stop, so a check that
 // cannot be fixed in this session never traps it in a loop.
@@ -24,6 +31,10 @@ import { failed, loadChecks, shown } from "./checks.mjs";
 // Scripts the project doesn't have are skipped.
 export const CHECKS = ["typecheck", "lint", "test:changed"];
 const MAX_OUTPUT = 4000;
+
+// Background work that edits the working tree. A background shell (a dev
+// server, a watcher) doesn't hold the checks back.
+const AGENT_TASKS = new Set(["subagent", "workflow"]);
 
 function defaultExec(command, args, cwd, { shell = false } = {}) {
   const result = spawnSync(command, args, {
@@ -59,6 +70,15 @@ export function beforeStop(
   const status = exec("git", ["status", "--porcelain"], projectDir);
   if (status.status !== 0 || status.output.trim() === "") return null;
 
+  const running = agentsRunning(input);
+  if (running.length > 0) {
+    return {
+      systemMessage:
+        `Stop checks not run: ${running.length} background ${running.length === 1 ? "agent is" : "agents are"} still working (${running.join("; ")}). ` +
+        "They run at the first stop after the last one finishes.",
+    };
+  }
+
   // A checkout that is always dirty (line endings, untracked notes) would be
   // checked on every turn. Skip when the tree is exactly as it was at the
   // last passing run.
@@ -68,6 +88,16 @@ export function beforeStop(
   const result = runChecks(projectDir, exec, checks);
   if (result === null && state) saveState(stateFile, state);
   return result;
+}
+
+/** The background agents of this session still in flight, described. */
+function agentsRunning(input) {
+  const tasks = Array.isArray(input?.background_tasks)
+    ? input.background_tasks
+    : [];
+  return tasks
+    .filter((t) => AGENT_TASKS.has(t?.type))
+    .map((t) => String(t.description ?? t.agent_type ?? t.type).slice(0, 80));
 }
 
 function runChecks(projectDir, exec, checks) {
