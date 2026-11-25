@@ -64,6 +64,25 @@ test("after-edit formats and lints an edited TypeScript file", () => {
   );
 });
 
+test("on Windows, after-edit refuses a file name the shell would run, and checks nothing", () => {
+  const dir = project({ bins: ["prettier", "eslint"] });
+  writeFileSync(path.join(dir, "src", "a&calc.ts"), "export {};\n");
+  const { calls, exec } = recorder();
+  const result = afterEdit(
+    { tool_input: { file_path: path.join(dir, "src", "a&calc.ts") } },
+    { projectDir: dir, exec, windows: true },
+  );
+  assert.equal(result.code, 2);
+  assert.match(result.stderr, /a&calc\.ts/);
+  assert.deepEqual(calls, []);
+  const plain = afterEdit(
+    { tool_input: { file_path: path.join(dir, "src", "a.ts") } },
+    { projectDir: dir, exec, windows: true },
+  );
+  assert.equal(plain.code, 0);
+  assert.equal(calls.length, 2);
+});
+
 test("after-edit reports lint errors to Claude with exit 2", () => {
   const dir = project({ bins: ["prettier", "eslint"] });
   const { exec } = recorder({
@@ -162,6 +181,31 @@ test("before-stop lets Claude stop on the second attempt, so it can't loop", () 
     null,
   );
   assert.equal(calls.length, 0);
+});
+
+test("before-stop skips a turn when nothing changed since its last passing run", () => {
+  const dir = project({ scripts: { typecheck: "tsc" } });
+  const results = { git: { status: 0, output: " M src/a.ts\n" } };
+  const { calls, exec } = recorder(results);
+  const npmRuns = () => calls.filter((c) => c[0] === "npm").length;
+  assert.equal(beforeStop({}, { projectDir: dir, exec }), null);
+  assert.equal(npmRuns(), 1);
+  assert.equal(beforeStop({}, { projectDir: dir, exec }), null);
+  assert.equal(npmRuns(), 1, "the same dirty tree isn't checked twice");
+  results.git = { status: 0, output: " M src/a.ts\n M src/b.ts\n" };
+  assert.equal(beforeStop({}, { projectDir: dir, exec }), null);
+  assert.equal(npmRuns(), 2, "a change since then is checked");
+});
+
+test("before-stop checks again after a failure, even with nothing new", () => {
+  const dir = project({ scripts: { typecheck: "tsc" } });
+  const { calls, exec } = recorder({
+    git: { status: 0, output: " M src/a.ts\n" },
+    typecheck: { status: 2, output: "TS2322" },
+  });
+  assert.equal(beforeStop({}, { projectDir: dir, exec }).decision, "block");
+  assert.equal(beforeStop({}, { projectDir: dir, exec }).decision, "block");
+  assert.equal(calls.filter((c) => c[0] === "npm").length, 2);
 });
 
 test("before-stop does nothing outside a git repository", () => {
@@ -363,7 +407,7 @@ test("before-stop runs playbook.json's commands through the shell, in order, sto
   assert.equal(result.decision, "block");
   assert.match(result.reason, /`go vet \.\/\.\.\.`/);
   assert.deepEqual(
-    calls.filter((c) => c.line !== "git status --porcelain"),
+    calls.filter((c) => !c.line.startsWith("git ")),
     [
       { line: 'test -z "$(gofmt -l .)"', shell: true },
       { line: "go vet ./...", shell: true },

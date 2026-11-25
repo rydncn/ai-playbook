@@ -1,6 +1,19 @@
 # Changelog
 
-Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
+Newest first. Each entry says what a project set up against an earlier version should do about it. From v1.0.0, releases are git tags and a project records its release as `"playbook"` in `.claude/playbook.json`; before that, it recorded a commit in its `CLAUDE.md`. To catch up, read from that release or commit upwards.
+
+## 2026-11-25 · v1.0.0: fixes from the first project on the project file
+
+The first project to use `.claude/playbook.json` (a Node app on Windows, with Husky) found these:
+
+- **The edit hook could run a file name.** On Windows the hooks run commands through `cmd.exe`, so a file named `a&calc.ts` would have run `calc`. The edit hook now refuses a path with a character `cmd.exe` acts on. Tested.
+- **The agent could edit what checks it.** [`settings.json`](templates/settings.json) now asks before any edit to `.claude/playbook.json` or `.claude/hooks/`.
+- **The stop hook ran every turn on a checkout that's always dirty.** It now skips a turn when the tree is exactly as it was at its last passing run. Tested, and run against a real repository.
+- **A misspelt setting** now names the one it's closest to.
+- **Line endings, Prettier and Husky:** the [hooks README](templates/hooks/README.md) now says to keep `.claude/hooks/` at LF and out of the formatter, and how to wire `pre-push` with Husky rather than replace it. This repository has a `.gitattributes`, so a Windows clone gets the templates byte for byte.
+- **Choosing commands:** the [project file's README](templates/project/README.md) says which commands belong in it, how to lint only what changed, what `format`, `e2e` and an empty `checks` mean, and that releases are git tags.
+
+**Existing projects:** copy the updated `after-edit.mjs`, `before-stop.mjs` and `project-config.mjs`, add the four `ask` rules from `templates/settings.json`, and add `.claude/hooks/** text eol=lf` to `.gitattributes`.
 
 ## 2026-11-24 · one project file
 

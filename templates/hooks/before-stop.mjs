@@ -12,7 +12,8 @@
 // cannot be fixed in this session never traps it in a loop.
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -58,6 +59,18 @@ export function beforeStop(
   const status = exec("git", ["status", "--porcelain"], projectDir);
   if (status.status !== 0 || status.output.trim() === "") return null;
 
+  // A checkout that is always dirty (line endings, untracked notes) would be
+  // checked on every turn. Skip when the tree is exactly as it was at the
+  // last passing run.
+  const state = treeState(projectDir, status.output, exec);
+  const stateFile = path.join(projectDir, ".git", "playbook-stop-state");
+  if (state && readState(stateFile) === state) return null;
+  const result = runChecks(projectDir, exec, checks);
+  if (result === null && state) saveState(stateFile, state);
+  return result;
+}
+
+function runChecks(projectDir, exec, checks) {
   let configured;
   try {
     configured = loadChecks(projectDir);
@@ -85,6 +98,51 @@ export function beforeStop(
     if (run.status !== 0) return blocked(`npm run ${name}`, run.output);
   }
   return null;
+}
+
+/**
+ * A fingerprint of the working tree: what git reports as changed, the diff
+ * itself, and each untracked file's size and modification time. Null when
+ * git can't say, so nothing is skipped.
+ */
+function treeState(projectDir, porcelain, exec) {
+  const unstaged = exec("git", ["diff", "--no-ext-diff"], projectDir);
+  const staged = exec("git", ["diff", "--cached", "--no-ext-diff"], projectDir);
+  const untracked = exec(
+    "git",
+    ["ls-files", "--others", "--exclude-standard"],
+    projectDir,
+  );
+  if ([unstaged, staged, untracked].some((r) => r.status !== 0)) return null;
+  const hash = createHash("sha256")
+    .update(porcelain)
+    .update(unstaged.output)
+    .update(staged.output);
+  for (const file of untracked.output.split("\n").filter(Boolean)) {
+    try {
+      const { size, mtimeMs } = statSync(path.join(projectDir, file));
+      hash.update(`${file}\0${size}\0${mtimeMs}\n`);
+    } catch {
+      hash.update(`${file}\0gone\n`);
+    }
+  }
+  return hash.digest("hex");
+}
+
+function readState(file) {
+  try {
+    return readFileSync(file, "utf8").trim();
+  } catch {
+    return null;
+  }
+}
+
+function saveState(file, state) {
+  try {
+    writeFileSync(file, `${state}\n`);
+  } catch {
+    // A worktree's .git is a file, not a folder: nothing is skipped there.
+  }
 }
 
 function blocked(command, output) {

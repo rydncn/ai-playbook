@@ -38,6 +38,12 @@ const MAX_OUTPUT = 4000;
 
 const WINDOWS = process.platform === "win32";
 
+// On Windows the commands run through cmd.exe (it's the only way to start the
+// .cmd shims npm installs), and cmd.exe acts on these characters even inside
+// an argument. A file named `a&calc.ts` would run `calc`. So a path with any
+// of them is refused rather than passed to the shell.
+const CMD_SPECIAL = /[&|<>^%!"()`\r\n]/;
+
 function defaultExec(command, args, cwd) {
   const result = spawnSync(command, args, {
     cwd,
@@ -58,7 +64,10 @@ function localBin(projectDir, name) {
   return null;
 }
 
-export function afterEdit(input, { projectDir, exec = defaultExec }) {
+export function afterEdit(
+  input,
+  { projectDir, exec = defaultExec, windows = WINDOWS },
+) {
   const filePath = input?.tool_input?.file_path;
   if (typeof filePath !== "string" || filePath === "") return { code: 0 };
 
@@ -68,6 +77,13 @@ export function afterEdit(input, { projectDir, exec = defaultExec }) {
     return { code: 0 };
   if (relative.split(path.sep).includes("node_modules")) return { code: 0 };
   if (!existsSync(absolute)) return { code: 0 };
+
+  if (windows && CMD_SPECIAL.test(absolute)) {
+    return {
+      code: 2,
+      stderr: `${relative} wasn't checked: its path has a character the Windows shell acts on (& | < > ^ % ! " ( ) or a backtick). Rename the file.\n`,
+    };
+  }
 
   const extension = path.extname(absolute).toLowerCase();
 

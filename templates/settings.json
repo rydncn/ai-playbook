@@ -38,7 +38,11 @@
       "Bash(*vercel env *)",
       "Bash(terraform apply*)",
       "Bash(kubectl apply*)",
-      "Bash(kubectl delete*)"
+      "Bash(kubectl delete*)",
+      "Edit(./.claude/playbook.json)",
+      "Write(./.claude/playbook.json)",
+      "Edit(./.claude/hooks/**)",
+      "Write(./.claude/hooks/**)"
     ],
     "allow": [
       "Bash(npm run lint*)",
