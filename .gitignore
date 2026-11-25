@@ -1,1 +1,4 @@
 .DS_Store
+scripts/trial/node_modules/
+scripts/trial/runs/
+scripts/trial/trial.json

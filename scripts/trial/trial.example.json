@@ -1,0 +1,45 @@
+{
+  "model": "claude-opus-5-5",
+  "effort": "high",
+  "budget": {
+    "perRunUsd": 10,
+    "monthlyUsd": 60,
+    "maxTurns": 400
+  },
+  "steps": [
+    "Read docs/brief.md. Nobody is available to answer questions during this run: where the brief is unclear, choose the most likely reading, write it in docs/assumptions.md and carry on. Write the design for the brief, with its acceptance criteria, and commit it.",
+    "Write the plan for the design in docs/, as slices small enough for one session each, and commit it.",
+    "Build the plan's slices in order, test-first, committing each one. Stop when every acceptance criterion has a passing test that names it, or when a slice is blocked, and say which."
+  ],
+  "arms": {
+    "A": {
+      "starter": "https://github.com/OWNER/trial-arm-a.git",
+      "ref": "main"
+    },
+    "B": {
+      "starter": "https://github.com/OWNER/trial-arm-b.git",
+      "ref": "main"
+    },
+    "C": {
+      "starter": "https://github.com/OWNER/trial-arm-c.git",
+      "ref": "main",
+      "plugins": [
+        "/opt/trial/plugins/playbook",
+        "/opt/trial/plugins/superpowers",
+        "/opt/trial/plugins/pocock-extras",
+        "/opt/trial/plugins/security-audit"
+      ]
+    },
+    "E": {
+      "starter": "https://github.com/OWNER/trial-arm-e.git",
+      "ref": "main",
+      "plugins": [
+        "/opt/trial/plugins/playbook",
+        "/opt/trial/plugins/superpowers",
+        "/opt/trial/plugins/pocock-extras",
+        "/opt/trial/plugins/security-audit"
+      ],
+      "pinnedModels": ["claude-haiku-5-5"]
+    }
+  }
+}

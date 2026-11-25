@@ -2,6 +2,15 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-25 · a trial runner on API credit
+
+- **[`scripts/trial`](scripts/trial/README.md)** runs the ablation trial's arms headless through the Claude Agent SDK, each arm repeated, every step a new session in a fresh clone of the arm's starter repository, with nothing from your own `~/.claude` reaching it. Each run stops at its own dollar cap, a ledger stops runs before the month's budget is spent, and the Console's workspace spend limit is the backstop. Each run's record has its cost, tokens per model, cache share, and a warning when arm E's pinned model never answered. Tested, and checked once against the real API.
+- **The cost estimate:** roughly $6 to $12 an hour of agent work on Opus 5.5, so the full trial is $200 to $400 for one run of each arm, and $60 a month fits repeats only on a small brief. The first real run replaces the estimate.
+- **[`session-tokens.mjs`](scripts/session-tokens.mjs)** prices each model's tokens at list price, with 1-hour cache writes at their own rate.
+- One new dependency, `@anthropic-ai/claude-agent-sdk`, pinned and locked in `scripts/trial` only; the rest of the playbook stays dependency-free.
+
+**Existing projects:** nothing to do.
+
 ## 2026-11-24 · one project file
 
 The playbook now works the same on any stack, with what's specific to a project in one file, `.claude/playbook.json` ([`templates/project`](templates/project)). It holds the playbook release the project is on, where its tickets live (GitHub issues or Jira), its test, e2e, lint and format commands, its edit checks, its one-way paths and its optional checks. It has examples for Node with Jira, Go and Python.

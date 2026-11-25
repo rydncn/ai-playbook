@@ -69,3 +69,5 @@ One run per arm is still one run. Write the result up with that said, and treat 
 ## Cost
 
 Roughly, A takes about 2 hours, B, C and E about 5 to 8 each, and D about 10. That's about 32 hours of working time and a few hours of a person's, mostly for the brief, the rubric, the unattended slices and reading the results.
+
+On API credit, [`scripts/trial`](../../scripts/trial/README.md) runs the arms headless through the Agent SDK, each repeated, under a per-run and a monthly spend cap. At Opus 5.5's list price the whole trial is an estimated $200 to $400 for one run of each arm, so a $60 monthly budget fits repeats only on a small brief: enough for question 5, which is mostly about cost, and to show how much one run varies. The runner's [cost section](../../scripts/trial/README.md#cost-per-run) has the working, and the first real run replaces the estimate.

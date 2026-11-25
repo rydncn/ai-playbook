@@ -69,7 +69,9 @@ jobs:
         run: node --test templates/review-gate/outcomes.test.mjs
 
       - name: Test the trial scripts
-        run: node --test scripts/session-tokens.test.mjs
+        # The runner's tests don't need the Agent SDK: it's imported only when
+        # a real run starts, so there's nothing to install here.
+        run: node --test scripts/session-tokens.test.mjs scripts/trial/ledger.test.mjs scripts/trial/run-trial.test.mjs
 
       - name: Test the tickets template
         run: node --test templates/tickets/check-ticket.test.mjs

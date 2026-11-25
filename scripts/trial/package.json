@@ -1,0 +1,15 @@
+{
+  "name": "playbook-trial-runner",
+  "private": true,
+  "type": "module",
+  "description": "Runs the ablation trial's arms headless through the Claude Agent SDK, under a spend cap.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "0.3.327"
+  }
+}
