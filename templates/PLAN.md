@@ -20,7 +20,7 @@ be observed before any code is written (rules 5 and 15). Keep the
 
 ### Task 1: <the behaviour it adds>
 
-- **Test:** <the failing test written first: file, name, and the assertion it fails on before the code exists>
+- **Test:** <the failing test written first: file, name, and the assertion it fails on before the code exists. If the behaviour already exists and it passes first time: the break planted and the failure it gave>
 - **Code:** <what changes, briefly>
 - **Observed by:** <the test passing, a command and its output, a screenshot, or the device check>
 
@@ -37,4 +37,4 @@ be observed before any code is written (rules 5 and 15). Keep the
 
 - [ ] Every criterion above has an acceptance test that names it, seen failing before the code and passing after
 - [ ] The quick checks and the tests pass in CI, with the pull request out of draft
-- [ ] Device checks recorded for anything only a device can show, or marked as not yet done
+- [ ] Asked of each task: what can only a real browser, device or screen reader show? Each answer is in `docs/device-checks.md`, recorded or marked as not yet done

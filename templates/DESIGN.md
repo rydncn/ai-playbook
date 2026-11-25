@@ -60,4 +60,4 @@ Before reviewing the criteria, check them from three directions:
 
 ## Test tiers
 
-<Which tier of rule 16 the acceptance tests run at, and what is left to device checks, with the ADR that records why.>
+<Which tier of rule 16 the acceptance tests run at, and what is left to device checks, with the ADR that records why. For each user-facing criterion, what only a real browser, device or screen reader can show (focus, announcements, hover and focus states, large text): those go in `docs/device-checks.md`, not in the unit tests' coverage.>

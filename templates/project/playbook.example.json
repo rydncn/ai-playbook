@@ -4,7 +4,9 @@
   "commands": {
     "test": "npm test",
     "testChanged": "npx vitest run --changed",
+    "integration": "npm run test:db",
     "e2e": "npx playwright test",
+    "coverage": "npx vitest run --coverage",
     "lint": "npm run lint",
     "typecheck": "npx tsc --noEmit",
     "format": "npx prettier --write .",

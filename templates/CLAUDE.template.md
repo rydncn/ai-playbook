@@ -58,7 +58,7 @@ These load automatically when the agent works on matching files:
 
 ## Workflow
 
-- Non-trivial work: written design, then a plan of test-first tasks. Each task states how its effect will be checked before any code is written.
+- Non-trivial work: written design, then a plan of test-first tasks. Each task states how its effect will be checked before any code is written. A test that passes first time is proved with a planted break and the failure it gave.
 - Every pull request says whether it is a one-way door (migrations, data deletion, auth, public API, agent configuration, new dependencies, release settings) or a two-way door. A human reads the diff of every one-way file before merging.
 - Done means the effect was observed, not the code read back, and a new user can start from the README alone.
 - Review is the CI review and its gate, briefed with `docs/review-brief.md`; don't also start a reviewer for a two-way slice. Fix every must-fix test-first; a should-fix only when it is small and plainly better.

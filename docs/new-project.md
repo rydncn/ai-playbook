@@ -47,6 +47,7 @@ This is the one ordered list of what the playbook asks for on day one. Each item
 
 - [ ] The hooks from [`templates/hooks`](../templates/hooks): the plugin check at session start, format and lint after each edit, the fast checks before Claude stops, and `pre-push` for everyone else.
 - [ ] [`templates/REVIEW.md`](../templates/REVIEW.md) as `docs/review-brief.md`, the brief for every review the project runs, with its five questions.
+- [ ] Run every command in `.claude/playbook.json` once, coverage and the second test tier included: `node .claude/hooks/project-config.mjs`. Fix each that fails, or leave it out of the file until it's fixed.
 - [ ] Break the type check on purpose and watch the agent get sent back, and watch a push get refused.
 
 ## 6. Instructions and decisions

@@ -46,6 +46,17 @@ The design then becomes a plan, one per slice of work that can be reviewed and m
 
 Each task starts with a failing test, and it has to fail for the right reason: an assertion on the missing behaviour, not an import error ([rule 15](rules/15-tests-must-be-seen-to-fail.md)). The implementation follows, and the same test then has to pass. Tests check behaviour through the public interface, never the code against itself ([rule 6](rules/06-tests-exercise-behaviour.md)). A bug fix starts with a test that reproduces the bug. The feature is done when its acceptance tests pass end to end, not when its unit tests do.
 
+Where the behaviour already exists and the new test passes first time, the task proves the test bites instead: a deliberate break, the failure it produced, and the break undone by an edit. That output is the evidence, for a person or a subagent alike.
+
+**With subagents.** A session can hand tasks to subagents, naming the model for each ([arm E](docs/trials/ablation.md) of the trial measures which choice pays). In one working tree:
+
+- **One implementer at a time.** Two agents editing the same tree see each other's half-finished work in every test run and every hook. Implementers that run side by side each get their own git worktree.
+- **A read-only reviewer alongside is fine.** It changes nothing the implementer is testing.
+- **Commits one at a time, by one agent.** lint-staged and similar pre-commit tools stash unstaged changes while they run, so a commit while another agent is editing takes that agent's changes out of the tree mid-task and puts them back afterwards, or fails to.
+- **Ask each for evidence:** the failing run, the passing run, or the planted break and its failure. A subagent's report says what it did, not what it missed; it is not a review, and the fresh-context review still runs ([§5](#5-independent-review)).
+
+The stop hook only warns while background agents are running, since the tree holds their work in progress; it checks at the first stop after they finish ([hooks](templates/hooks)).
+
 ## 4. Gates
 
 Gates are checks that run without anyone having to remember them. The first run inside the agent's loop, through Claude Code hooks ([templates](templates/hooks)): each edited file is formatted and linted as soon as it changes, and before the agent finishes a turn that changed files, the type check and the tests for changed files run. If they fail, the agent is sent back to fix them, or to say plainly that it couldn't. Problems are caught while the agent still has the context to fix them, rather than in CI after it has moved on.
@@ -112,7 +123,7 @@ Alongside them:
 - Anything that reaches production asks first, set in shared, committed settings that no personal setting can override ([rule 3](rules/03-production-asks-first.md); [template](templates/settings.json)).
 - A permission classifier blocks reading secrets, reading production data and merging.
 - Where the agent runs sets how much the prompts have to do: on my machine with prompts, sandboxed for longer tasks, or in a firewalled dev container for anything unattended ([where the agent runs](docs/agent-environment.md)).
-- Parallel sessions each work in their own git worktree, on one planned task, through the same gates.
+- Parallel sessions, and implementing subagents that run side by side, each work in their own git worktree, on one planned task, through the same gates.
 
 ## 7. Capture
 

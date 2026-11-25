@@ -9,8 +9,10 @@ import {
   isBehind,
   loadProjectConfig,
   problems,
+  runCommands,
   stopCommands,
 } from "./project-config.mjs";
+import { spawnSync } from "node:child_process";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -235,4 +237,88 @@ test("a misspelt setting names the one it's closest to", () => {
   assert.ok(
     far.some((p) => p.includes('"banana"') && !p.includes("Did you mean")),
   );
+});
+
+test("a second test tier and a coverage command have their own slots", () => {
+  assert.deepEqual(
+    problems({
+      ...minimal(),
+      commands: {
+        test: "npm test",
+        integration: "npm run test:db",
+        coverage: "npx vitest run --coverage",
+      },
+    }),
+    [],
+  );
+});
+
+test("the second tier and coverage stay out of the stop hook", () => {
+  const commands = {
+    test: "unit",
+    integration: "db",
+    coverage: "cov",
+    e2e: "e2e",
+  };
+  assert.deepEqual(stopCommands({ ...minimal(), commands }), ["unit"]);
+});
+
+test("running the commands: each once, in order, every one but format", () => {
+  const ran = [];
+  const exec = (line) => {
+    ran.push(line);
+    return { status: line === "cov" ? 1 : 0, output: `${line} said this` };
+  };
+  const config = {
+    ...minimal(),
+    commands: {
+      coverage: "cov",
+      format: "fmt",
+      test: "unit",
+      lint: "lint",
+      integration: "db",
+    },
+  };
+  const results = runCommands(config, { exec });
+  assert.deepEqual(ran, ["unit", "db", "cov", "lint"]);
+  assert.deepEqual(
+    results.map((r) => [r.name, r.passed]),
+    [
+      ["test", true],
+      ["integration", true],
+      ["coverage", false],
+      ["lint", true],
+    ],
+  );
+  assert.equal(results[2].output, "cov said this");
+  ran.length = 0;
+  runCommands(config, { exec, only: ["lint", "format"] });
+  assert.deepEqual(ran, ["lint", "fmt"]);
+});
+
+test("run as a script, it runs the file's commands in a real shell and fails when one does", () => {
+  const dir = projectWith(
+    JSON.stringify({
+      ...minimal(),
+      commands: {
+        test: 'node -e "process.exit(0)"',
+        coverage: 'node -e "console.log(42); process.exit(1)"',
+      },
+    }),
+  );
+  const script = path.join(here, "project-config.mjs");
+  const run = (...args) =>
+    spawnSync(process.execPath, [script, ...args], {
+      cwd: dir,
+      encoding: "utf8",
+      env: { ...process.env, CLAUDE_PROJECT_DIR: dir },
+    });
+  const all = run();
+  assert.equal(all.status, 1);
+  assert.match(all.stdout, /pass {2}test/);
+  assert.match(all.stdout, /FAIL {2}coverage/);
+  assert.match(all.stdout, /42/);
+  assert.match(all.stdout, /Not in the file: .*integration/);
+  assert.equal(run("test").status, 0);
+  assert.equal(run("tests").status, 1);
 });

@@ -8,7 +8,7 @@ Acceptance and integration tests run against real infrastructure: a real databas
 
 Each test is independent. It creates the data it needs, doesn't depend on another test having run, and leaves nothing behind. The suite passes in any order and in parallel.
 
-Unit tests stay fast and separate. These rules are for the tests that check the system works.
+Unit tests stay fast and separate, and can't reach a database: a unit test that forgets to fake its client fails, rather than connecting with whatever `.env` holds. These rules are for the tests that check the system works.
 
 ### Tiers
 
@@ -28,6 +28,7 @@ Tests that share state fail in ways that depend on the order they ran in. The fa
 
 ## How to enforce it
 
+- Make the unit tier unable to reach a database: one line in its setup file points the database URL at nothing (`process.env.DATABASE_URL = "postgres://unreachable.invalid/none"`), after `.env` has loaded. Give real-database tests their own file pattern, excluded from the unit config before the first one is written, so a changed-tests run on every turn can't pick one up ([project file](../templates/project#choosing-commands)). Each real-database test refuses to start unless its database is local (a `localhost` or container host), so a test run in the wrong context stops rather than reaching a shared one.
 - Start real services for the test run: containers (Testcontainers, or Docker Compose in CI) or the platform's local stack, with every migration applied from empty.
 - Give each test its own data: unique IDs or tenants, a transaction rolled back after each test, or a truncate between tests. Never rely on seeded data another test may change.
 - Run the suite in random order and in parallel in CI (for example Jest's `--randomize`, or Vitest's `sequence.shuffle`), so order dependence fails quickly rather than one day.
