@@ -222,3 +222,17 @@ test("without changed-tests, the stop checks run the whole suite", () => {
     ["go vet ./...", "go test ./..."],
   );
 });
+
+test("a misspelt setting names the one it's closest to", () => {
+  const found = problems({ ...minimal(), oneWayPath: [] });
+  assert.ok(found.some((p) => p.includes('Did you mean "oneWayPaths"?')));
+  const command = problems({
+    ...minimal(),
+    commands: { test: "x", tests: "y" },
+  });
+  assert.ok(command.some((p) => p.includes('Did you mean "test"?')));
+  const far = problems({ ...minimal(), banana: 1 });
+  assert.ok(
+    far.some((p) => p.includes('"banana"') && !p.includes("Did you mean")),
+  );
+});

@@ -11,13 +11,16 @@ Three Claude Code hooks that check the agent's setup and work while it is workin
 
 Each skips anything the project doesn't have (no Prettier, no `test:changed` script, no git, no plugins enabled), so they never break a session.
 
+The stop hook runs only when the working tree has changes, and skips a turn when the tree is exactly as it was at its last passing run, so a checkout that is always dirty isn't checked every turn. It sends Claude back once per stop, and gives each command five minutes. On Windows, the edit hook refuses a file whose path has a character `cmd.exe` acts on (`& | < > ^ % ! " ( )`), rather than pass it to the shell.
+
 ## Using them
 
 1. Copy all six files (the four hooks, and `checks.mjs` and `project-config.mjs`, which the edit and stop hooks share) into the project's `.claude/hooks/`. Then write the project's [`.claude/playbook.json`](../project) with its commands; a project file that can't be read is reported to Claude, never skipped. An older `.claude/checks.json` still works when there's no project file.
-2. Merge [`settings.hooks.json`](settings.hooks.json) into the committed `.claude/settings.json`.
-3. Add `"prepare": "git config core.hooksPath .claude/hooks || true"` to `package.json`, so every install points git at the same folder for `pre-push`. Git only runs files named after its hooks, so the `.mjs` files beside it are ignored.
-4. Add a fast `test:changed` script: `vitest run --changed` or `jest --onlyChanged`. Keep the Stop hook's checks to what runs in seconds; the full suite belongs in CI.
-5. Check they run ([rule 9](../../rules/09-checks-must-prove-they-ran.md)); a hook with a wrong path fails silently:
+2. Merge [`settings.hooks.json`](settings.hooks.json) into the committed `.claude/settings.json`. Nothing runs without this step.
+3. Keep the copies byte for byte: add `.claude/hooks/** text eol=lf` to `.gitattributes`, so a Windows checkout doesn't turn `pre-push` into a script `sh` can't run, and `.claude/hooks/` to `.prettierignore`, so the project's formatter doesn't rewrite them.
+4. Wire `pre-push` into git. Without another hook manager, add `"prepare": "git config core.hooksPath .claude/hooks || true"` to `package.json`, so every install points git at the same folder; git only runs files named after its hooks, so the `.mjs` files beside it are ignored. With Husky, don't: changing `core.hooksPath` turns Husky's hooks off. Add `.husky/pre-push` with the line `sh .claude/hooks/pre-push` instead.
+5. Give the project file a fast `testChanged` command: `vitest run --changed` or `jest --onlyChanged`. Keep the Stop hook's checks to what runs in seconds; the full suite belongs in CI.
+6. Check they run ([rule 9](../../rules/09-checks-must-prove-they-ran.md)); a hook with a wrong path fails silently:
    - ask Claude to make a change that breaks the type check, and watch it get sent back;
    - push a branch with a type error, and watch the push get refused;
    - start a session with one enabled plugin uninstalled, and watch the warning appear;

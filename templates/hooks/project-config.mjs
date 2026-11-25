@@ -55,7 +55,38 @@ const isText = (v) => typeof v === "string" && v.trim() !== "";
 function unknownKeys(obj, allowed, prefix) {
   return Object.keys(obj)
     .filter((k) => !allowed.includes(k))
-    .map((k) => `"${prefix}${k}" isn't a setting the playbook reads.`);
+    .map((k) => {
+      const near = nearest(k, allowed);
+      const hint = near ? ` Did you mean "${near}"?` : "";
+      return `"${prefix}${k}" isn't a setting the playbook reads.${hint}`;
+    });
+}
+
+/** The allowed key within two edits of `key`, ignoring case, if there is one. */
+function nearest(key, allowed) {
+  let best = null;
+  let bestDistance = 3;
+  for (const candidate of allowed) {
+    const d = distance(key.toLowerCase(), candidate.toLowerCase());
+    if (d < bestDistance) [best, bestDistance] = [candidate, d];
+  }
+  return best;
+}
+
+function distance(a, b) {
+  let row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b.length; j++) {
+      next[j] = Math.min(
+        row[j] + 1,
+        next[j - 1] + 1,
+        row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    }
+    row = next;
+  }
+  return row[b.length];
 }
 
 function ticketProblems(tickets) {
