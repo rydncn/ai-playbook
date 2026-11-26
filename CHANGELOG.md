@@ -2,6 +2,12 @@
 
 Newest first. Each entry names the commit it follows and says what a project set up against an earlier commit should do about it. A project records the commit it was set up against in its `CLAUDE.md`; to catch up, read from that commit upwards.
 
+## 2026-11-26 · the ablation trial measures its own noise
+
+- **The [noise band](docs/trials/ablation.md#the-noise-band):** arm C runs twice, and a difference between arms counts only when it is bigger than the gap between C's two runs. If that gap is already bigger than the decision bars, every arm runs twice before deciding. About 6 more hours. From Uber Engineering's [skill evals](https://x.com/UberEng/status/2125008806249930999), which report every ablation against how much two identical runs differ.
+
+**Existing projects:** nothing to do.
+
 ## 2026-11-24 · one project file
 
 The playbook now works the same on any stack, with what's specific to a project in one file, `.claude/playbook.json` ([`templates/project`](templates/project)). It holds the playbook release the project is on, where its tickets live (GitHub issues or Jira), its test, e2e, lint and format commands, its edit checks, its one-way paths and its optional checks. It has examples for Node with Jira, Go and Python.
