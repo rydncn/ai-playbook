@@ -25,13 +25,19 @@ All arms get one brief, the same session model and the same environment, under t
 | ------------- | ----------------------------------------------------------------------------------------------- | ---------------------------- |
 | A, control    | Plain Claude Code, no plugins, no playbook files                                                | The baseline, on a new brief |
 | B, core       | The playbook's files, set up by hand from [new-project.md](../new-project.md); no plugins       | 1                            |
-| C, default    | B plus the default plugins, with the layers aimed by door                                       | 1, 2, 3, 4                   |
+| C, default    | B plus the default plugins, with the layers aimed by door, run twice                            | 1, 2, 3, 4, and the noise    |
 | D, everything | C, with every expensive layer on every slice and the builder's own fresh-context review as well | 2, 3                         |
 | E, pinned     | C, with a model named for every subagent                                                        | 5                            |
 
 Arm C runs its last three slices unattended (question 4): `ready`, `afk` issues that passed `check-ticket.mjs`, each issue's done command as the `/goal`, in a cloud session, and ending in a pull request that the review gate decides. The first of the three is watched in full, as the [unattended runs](../agent-environment.md#unattended-runs) section asks.
 
 In arm E, every subagent definition (`.claude/agents/*.md`) has `model:` in its frontmatter, and every dispatch the session makes names a model. Review, design, debugging and anything with a verdict stay on the session's model. Haiku gets only mechanical work: copying code a plan already holds, running a command and reporting its output, and drafting a summary that a stronger model then checks. Before the arm counts, its transcripts must show each pinned subagent answering on its pinned model ([rule 7](../../rules/07-prove-config-takes-effect.md)); `session-tokens.mjs` lists the tokens per model for this.
+
+## The noise band
+
+Two runs of the same arm don't score the same, so a difference between arms means nothing until it is bigger than that. Arm C, the arm every other one is compared against, runs twice: the same brief, model and environment, in fresh sessions, and both builds go to the blind reviewer with the rest, as two more anonymised copies. For each measure, the gap between C's two runs is the noise band. A difference between two arms that is no bigger than the band counts as no difference, whatever the bars below say. Uber Engineering's [ablations of its agent skills](https://x.com/UberEng/status/2125008806249930999) report each result against the same kind of band, measured as how much two identical runs differ.
+
+If C's two runs differ by more than the bars below (one must-fix, two rubric points or 25% of tokens per criterion), one run per arm can't decide anything on that measure: say so in the write-up, and run every arm a second time before any decision that rests on it.
 
 ## The brief
 
@@ -56,7 +62,7 @@ The same for every arm, written in the same effort log:
 
 ## Decisions, agreed before the results
 
-A layer stays in the default only if the arm with it does better on must-fix escapes or quality, by at least one must-fix or two rubric points, at less than 25% more tokens per criterion. Otherwise it becomes optional, as `codex` and `ponytail` did.
+A layer stays in the default only if the arm with it does better on must-fix escapes or quality, by at least one must-fix or two rubric points and by more than the [noise band](#the-noise-band), at less than 25% more tokens per criterion. Otherwise it becomes optional, as `codex` and `ponytail` did.
 
 - **B against C:** if C doesn't clear the bar, the plugins go optional and the core stands alone.
 - **C against D:** if D clears the bar against C, the layer it adds for two-way doors goes back in. If it doesn't, the door table stands, and the per-slice in-session review stays out.
@@ -64,8 +70,8 @@ A layer stays in the default only if the arm with it does better on must-fix esc
 - **C against E:** if E costs at least 20% less per criterion than C, with no more must-fix escapes and no more than one rubric point lower, naming each subagent's model becomes part of the default, with E's split between judgment and mechanical work. Otherwise subagents keep inheriting the session's model. If any pinned subagent answered on another model, E doesn't count until the pin is fixed and the arm is run again.
 - **Every arm against A:** if C or B no longer beats the control on must-fix escapes, the playbook stops claiming to beat plain Claude Code until a trial shows it again.
 
-One run per arm is still one run. Write the result up with that said, and treat it as evidence, not proof, until a second run agrees.
+Apart from C's second run, one run per arm is still one run. Write the result up with that said, and treat it as evidence, not proof, until a second run agrees.
 
 ## Cost
 
-Roughly, A takes about 2 hours, B, C and E about 5 to 8 each, and D about 10. That's about 32 hours of working time and a few hours of a person's, mostly for the brief, the rubric, the unattended slices and reading the results.
+Roughly, A takes about 2 hours, B, E and each of C's two runs about 5 to 8, and D about 10. That's about 38 hours of working time and a few hours of a person's, mostly for the brief, the rubric, the unattended slices and reading the results.
