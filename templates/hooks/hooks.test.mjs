@@ -84,6 +84,28 @@ test("on Windows, after-edit refuses a file name the shell would run, and checks
   assert.equal(calls.length, 2);
 });
 
+test("on Windows, after-edit quotes a path with spaces, so the shell passes it as one argument", () => {
+  const dir = project({ bins: ["prettier", "eslint"] });
+  mkdirSync(path.join(dir, "src", "my dir"));
+  writeFileSync(path.join(dir, "src", "my dir", "b.ts"), "export {};\n");
+  const { calls, exec } = recorder();
+  const result = afterEdit(
+    { tool_input: { file_path: path.join(dir, "src", "my dir", "b.ts") } },
+    { projectDir: dir, exec, windows: true },
+  );
+  assert.equal(result.code, 0);
+  assert.equal(calls.length, 2);
+  for (const call of calls) {
+    assert.equal(call.at(-1), `"${path.join(dir, "src", "my dir", "b.ts")}"`);
+  }
+  calls.length = 0;
+  afterEdit(
+    { tool_input: { file_path: path.join(dir, "src", "my dir", "b.ts") } },
+    { projectDir: dir, exec, windows: false },
+  );
+  assert.equal(calls[0].at(-1), path.join(dir, "src", "my dir", "b.ts"));
+});
+
 test("after-edit reports lint errors to Claude with exit 2", () => {
   const dir = project({ bins: ["prettier", "eslint"] });
   const { exec } = recorder({
@@ -268,15 +290,35 @@ test("before-stop skips a turn when nothing changed since its last passing run",
   assert.equal(npmRuns(), 2, "a change since then is checked");
 });
 
-test("before-stop checks again after a failure, even with nothing new", () => {
+test("before-stop doesn't send Claude back twice for the same failure on an unchanged tree", () => {
   const dir = project({ scripts: { typecheck: "tsc" } });
-  const { calls, exec } = recorder({
+  const results = {
+    git: { status: 0, output: " M src/a.ts\n" },
+    typecheck: { status: 2, output: "TS2322" },
+  };
+  const { calls, exec } = recorder(results);
+  const npmRuns = () => calls.filter((c) => c[0] === "npm").length;
+  assert.equal(beforeStop({}, { projectDir: dir, exec }).decision, "block");
+  const again = beforeStop({}, { projectDir: dir, exec });
+  assert.equal(again.decision, undefined, "not sent back a second time");
+  assert.match(again.systemMessage, /npm run typecheck/);
+  assert.match(again.systemMessage, /unchanged/);
+  assert.equal(npmRuns(), 1, "the unchanged tree isn't checked again");
+  results.git = { status: 0, output: " M src/a.ts\n M src/b.ts\n" };
+  assert.equal(beforeStop({}, { projectDir: dir, exec }).decision, "block");
+  assert.equal(npmRuns(), 2, "a change since then is checked");
+});
+
+test("before-stop's message leads with what fails, and allows for another agent's work in progress", () => {
+  const dir = project({ scripts: { typecheck: "tsc" } });
+  const { exec } = recorder({
     git: { status: 0, output: " M src/a.ts\n" },
     typecheck: { status: 2, output: "TS2322" },
   });
-  assert.equal(beforeStop({}, { projectDir: dir, exec }).decision, "block");
-  assert.equal(beforeStop({}, { projectDir: dir, exec }).decision, "block");
-  assert.equal(calls.filter((c) => c[0] === "npm").length, 2);
+  const { reason } = beforeStop({}, { projectDir: dir, exec });
+  assert.match(reason.split("\n")[0], /^`npm run typecheck` fails\./);
+  assert.match(reason, /another agent's work in progress/);
+  assert.match(reason, /exactly what fails and why/);
 });
 
 test("before-stop does nothing outside a git repository", () => {
@@ -457,6 +499,11 @@ test("before-stop sends Claude back once when checks.json can't be read", () => 
   const result = beforeStop({}, { projectDir: dir, exec });
   assert.equal(result.decision, "block");
   assert.match(result.reason, /\.claude\/checks\.json/);
+  assert.equal(
+    beforeStop({}, { projectDir: dir, exec }).decision,
+    "block",
+    "a broken file isn't remembered as a passing run",
+  );
 });
 
 // .claude/playbook.json: the one project file. Its commands are command

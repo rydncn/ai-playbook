@@ -90,9 +90,16 @@ export function projectPaths(text) {
   } catch (error) {
     throw new Error(`.claude/playbook.json can't be read: ${error.message}`);
   }
-  const paths = config?.oneWayPaths ?? [];
+  // A list of globs, or an object from each glob to why it is one-way.
+  const given = config?.oneWayPaths ?? [];
+  const paths =
+    given !== null && typeof given === "object" && !Array.isArray(given)
+      ? Object.keys(given)
+      : given;
   if (!Array.isArray(paths) || !paths.every((p) => typeof p === "string")) {
-    throw new Error('.claude/playbook.json: "oneWayPaths" is a list of globs.');
+    throw new Error(
+      '.claude/playbook.json: "oneWayPaths" is a list of globs, or an object from each glob to its reason.',
+    );
   }
   return parsePaths(paths.join("\n"));
 }

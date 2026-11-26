@@ -11,11 +11,13 @@ Three Claude Code hooks that check the agent's setup and work while it is workin
 
 Each skips anything the project doesn't have (no Prettier, no `test:changed` script, no git, no plugins enabled), so they never break a session.
 
-The stop hook runs only when the working tree has changes, and skips a turn when the tree is exactly as it was at its last passing run, so a checkout that is always dirty isn't checked every turn. It sends Claude back once per stop, and gives each command five minutes.
+The stop hook runs only when the working tree has changes, and skips a turn when the tree is exactly as it was at its last passing run, so a checkout that is always dirty isn't checked every turn. It sends Claude back once per stop, and not again while the tree stays as it was when it did, and gives each command five minutes. Its message leads with the failing command and allows for a failure that is another agent's work in progress: then the right move is to leave it and say exactly what fails.
 
 While a background subagent or workflow of the session is still running, the stop hook doesn't check: the tree holds that agent's half-finished task, often a test it is failing on purpose, and the session stopping didn't write it. It shows a one-line warning instead, and checks at the first stop after the last agent finishes. Claude Code lists that work in the Stop hook's input (`background_tasks`); a version that doesn't checks every time.
 
-After a shell command, the edit hook checks the files in `git status` that changed while the command ran, up to 20 of them. It needs the `PreToolUse` entry in `settings.hooks.json`, which notes when each command starts. Its "unused" errors mid-change are expected when an import is added before the code that uses it; its message says so, rather than hiding them, because one left at the end is a real slip. On Windows, the edit hook refuses a file whose path has a character `cmd.exe` acts on (`& | < > ^ % ! " ( )`), rather than pass it to the shell.
+After a shell command, the edit hook checks the files in `git status` that changed while the command ran, up to 20 of them. It needs the `PreToolUse` entry in `settings.hooks.json`, which notes when each command starts. Its "unused" errors mid-change are expected when an import is added before the code that uses it; its message says so, rather than hiding them, because one left at the end is a real slip. On Windows, the edit hook refuses a file whose path has a character `cmd.exe` acts on (`& | < > ^ % ! " ( )`), rather than pass it to the shell, and quotes a path with spaces.
+
+The [settings template](../settings.json) asks before Claude's edit tools change `.claude/settings.json`, `.claude/playbook.json` or `.claude/hooks/`, since those decide what the hooks run. A shell command can still change them; the review gate's one-way paths catch that at review ([rule 18](../../rules/18-agent-configuration-is-code.md)).
 
 ## Using them
 

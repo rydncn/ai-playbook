@@ -81,12 +81,21 @@ export function beforeStop(
 
   // A checkout that is always dirty (line endings, untracked notes) would be
   // checked on every turn. Skip when the tree is exactly as it was at the
-  // last passing run.
+  // last run: after a pass, quietly; after a send-back, with a one-line
+  // reminder, since the same failure on the same tree needs no second one.
   const state = treeState(projectDir, status.output, exec);
   const stateFile = path.join(projectDir, ".git", "playbook-stop-state");
-  if (state && readState(stateFile) === state) return null;
+  const last = state ? readState(stateFile) : null;
+  if (last?.tree === state) {
+    if (!last.failing) return null;
+    return {
+      systemMessage: `Stop checks not run: the tree is unchanged since \`${last.failing}\` failed and Claude was sent back for it.`,
+    };
+  }
   const result = runChecks(projectDir, exec, checks);
-  if (result === null && state) saveState(stateFile, state);
+  if (state && result === null) saveState(stateFile, state);
+  if (state && result?.command) saveState(stateFile, state, result.command);
+  if (result) delete result.command;
   return result;
 }
 
@@ -159,17 +168,21 @@ function treeState(projectDir, porcelain, exec) {
   return hash.digest("hex");
 }
 
+/** The last run's tree and, if it sent Claude back, the failing command. */
 function readState(file) {
   try {
-    return readFileSync(file, "utf8").trim();
+    const [tree, failing = null] = readFileSync(file, "utf8")
+      .trim()
+      .split("\n");
+    return { tree, failing };
   } catch {
     return null;
   }
 }
 
-function saveState(file, state) {
+function saveState(file, tree, failing) {
   try {
-    writeFileSync(file, `${state}\n`);
+    writeFileSync(file, failing ? `${tree}\n${failing}\n` : `${tree}\n`);
   } catch {
     // A worktree's .git is a file, not a folder: nothing is skipped there.
   }
@@ -178,10 +191,12 @@ function saveState(file, state) {
 function blocked(command, output) {
   return {
     decision: "block",
+    command,
     reason:
-      `\`${command}\` fails after your changes. Fix it before finishing. ` +
-      `If it can't be fixed in this session, stop and tell the user exactly what fails and why, ` +
-      `rather than reporting the work as done.\n\n${output.slice(-MAX_OUTPUT)}`,
+      `\`${command}\` fails. If your own changes caused it, fix it before finishing. ` +
+      `If it is another agent's work in progress, or can't be fixed in this session, leave it ` +
+      `and tell the user exactly what fails and why, rather than reporting the work as done.` +
+      `\n\n${output.slice(-MAX_OUTPUT)}`,
   };
 }
 

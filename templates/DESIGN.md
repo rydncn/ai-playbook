@@ -56,7 +56,10 @@ Before reviewing the criteria, check them from three directions:
 
 - Each rules file that applies (`CLAUDE.md`, `.claude/rules/`): for each rule with behaviour someone could observe, which criterion proves it? A rule with none is a gap.
 - The five questions in `templates/REVIEW.md`, asked of the design: what another parser does with each input, what two at once do, what a flood costs, what one account or input can do to a result people rely on, and what the caller learns when it only partly works. Each answer that matters becomes a criterion.
-- Each lifecycle above: every refused move is a criterion.>
+- Each lifecycle above: every refused move is a criterion.
+- Each limit the design touches (a rate tier, a quota, a pool): what else draws on the same allowance?
+
+A criterion that a later slice makes untrue (agreed wording, say) is marked **Superseded by** that slice's criterion in the same change, not left to be remembered.>
 
 ## Test tiers
 

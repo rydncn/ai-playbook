@@ -51,11 +51,13 @@ Where the behaviour already exists and the new test passes first time, the task 
 **With subagents.** A session can hand tasks to subagents, naming the model for each ([arm E](docs/trials/ablation.md) of the trial measures which choice pays). In one working tree:
 
 - **One implementer at a time.** Two agents editing the same tree see each other's half-finished work in every test run and every hook. Implementers that run side by side each get their own git worktree.
-- **A read-only reviewer alongside is fine.** It changes nothing the implementer is testing.
-- **Commits one at a time, by one agent.** lint-staged and similar pre-commit tools stash unstaged changes while they run, so a commit while another agent is editing takes that agent's changes out of the tree mid-task and puts them back afterwards, or fails to.
-- **Ask each for evidence:** the failing run, the passing run, or the planted break and its failure. A subagent's report says what it did, not what it missed; it is not a review, and the fresh-context review still runs ([§5](#5-independent-review)).
+- **A read-only reviewer alongside is fine** if it reads commits (`git show <hash>:<path>`), never the working tree, which holds the implementer's planted breaks. Brief a background automated review the same way.
+- **Commits one at a time, by one agent,** each after the type check passes. lint-staged and similar pre-commit tools stash unstaged changes while they run, so a commit while another agent is editing takes that agent's changes out of the tree mid-task and puts them back afterwards, or fails to. The brief says which trailer to use: the model that wrote the change, so a subagent's commits name its model, not the orchestrator's.
+- **Brief by group.** A plan's tasks go to a handful of implementer briefs, each with one reviewer checking the spec first, then quality. Ask reviewers "would this test still pass if …?" rather than "review the diff", and implementers what only a real browser can show.
+- **Each fix round gets its own review,** since fixes bring bugs of their own. A finding that arrives while an implementer is still building goes to it as a message, which is cheaper than another round. Fix what the change made worse or left inconsistent; report, rather than fix, older problems in authentication or anything that needs a product decision.
+- **Ask each for evidence:** the failing run, the passing run, or the planted break and its failure, and count tests from the runner's totals. A subagent's report says what it did, not what it missed; it is not a review, and the fresh-context review still runs ([§5](#5-independent-review)).
 
-The stop hook only warns while background agents are running, since the tree holds their work in progress; it checks at the first stop after they finish ([hooks](templates/hooks)).
+The stop hook only warns while background agents are running, since the tree holds their work in progress; it checks at the first stop after they finish, and doesn't send the session back twice for the same tree ([hooks](templates/hooks)).
 
 ## 4. Gates
 

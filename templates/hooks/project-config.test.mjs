@@ -7,7 +7,9 @@ import { fileURLToPath } from "node:url";
 import {
   CONFIG_FILE,
   isBehind,
+  globToRegExp,
   loadProjectConfig,
+  oneWayGlobs,
   problems,
   runCommands,
   stopCommands,
@@ -321,4 +323,143 @@ test("run as a script, it runs the file's commands in a real shell and fails whe
   assert.match(all.stdout, /Not in the file: .*integration/);
   assert.equal(run("test").status, 0);
   assert.equal(run("tests").status, 1);
+});
+
+test("the stop hook lints only what changed when the file says how", () => {
+  const commands = {
+    test: "unit",
+    testChanged: "unit --changed",
+    lint: "lint .",
+    lintChanged: "lint changed",
+  };
+  assert.deepEqual(problems({ ...minimal(), commands }), []);
+  assert.deepEqual(stopCommands({ ...minimal(), commands }), [
+    "lint changed",
+    "unit --changed",
+  ]);
+});
+
+test("a command known to fail on this checkout stays out of the stop hook, with its reason", () => {
+  const config = {
+    ...minimal(),
+    commands: {
+      test: "unit",
+      lint: "lint .",
+      formatCheck: "fmt --check",
+      typecheck: "tsc",
+    },
+    knownFailing: {
+      lint: "151 errors and CRLF endings; issue #42",
+      formatCheck: "CRLF endings until the renormalise lands",
+    },
+  };
+  assert.deepEqual(problems(config), []);
+  assert.deepEqual(stopCommands(config), ["tsc", "unit"]);
+  for (const knownFailing of [
+    ["lint"],
+    { lint: "" },
+    { e2e: "not in commands" },
+    { lints: "x" },
+  ]) {
+    assert.ok(
+      problems({ ...config, knownFailing }).some((p) =>
+        p.includes("knownFailing"),
+      ),
+      JSON.stringify(knownFailing),
+    );
+  }
+});
+
+test("running the commands: a known failure is reported as known, and one that now passes says so", () => {
+  const exec = (line) => ({ status: line === "lint ." ? 1 : 0, output: "" });
+  const config = {
+    ...minimal(),
+    commands: { test: "unit", lint: "lint .", typecheck: "tsc" },
+    knownFailing: { lint: "backlog", typecheck: "was broken" },
+  };
+  const results = runCommands(config, { exec });
+  assert.deepEqual(
+    results.map((r) => [r.name, r.passed, r.known ?? null]),
+    [
+      ["test", true, null],
+      ["lint", false, "backlog"],
+      ["typecheck", true, "was broken"],
+    ],
+  );
+});
+
+test("one-way paths can say why each is on the list", () => {
+  const reasons = {
+    ...minimal(),
+    oneWayPaths: {
+      "prisma/migrations/": "schema changes reach every environment",
+      "src/lib/auth.ts": "sessions",
+    },
+  };
+  assert.deepEqual(problems(reasons), []);
+  assert.deepEqual(oneWayGlobs(reasons), [
+    "prisma/migrations/",
+    "src/lib/auth.ts",
+  ]);
+  assert.deepEqual(oneWayGlobs({ ...minimal(), oneWayPaths: ["a/"] }), ["a/"]);
+  assert.deepEqual(oneWayGlobs(minimal()), []);
+  assert.ok(
+    problems({ ...minimal(), oneWayPaths: { "a/": "" } }).some((p) =>
+      p.includes("oneWayPaths"),
+    ),
+  );
+});
+
+test("its glob matching agrees with the review gate's", async () => {
+  const gate = await import("../review-gate/gate.mjs");
+  const files = [
+    "src/auth/login.ts",
+    "src/authz.ts",
+    "a/b/migrations/001.sql",
+    "migrations/002.sql",
+    "app.json",
+    "apps/web/app.json",
+  ];
+  for (const glob of [
+    "src/auth",
+    "**/migrations",
+    "app.json",
+    "*.json",
+    "src/*.ts",
+  ]) {
+    const ours = files.filter((f) => globToRegExp(glob).test(f));
+    const theirs = files.filter((f) => gate.globToRegExp(glob).test(f));
+    assert.deepEqual(ours, theirs, glob);
+  }
+});
+
+test("run as a script, it warns about a one-way glob that matches no file, and marks known failures", () => {
+  const dir = projectWith(
+    JSON.stringify({
+      ...minimal(),
+      commands: {
+        test: 'node -e "process.exit(0)"',
+        lint: 'node -e "process.exit(1)"',
+      },
+      knownFailing: { lint: "the lint backlog" },
+      oneWayPaths: ["src/auth/", "src/atuh/"],
+    }),
+  );
+  mkdirSync(path.join(dir, "src", "auth"), { recursive: true });
+  writeFileSync(path.join(dir, "src", "auth", "a.ts"), "");
+  spawnSync("git", ["init", "-q"], { cwd: dir });
+  spawnSync("git", ["add", "-A"], { cwd: dir });
+  const run = spawnSync(
+    process.execPath,
+    [path.join(here, "project-config.mjs")],
+    {
+      cwd: dir,
+      encoding: "utf8",
+      env: { ...process.env, CLAUDE_PROJECT_DIR: dir },
+    },
+  );
+  assert.equal(run.status, 0, "a known failure doesn't fail the run");
+  assert.match(run.stdout, /known {1}lint .*the lint backlog/);
+  assert.match(run.stdout, /"src\/atuh\/" matches no file/);
+  assert.doesNotMatch(run.stdout, /"src\/auth\/" matches no file/);
 });
