@@ -2,6 +2,24 @@
 
 Newest first. Each entry says what a project set up against an earlier version should do about it. From v1.0.0, releases are git tags and a project records its release as `"playbook"` in `.claude/playbook.json`; before that, it recorded a commit in its `CLAUDE.md`. To catch up, read from that release or commit upwards.
 
+## 2026-11-26 · v1.2.0: feedback from a feature build
+
+A three-step feature build, on Windows with an existing Husky setup and an orchestrating session directing subagents, confirmed most of v1.1.0 and found these:
+
+- **The stop hook remembers a send-back.** It sent the session back twice, minutes apart, for the same failure. It now doesn't send back again while the tree is unchanged since it did, and shows a one-line note instead. A project file that can't be read is still reported every time. Tested.
+- **Its message leads with what fails,** then allows for a failure that is another agent's work in progress: leave it and say exactly what fails. Tested.
+- **`lintChanged`** in `.claude/playbook.json`: the stop hook runs it in place of `lint`, for a project whose whole-repo lint is too slow for every turn.
+- **`knownFailing`:** a command that exists but fails on this checkout, with the reason. The stop hook skips it; the setup run reports it as known, and says when it passes again. Tested.
+- **One-way paths can carry their reason,** as an object from glob to why; the review gate reads both forms. The setup run warns about a glob that matches no tracked file. Tested, including that its glob matching agrees with the gate's.
+- **Paths with spaces on Windows.** The edit hook now quotes them for `cmd.exe`, where before they were split. Tested.
+- **`.claude/settings.json` asks before an edit,** like the project file and the hooks, since it decides which hooks run.
+- **Setup:** the setup skill no longer sets `core.hooksPath` over Husky, and adds the `.prettierignore` and `.gitattributes` lines. A project with no CI uses the run-every-command script as its stand-in, and says so. Coverage counts every source file, so a file's first test can't lower it.
+- **Rules:** rule 15 checks `git diff` is empty before the next planted break; rule 9 covers thresholds nothing runs.
+- **Subagents** ([VERIFICATION.md](VERIFICATION.md#3-build-against-the-check)): reviewers read commits, not the tree; each commit is type-checked and carries the trailer of the model that wrote it; tasks go out in grouped briefs with one reviewer each; each fix round gets its own review; and where to stop following findings into older code.
+- **Designs** ask what else draws on a limit the design uses, and mark a criterion a later slice makes untrue as superseded.
+
+**Existing projects:** copy the updated `after-edit.mjs`, `before-stop.mjs` and `project-config.mjs`, and the review gate's `gate.mjs` to `scripts/review-gate.mjs`. Add the two `settings.json` ask rules. Move any command you dropped for failing on this checkout into `knownFailing`, add `lintChanged` if lint is slow, then run `node .claude/hooks/project-config.mjs`.
+
 ## 2026-11-25 · v1.1.0: feedback from a build phase
 
 A project's first build phase, with an orchestrating session handing tasks to subagents, found these:

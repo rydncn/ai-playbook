@@ -58,6 +58,11 @@ const WINDOWS = process.platform === "win32";
 // of them is refused rather than passed to the shell.
 const CMD_SPECIAL = /[&|<>^%!"()`\r\n]/;
 
+// cmd.exe also splits an argument at spaces, so a path with one is quoted.
+// It can't hold a quote of its own: CMD_SPECIAL refuses those paths first.
+const quoted = (part, windows) =>
+  windows && /\s/.test(part) ? `"${part}"` : part;
+
 function defaultExec(command, args, cwd) {
   const result = spawnSync(command, args, {
     cwd,
@@ -173,6 +178,7 @@ function checkFile(
   }
 
   const extension = path.extname(absolute).toLowerCase();
+  const fileArg = quoted(absolute, windows);
 
   let checks;
   try {
@@ -184,8 +190,7 @@ function checkFile(
     return configured(
       checks.afterEdit,
       extension,
-      absolute,
-      relative,
+      { file: fileArg, relative, windows },
       projectDir,
       exec,
     );
@@ -193,8 +198,8 @@ function checkFile(
   const prettier = localBin(projectDir, "prettier");
   if (FORMAT_EXTENSIONS.has(extension) && prettier) {
     exec(
-      prettier,
-      ["--write", "--log-level", "warn", "--ignore-unknown", absolute],
+      quoted(prettier, windows),
+      ["--write", "--log-level", "warn", "--ignore-unknown", fileArg],
       projectDir,
     );
   }
@@ -202,8 +207,8 @@ function checkFile(
   const eslint = localBin(projectDir, "eslint");
   if (LINT_EXTENSIONS.has(extension) && eslint) {
     const lint = exec(
-      eslint,
-      ["--no-warn-ignored", "--max-warnings", "0", absolute],
+      quoted(eslint, windows),
+      ["--no-warn-ignored", "--max-warnings", "0", fileArg],
       projectDir,
     );
     if (lint.status !== 0) {
@@ -217,11 +222,13 @@ function checkFile(
   return { code: 0 };
 }
 
-function configured(entries, extension, absolute, relative, projectDir, exec) {
+function configured(entries, extension, target, projectDir, exec) {
+  const { file, relative, windows } = target;
   const dir = path.dirname(relative);
   const vars = {
-    file: absolute,
-    dir: dir === "." ? "." : `./${dir.split(path.sep).join("/")}`,
+    file,
+    dir:
+      dir === "." ? "." : quoted(`./${dir.split(path.sep).join("/")}`, windows),
   };
   for (const entry of entries) {
     if (!entry.extensions.map((e) => e.toLowerCase()).includes(extension))

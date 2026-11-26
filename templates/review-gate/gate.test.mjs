@@ -70,6 +70,13 @@ test("the project file's one-way paths are read as folders, and add to the list"
   assert.deepEqual(projectPaths(text), ["supabase/migrations", "app.json"]);
   assert.deepEqual(projectPaths(JSON.stringify({ playbook: "1.0.0" })), []);
   assert.deepEqual(projectPaths(null), []);
+  const withReasons = JSON.stringify({
+    oneWayPaths: { "prisma/migrations/": "schema", "src/auth.ts": "sessions" },
+  });
+  assert.deepEqual(projectPaths(withReasons), [
+    "prisma/migrations",
+    "src/auth.ts",
+  ]);
 });
 
 test("a project file the gate can't read fails it closed", () => {

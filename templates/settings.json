@@ -39,6 +39,8 @@
       "Bash(terraform apply*)",
       "Bash(kubectl apply*)",
       "Bash(kubectl delete*)",
+      "Edit(./.claude/settings.json)",
+      "Write(./.claude/settings.json)",
       "Edit(./.claude/playbook.json)",
       "Write(./.claude/playbook.json)",
       "Edit(./.claude/hooks/**)",

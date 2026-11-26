@@ -22,6 +22,7 @@ export const COMMANDS = [
   "e2e", // the end-to-end or acceptance tests, against the real thing
   "coverage", // the suite with the project's coverage threshold enforced
   "lint",
+  "lintChanged", // lint for what changed, when the whole-project lint is slow
   "typecheck",
   "format", // fixes formatting across the project
   "formatCheck", // fails when anything is unformatted
@@ -44,6 +45,7 @@ const KEYS = [
   "tickets",
   "commands",
   "oneWayPaths",
+  "knownFailing",
   "checks",
   "afterEdit",
 ];
@@ -147,14 +149,12 @@ export function problems(config) {
   }
   out.push(...ticketProblems(config.tickets));
   out.push(...commandProblems(config.commands));
-  if (
-    "oneWayPaths" in config &&
-    !(Array.isArray(config.oneWayPaths) && config.oneWayPaths.every(isText))
-  ) {
+  if ("oneWayPaths" in config && !validOneWayPaths(config.oneWayPaths)) {
     out.push(
-      '"oneWayPaths" is a list of globs, like ["src/auth/", "**/migrations/"].',
+      '"oneWayPaths" is a list of globs, like ["src/auth/", "**/migrations/"], or an object from each glob to why it is one-way.',
     );
   }
+  if ("knownFailing" in config) out.push(...knownProblems(config));
   if ("afterEdit" in config && !validEditChecks(config.afterEdit)) {
     out.push(
       '"afterEdit" is a list of { "extensions": [".go"], "run": ["gofmt", "-w", "{file}"] }, with "fix": true for a formatter.',
@@ -174,6 +174,57 @@ export function problems(config) {
     }
   }
   return out;
+}
+
+function validOneWayPaths(paths) {
+  if (Array.isArray(paths)) return paths.every(isText);
+  return (
+    isObject(paths) &&
+    Object.entries(paths).every(([glob, why]) => isText(glob) && isText(why))
+  );
+}
+
+function knownProblems(config) {
+  const known = config.knownFailing;
+  const shape =
+    '"knownFailing" is an object from a command\'s name to why it fails on this checkout, like { "lint": "CRLF endings; issue #42" }.';
+  if (!isObject(known)) return [shape];
+  const out = [];
+  for (const [name, why] of Object.entries(known)) {
+    if (!isObject(config.commands) || !(name in config.commands)) {
+      out.push(`"knownFailing.${name}" isn't one of the file's commands.`);
+    } else if (!isText(why)) {
+      out.push(shape);
+    }
+  }
+  return out;
+}
+
+/** The one-way globs, from either form of "oneWayPaths". */
+export function oneWayGlobs(config) {
+  const paths = config.oneWayPaths ?? [];
+  return Array.isArray(paths) ? paths : Object.keys(paths);
+}
+
+/**
+ * A glob (`**`, `*`, `?`) as a regular expression over a repository path; a
+ * trailing slash, or a folder name, covers what's inside it. The same as the
+ * review gate's, which a test checks.
+ */
+export function globToRegExp(glob) {
+  const g = glob.replace(/^\/|\/$/g, "");
+  let re = "";
+  for (let i = 0; i < g.length; i++) {
+    const c = g[i];
+    if (c === "*" && g[i + 1] === "*") {
+      const slash = g[i + 2] === "/";
+      re += slash ? "(?:.*/)?" : ".*";
+      i += slash ? 2 : 1;
+    } else if (c === "*") re += "[^/]*";
+    else if (c === "?") re += "[^/]";
+    else re += c.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+  }
+  return new RegExp(`^${re}(?:/.*)?$`);
 }
 
 function validEditChecks(entries) {
@@ -196,10 +247,15 @@ function validEditChecks(entries) {
  * for what changed, or the whole suite when the project has no such command.
  */
 export function stopCommands(config) {
-  const c = config.commands;
-  return [c.formatCheck, c.lint, c.typecheck, c.testChanged ?? c.test].filter(
-    Boolean,
-  );
+  const known = config.knownFailing ?? {};
+  const pick = (...names) =>
+    names.map((n) => !(n in known) && config.commands[n]).find(Boolean);
+  return [
+    pick("formatCheck"),
+    pick("lintChanged", "lint"),
+    pick("typecheck"),
+    pick("testChanged", "test"),
+  ].filter(Boolean);
 }
 
 /**
@@ -253,6 +309,7 @@ export function runCommands(
     return {
       name,
       line: config.commands[name],
+      known: config.knownFailing?.[name],
       passed: run.status === 0,
       seconds: Math.round((Date.now() - started) / 1000),
       output: run.output,
@@ -266,6 +323,19 @@ function shellExec(line, cwd) {
     status: result.status ?? 1,
     output: `${result.stdout ?? ""}${result.stderr ?? ""}`,
   };
+}
+
+/** The one-way globs that match no file git tracks; none without git. */
+function unmatchedGlobs(config, projectDir) {
+  const listed = spawnSync("git", ["ls-files"], {
+    cwd: projectDir,
+    encoding: "utf8",
+  });
+  if (listed.status !== 0) return [];
+  const files = listed.stdout.split("\n").filter(Boolean);
+  return oneWayGlobs(config).filter(
+    (glob) => !files.some((f) => globToRegExp(glob).test(f)),
+  );
 }
 
 function main(args) {
@@ -290,20 +360,31 @@ function main(args) {
   }
   const results = runCommands(config, { projectDir, only: args });
   for (const r of results) {
-    if (!r.passed)
+    if (!r.passed && !r.known)
       process.stdout.write(`\n--- ${r.name} ---\n${r.output.slice(-4000)}\n`);
   }
   process.stdout.write("\n");
   for (const r of results) {
+    const label = r.passed ? "pass" : r.known ? "known" : "FAIL";
+    const note = !r.known
+      ? ""
+      : r.passed
+        ? " (passes now: take it out of knownFailing)"
+        : ` (known failing: ${r.known})`;
     process.stdout.write(
-      `${r.passed ? "pass" : "FAIL"}  ${r.name} (${r.seconds}s): ${r.line}\n`,
+      `${label.padEnd(5)} ${r.name} (${r.seconds}s): ${r.line}${note}\n`,
     );
   }
   const missing = COMMANDS.filter((n) => !config.commands[n]);
   if (missing.length > 0) {
     process.stdout.write(`Not in the file: ${missing.join(", ")}.\n`);
   }
-  return results.every((r) => r.passed) ? 0 : 1;
+  for (const glob of unmatchedGlobs(config, projectDir)) {
+    process.stdout.write(
+      `Warning: one-way path "${glob}" matches no file. Check it for a typo.\n`,
+    );
+  }
+  return results.every((r) => r.passed || r.known) ? 0 : 1;
 }
 
 if (
